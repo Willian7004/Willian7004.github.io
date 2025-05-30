@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码编辑器</title>
+    <!-- Prism.js 代码高亮 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+        }
+        
+        /* 容器布局 - 默认左右分屏 */
+        .container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* 高度>宽度时切换上下分屏 */
+        @media (max-aspect-ratio: 1/1) {
+            .container {
+                flex-direction: column;
+            }
+        }
+        
+        .pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 分割线 */
+        .resize-handle {
+            width: 10px;
+            background: #444;
+            cursor: col-resize;
+            position: relative;
+            z-index: 10;
+        }
+        
+        @media (max-aspect-ratio: 1/1) {
+            .resize-handle {
+                width: 100%;
+                height: 10px;
+                cursor: row-resize;
+            }
+        }
+        
+        /* 工具栏样式 */
+        .toolbar {
+            background: #252526;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .toolbar button {
+            background: #3a3a3a;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toolbar button:hover {
+            background: #4a4a4a;
+        }
+        
+        .toolbar .toggle-btn {
+            margin-left: auto;
+        }
+        
+        /* 编辑器区域 */
+        .editor-container {
+            position: relative;
+            flex: 1;
+            overflow: auto;
+            display: flex;
+        }
+        
+        .line-numbers {
+            width: 40px;
+            background: #2d2d2d;
+            color: #6a9955;
+            text-align: right;
+            padding: 15px 5px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            border-right: 1px solid #444;
+        }
+        
+        #editor {
+            flex: 1;
+            height: 100%;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border: none;
+            resize: none;
+            white-space: pre;
+            tab-size: 4;
+        }
+        
+        #editor.wrap {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        /* 预览区域 */
+        #preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: #e6e6e6;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+        }
+        
+        .modal-content button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 编辑器区域 -->
+        <div class="pane">
+            <div class="toolbar">
+                <button id="undoBtn" title="撤销">↩ 撤销</button>
+                <button id="redoBtn" title="重做">↪ 重做</button>
+                <button id="findBtn" title="查找">🔍 查找</button>
+                <button id="replaceBtn" title="替换">🔄 替换</button>
+                <button id="lineNumbersBtn" title="行号"># 行号</button>
+                <button id="wordWrapBtn" title="自动换行">↩ 换行</button>
+                <button id="loadBtn" title="加载文件">📂 加载</button>
+                <button id="saveBtn" title="保存文件">💾 保存</button>
+                <button class="toggle-btn" id="toggleEditorBtn" title="收起编辑器">◀</button>
+            </div>
+            <div class="editor-container">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <textarea id="editor" spellcheck="false"><!DOCTYPE html>
+<html>
+<head>
+    <title>欢迎使用代码编辑器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>欢迎使用代码编辑器</h1>
+    <p>在左侧编辑代码，右侧查看实时预览</p>
+</body>
+</html></textarea>
+            </div>
+        </div>
+        
+        <!-- 分割线 -->
+        <div class="resize-handle" id="resizeHandle"></div>
+        
+        <!-- 预览区域 -->
+        <div class="pane">
+            <div class="toolbar">
+                <button id="runBtn" title="运行">▶ 运行</button>
+                <button class="toggle-btn" id="togglePreviewBtn" title="收起预览">▶</button>
+            </div>
+            <iframe id="preview"></iframe>
+        </div>
+    </div>
+    
+    <!-- 查找模态框 -->
+    <div class="modal" id="findModal">
+        <div class="modal-content">
+            <h3>查找</h3>
+            <input type="text" id="findInput" placeholder="输入要查找的内容">
+            <div>
+                <button id="findNextBtn">查找下一个</button>
+                <button id="findCancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 替换模态框 -->
+    <div class="modal" id="replaceModal">
+        <div class="modal-content">
+            <h3>查找和替换</h3>
+            <input type="text" id="replaceFindInput" placeholder="查找内容">
+            <input type="text" id="replaceWithInput" placeholder="替换为">
+            <div>
+                <button id="replaceBtnAction">替换</button>
+                <button id="replaceAllBtn">全部替换</button>
+                <button id="replaceCancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文件输入（隐藏） -->
+    <input type="file" id="fileInput" style="display: none;" accept=".html,.txt,.js,.css">
+    
+    <script>
+        // DOM元素
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const resizeHandle = document.getElementById('resizeHandle');
+        const toggleEditorBtn = document.getElementById('toggleEditorBtn');
+        const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+        const runBtn = document.getElementById('runBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const findBtn = document.getElementById('findBtn');
+        const replaceBtn = document.getElementById('replaceBtn');
+        const lineNumbersBtn = document.getElementById('lineNumbersBtn');
+        const wordWrapBtn = document.getElementById('wordWrapBtn');
+        const loadBtn = document.getElementById('loadBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const findModal = document.getElementById('findModal');
+        const replaceModal = document.getElementById('replaceModal');
+        const fileInput = document.getElementById('fileInput');
+        const lineNumbersElement = document.getElementById('lineNumbers');
+        
+        // 编辑器状态
+        let editorHistory = [];
+        let historyPointer = -1;
+        let isResizing = false;
+        let isEditorCollapsed = false;
+        let isPreviewCollapsed = false;
+        let showLineNumbers = true;
+        let wordWrap = false;
+        
+        // 初始化编辑器
+        function initEditor() {
+            // 初始化历史记录
+            saveHistory();
+            
+            // 初始运行预览
+            updatePreview();
+            
+            // 更新行号
+            updateLineNumbers();
+            
+            // 设置初始按钮状态
+            toggleEditorBtn.style.display = isPreviewCollapsed ? 'block' : 'none';
+            togglePreviewBtn.style.display = isEditorCollapsed ? 'block' : 'none';
+            
+            // 事件监听
+            setupEventListeners();
+        }
+        
+        // 设置事件监听
+        function setupEventListeners() {
+            // 编辑器输入监听
+            editor.addEventListener('input', () => {
+                saveHistory();
+                highlightCode();
+                updateLineNumbers();
+            });
+            
+            // 编辑器滚动同步
+            editor.addEventListener('scroll', () => {
+                lineNumbersElement.scrollTop = editor.scrollTop;
+            });
+            
+            // 运行按钮
+            runBtn.addEventListener('click', updatePreview);
+            
+            // 撤销/重做
+            undoBtn.addEventListener('click', undo);
+            redoBtn.addEventListener('click', redo);
+            
+            // 查找/替换
+            findBtn.addEventListener('click', () => findModal.style.display = 'flex');
+            replaceBtn.addEventListener('click', () => replaceModal.style.display = 'flex');
+            
+            // 行号切换
+            lineNumbersBtn.addEventListener('click', toggleLineNumbers);
+            
+            // 自动换行切换
+            wordWrapBtn.addEventListener('click', toggleWordWrap);
+            
+            // 文件操作
+            loadBtn.addEventListener('click', () => fileInput.click());
+            saveBtn.addEventListener('click', saveFile);
+            fileInput.addEventListener('change', loadFile);
+            
+            // 折叠/展开
+            toggleEditorBtn.addEventListener('click', () => togglePane('editor'));
+            togglePreviewBtn.addEventListener('click', () => togglePane('preview'));
+            
+            // 查找/替换模态框
+            document.getElementById('findCancelBtn').addEventListener('click', () => findModal.style.display = 'none');
+            document.getElementById('replaceCancelBtn').addEventListener('click', () => replaceModal.style.display = 'none');
+            document.getElementById('findNextBtn').addEventListener('click', findNext);
+            document.getElementById('replaceBtnAction').addEventListener('click', replaceText);
+            document.getElementById('replaceAllBtn').addEventListener('click', replaceAll);
+            
+            // 分割线拖动
+            resizeHandle.addEventListener('mousedown', startResize);
+            window.addEventListener('mousemove', resize);
+            window.addEventListener('mouseup', stopResize);
+        }
+        
+        // 保存历史记录
+        function saveHistory() {
+            // 保存当前状态到历史记录
+            editorHistory = editorHistory.slice(0, historyPointer + 1);
+            editorHistory.push(editor.value);
+            historyPointer = editorHistory.length - 1;
+        }
+        
+        // 撤销
+        function undo() {
+            if (historyPointer > 0) {
+                historyPointer--;
+                editor.value = editorHistory[historyPointer];
+                highlightCode();
+                updateLineNumbers();
+            }
+        }
+        
+        // 重做
+        function redo() {
+            if (historyPointer < editorHistory.length - 1) {
+                historyPointer++;
+                editor.value = editorHistory[historyPointer];
+                highlightCode();
+                updateLineNumbers();
+            }
+        }
+        
+        // 更新行号显示
+        function updateLineNumbers() {
+            if (!showLineNumbers) {
+                lineNumbersElement.innerHTML = '';
+                return;
+            }
+            
+            const lineCount = editor.value.split('\n').length;
+            let numbersHTML = '';
+            
+            for (let i = 1; i <= lineCount; i++) {
+                numbersHTML += `<div>${i}</div>`;
+            }
+            
+            lineNumbersElement.innerHTML = numbersHTML;
+        }
+        
+        // 切换行号显示
+        function toggleLineNumbers() {
+            showLineNumbers = !showLineNumbers;
+            lineNumbersElement.style.display = showLineNumbers ? 'block' : 'none';
+            lineNumbersBtn.textContent = showLineNumbers ? '# 行号' : '# 行号';
+            updateLineNumbers();
+        }
+        
+        // 切换自动换行
+        function toggleWordWrap() {
+            wordWrap = !wordWrap;
+            editor.classList.toggle('wrap', wordWrap);
+            wordWrapBtn.textContent = wordWrap ? '↩ 换行' : '↩ 换行';
+        }
+        
+        // 代码高亮
+        function highlightCode() {
+            // 使用Prism.js进行代码高亮
+            const highlighted = Prism.highlight(
+                editor.value, 
+                Prism.languages.html, 
+                'html'
+            );
+        }
+        
+        // 更新预览（修复中文乱码）
+        function updatePreview() {
+            const content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    ${editor.value.includes('<head>') ? '' : '</head>'}
+                    ${editor.value}
+                </html>
+            `;
+            
+            const blob = new Blob([content], { type: 'text/html' });
+            preview.src = URL.createObjectURL(blob);
+        }
+        
+        // 加载文件
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                editor.value = e.target.result;
+                saveHistory();
+                updatePreview();
+                highlightCode();
+                updateLineNumbers();
+            };
+            reader.readAsText(file);
+        }
+        
+        // 保存文件
+        function saveFile() {
+            const content = editor.value;
+            const blob = new Blob([content], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'code-editor.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        // 查找文本
+        function findNext() {
+            const text = document.getElementById('findInput').value;
+            if (!text) return;
+            
+            const start = editor.selectionEnd;
+            const content = editor.value;
+            const index = content.indexOf(text, start);
+            
+            if (index >= 0) {
+                editor.focus();
+                editor.setSelectionRange(index, index + text.length);
+            }
+        }
+        
+        // 替换文本
+        function replaceText() {
+            const findText = document.getElementById('replaceFindInput').value;
+            const replaceText = document.getElementById('replaceWithInput').value;
+            
+            if (!findText) return;
+            
+            const content = editor.value;
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            
+            if (editor.value.substring(start, end) === findText) {
+                editor.value = content.substring(0, start) + replaceText + content.substring(end);
+                editor.setSelectionRange(start, start + replaceText.length);
+                saveHistory();
+                highlightCode();
+                updateLineNumbers();
+            }
+        }
+        
+        // 全部替换
+        function replaceAll() {
+            const findText = document.getElementById('replaceFindInput').value;
+            const replaceText = document.getElementById('replaceWithInput').value;
+            
+            if (!findText) return;
+            
+            const regex = new RegExp(findText, 'g');
+            editor.value = editor.value.replace(regex, replaceText);
+            saveHistory();
+            highlightCode();
+            updateLineNumbers();
+            replaceModal.style.display = 'none';
+        }
+        
+        // 切换面板显示（修复展开按钮逻辑）
+        function togglePane(paneType) {
+            const container = document.querySelector('.container');
+            const editorPane = container.children[0];
+            const previewPane = container.children[2];
+            
+            if (paneType === 'editor') {
+                isEditorCollapsed = !isEditorCollapsed;
+                editorPane.style.flex = isEditorCollapsed ? '0' : '1';
+                toggleEditorBtn.textContent = isEditorCollapsed ? '▶' : '◀';
+                toggleEditorBtn.title = isEditorCollapsed ? '展开编辑器' : '收起编辑器';
+                resizeHandle.style.display = isEditorCollapsed ? 'none' : 'block';
+                
+                // 显示/隐藏预览区域的展开按钮
+                togglePreviewBtn.style.display = isEditorCollapsed ? 'block' : 'none';
+            } else {
+                isPreviewCollapsed = !isPreviewCollapsed;
+                previewPane.style.flex = isPreviewCollapsed ? '0' : '1';
+                togglePreviewBtn.textContent = isPreviewCollapsed ? '◀' : '▶';
+                togglePreviewBtn.title = isPreviewCollapsed ? '展开预览' : '收起预览';
+                resizeHandle.style.display = isPreviewCollapsed ? 'none' : 'block';
+                
+                // 显示/隐藏编辑器区域的展开按钮
+                toggleEditorBtn.style.display = isPreviewCollapsed ? 'block' : 'none';
+            }
+        }
+        
+        // 分割线拖动功能
+        function startResize(e) {
+            isResizing = true;
+            document.body.style.cursor = window.innerWidth > window.innerHeight ? 'col-resize' : 'row-resize';
+            e.preventDefault();
+        }
+        
+        function resize(e) {
+            if (!isResizing) return;
+            
+            const container = document.querySelector('.container');
+            const editorPane = container.children[0];
+            const previewPane = container.children[2];
+            
+            if (window.innerWidth > window.innerHeight) {
+                // 左右布局
+                const containerRect = container.getBoundingClientRect();
+                const newWidth = e.clientX - containerRect.left;
+                editorPane.style.flex = `0 0 ${newWidth}px`;
+                previewPane.style.flex = '1';
+            } else {
+                // 上下布局
+                const containerRect = container.getBoundingClientRect();
+                const newHeight = e.clientY - containerRect.top;
+                editorPane.style.flex = `0 0 ${newHeight}px`;
+                previewPane.style.flex = '1';
+            }
+        }
+        
+        function stopResize() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        }
+        
+        // 初始化编辑器
+        window.onload = initEditor;
+    </script>
+</body>
+</html>
