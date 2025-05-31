@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用html创建一个项目，实现以下功能：
+1. 需要时使用cdn导入库文件。
+2. 使用页面尺寸作为画布尺寸，使用黑色背景，使用2d形式。
+3. 创建对角线长度未页面宽度和高度中较小值的80%的正多边形，创建滑块用于选择边数，可选边数为4到16之间的偶数。滑块最左侧添加一个选项用于取消创建多边形。创建滑块设置多边形旋转速度，取值范围为-90°/s到90°/s且为15°/s的整数。
+4. 创建60个直径为30像素的随机颜色的小球并确保不重叠，如果生成了多边形则只在多边形范围内创建，每个小球向随机方向以每秒100像素的速度移动，模拟与其它小球之间以、多边形或页面边缘的弹性碰撞。
+5. 在页面左上角添加复选框，分别用于添加重力模拟（每个小球有向下的 20像素/s^2 的加速度）、添加摩擦力模拟给每个小球增加拖影效果（拖影长度100像素）、每次碰撞后重新选择相应的小球的颜色和给多边形添加一条边的缺口。
+6. 创建可折叠菜单用于调整第4、5步中未添加调节选项的的参数。
+
+注：摩擦力功能未实现，拖影表现较差。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理模拟系统</title>
+    <style>
+/* 基础样式 */
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+/* 画布全屏 */
+#mainCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    display: block;
+    z-index: 0;
+}
+
+/* 控件面板 */
+.controls {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 10;
+    max-width: 300px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.polygon-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+/* 可折叠菜单 */
+.settings-menu {
+    margin-top: 15px;
+}
+
+.menu-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+/* 标签样式 */
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 14px;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+input[type="number"] {
+    width: 60px;
+    padding: 4px;
+}
+
+/* 滑块数值显示 */
+span[id$="Value"] {
+    display: inline-block;
+    min-width: 40px;
+    text-align: right;
+}
+    </style>
+</head>
+<body>
+    <!-- 控件面板 -->
+    <div class="controls">
+        <div class="checkbox-group">
+            <label>
+                <input type="checkbox" id="gravityToggle"> 重力模拟
+            </label>
+            <label>
+                <input type="checkbox" id="trailToggle"> 拖影效果
+            </label>
+            <label>
+                <input type="checkbox" id="colorChangeToggle"> 碰撞变色
+            </label>
+            <label>
+                <input type="checkbox" id="gapChangeToggle"> 动态缺口
+            </label>
+        </div>
+        
+        <!-- 多边形控制 -->
+        <div class="polygon-controls">
+            <label>多边形边数:
+                <input type="range" id="sidesSlider" min="0" max="8" step="1" value="0">
+                <span id="sidesValue">无多边形</span>
+            </label>
+            <label>旋转速度 (°/s):
+            <input type="range" id="rotationSlider" min="-90" max="90" step="15" value="0">
+                <span id="rotationValue">0</span>
+            </label>
+        </div>
+        
+        <!-- 可折叠菜单 -->
+        <details class="settings-menu">
+            <summary>高级设置</summary>
+            <div class="menu-content">
+                <p>注：旋转状态小于8边以及静止状态小于4边可能穿模。</p>
+                <label>小球数量:
+                    <input type="number" id="ballCount" min="1" max="200" value="60">
+                </label>
+                <label>小球直径(px):
+                    <input type="range" id="ballSize" min="5" max="50" value="30">
+                    <span id="ballSizeValue">30</span>
+                </label>
+                <label>初始速度(px/s):
+                    <input type="range" id="ballSpeed" min="10" max="500" value="100">
+                    <span id="ballSpeedValue">100</span>
+                </label>
+                <label>重力加速度(px/s²):
+                    <input type="range" id="gravityValue" min="0" max="100" value="20">
+                    <span id="gravityValueValue">20</span>
+                </label>
+                <label>拖影长度:
+                    <input type="range" id="trailLength" min="10" max="200" value="100">
+                    <span id="trailLengthValue">100</span>
+                </label>
+            </div>
+        </details>
+    </div>
+    
+    <canvas id="mainCanvas"></canvas>
+    
+    <script>
+// 物理模拟系统核心逻辑
+
+// ===== 全局状态 =====
+let canvas, ctx;
+const balls = []; // 小球数组
+let polygon = null; // 当前多边形
+let lastTime = 0; // 上一帧时间
+let animationId = null; // 动画帧ID
+
+// 控制状态
+let gravityEnabled = false;
+let trailEnabled = false;
+let colorChangeEnabled = false;
+let gapChangeEnabled = false;
+
+// 可配置参数
+let config = {
+    ballCount: 60,
+    ballSize: 30,
+    ballSpeed: 100,
+    gravityValue: 20,
+    trailLength: 100
+};
+
+// ===== 工具函数 =====
+
+// 生成随机颜色
+function getRandomColor() {
+    return `hsl(${Math.random() * 360}, 80%, 60%)`;
+}
+
+// 2D向量类
+class Vector2 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    
+    // 向量加法
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+    }
+    
+    // 向量缩放
+    scale(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    }
+    
+    // 克隆向量
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+    
+    // 向量长度
+    magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+    
+    // 单位化向量
+    normalize() {
+        const mag = this.magnitude();
+        if (mag > 0) {
+            this.x /= mag;
+            this.y /= mag;
+        }
+        return this;
+    }
+    
+    // 随机向量
+    static random() {
+        const angle = Math.random() * Math.PI * 2;
+        return new Vector2(Math.cos(angle), Math.sin(angle));
+    }
+}
+
+// ===== 小球类 =====
+class Ball {
+    constructor(x, y, radius) {
+        this.pos = new Vector2(x, y);
+        this.vel = Vector2.random().scale(config.ballSpeed);
+        this.radius = radius;
+        this.color = getRandomColor();
+        this.trail = []; // 拖影轨迹点
+    }
+    
+    // 更新小球位置
+    update(dt) {
+        // 应用重力
+        if (gravityEnabled) {
+            this.vel.y += config.gravityValue * dt;
+        }
+        
+        // 更新位置
+        this.pos.add(this.vel.clone().scale(dt));
+        
+        // 保存拖影
+        if (trailEnabled) {
+            this.trail.push({
+                pos: this.pos.clone(),
+                alpha: 1.0
+            });
+            
+            // 限制拖影长度
+            if (this.trail.length > config.trailLength) {
+                this.trail.shift();
+            }
+        }
+    }
+    
+    // 绘制小球
+    draw() {
+        ctx.save(); // 保存上下文状态
+        
+        // 绘制拖影（线段式）
+        if (trailEnabled && this.trail.length > 1) {
+            for (let i = 0; i < this.trail.length - 1; i++) {
+                const startPoint = this.trail[i];
+                const endPoint = this.trail[i+1];
+                
+                // 反转透明度：近端浓(0.7), 远端淡(0.3)
+                const alpha = 0.7 - (i / (this.trail.length-1)) * 0.4;
+                
+                ctx.beginPath();
+                ctx.moveTo(startPoint.pos.x, startPoint.pos.y);
+                ctx.lineTo(endPoint.pos.x, endPoint.pos.y);
+                ctx.strokeStyle = `rgba(${this.colorToRGB()}, ${alpha})`;
+                ctx.lineWidth = this.radius;
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制小球
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        
+        ctx.restore(); // 恢复上下文状态
+    }
+    
+    // 颜色转RGB
+    colorToRGB() {
+        const temp = document.createElement('div');
+        temp.style.color = this.color;
+        document.body.appendChild(temp);
+        const rgb = getComputedStyle(temp).color;
+        document.body.removeChild(temp);
+        return rgb.match(/\d+/g).slice(0, 3).join(',');
+    }
+}
+
+// ===== 多边形类 =====
+class Polygon {
+    constructor(sides) {
+        this.sides = sides;
+        // 随机生成缺口位置 (0 ≤ index < sides)
+        this.fixedGapEdge = Math.floor(Math.random() * sides);
+        this.rotation = 0; // 当前旋转角度(弧度)
+        this.rotationSpeed = 0; // 旋转速度(弧度/秒)
+        this.center = new Vector2(canvas.width/2, canvas.height/2);
+        this.radius = Math.min(canvas.width, canvas.height) * 0.8 / 2;
+        this.vertices = this.calculateVertices();
+    }
+    
+    // 计算顶点位置
+    calculateVertices() {
+        const vertices = [];
+        const angleStep = (Math.PI * 2) / this.sides;
+        
+        for (let i = 0; i < this.sides; i++) {
+            // 生成所有顶点
+            const angle = angleStep * i + this.rotation;
+            const x = this.center.x + this.radius * Math.cos(angle);
+            const y = this.center.y + this.radius * Math.sin(angle);
+            vertices.push(new Vector2(x, y));
+        }
+        
+        return vertices;
+    }
+    
+    // 更新旋转
+    update(dt) {
+        this.rotation += this.rotationSpeed * dt;
+        this.vertices = this.calculateVertices();
+    }
+    
+    // 绘制多边形
+    draw() {
+        if (this.vertices.length < 2) return;
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+        
+        // 遍历所有顶点（包括连接回第一个顶点）
+        for (let i = 1; i <= this.vertices.length; i++) {
+            const currentIndex = i % this.vertices.length;
+            
+            // 检查前一条边是否是缺口边
+            const prevEdgeIndex = (i - 1) % this.vertices.length;
+            if (gapChangeEnabled && prevEdgeIndex === this.fixedGapEdge) {
+                // 结束当前路径并开始新路径
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(this.vertices[currentIndex].x, this.vertices[currentIndex].y);
+                continue;
+            }
+            
+            ctx.lineTo(this.vertices[currentIndex].x, this.vertices[currentIndex].y);
+        }
+        
+        // 如果不是缺口模式，则闭合路径
+        if (!gapChangeEnabled) {
+            ctx.closePath();
+        }
+        
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+// ===== 碰撞检测 =====
+function checkCollisions() {
+    // 边界碰撞
+    for (const ball of balls) {
+        // 左右边界
+        if (ball.pos.x - ball.radius < 0) {
+            ball.pos.x = ball.radius;
+            ball.vel.x = Math.abs(ball.vel.x);
+            handleCollisionEffect(ball);
+        } else if (ball.pos.x + ball.radius > canvas.width) {
+            ball.pos.x = canvas.width - ball.radius;
+            ball.vel.x = -Math.abs(ball.vel.x);
+            handleCollisionEffect(ball);
+        }
+        
+        // 上下边界
+        if (ball.pos.y - ball.radius < 0) {
+            ball.pos.y = ball.radius;
+            ball.vel.y = Math.abs(ball.vel.y);
+            handleCollisionEffect(ball);
+        } else if (ball.pos.y + ball.radius > canvas.height) {
+            ball.pos.y = canvas.height - ball.radius;
+            ball.vel.y = -Math.abs(ball.vel.y);
+            handleCollisionEffect(ball);
+        }
+    }
+    
+    // 小球间碰撞 (简化为两两检测)
+    for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+            const ballA = balls[i];
+            const ballB = balls[j];
+            const dx = ballB.pos.x - ballA.pos.x;
+            const dy = ballB.pos.y - ballA.pos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < ballA.radius + ballB.radius) {
+                // 碰撞响应
+                const angle = Math.atan2(dy, dx);
+                const sin = Math.sin(angle);
+                const cos = Math.cos(angle);
+                
+                // 旋转速度向量
+                const vx1 = ballA.vel.x * cos + ballA.vel.y * sin;
+                const vy1 = ballA.vel.y * cos - ballA.vel.x * sin;
+                const vx2 = ballB.vel.x * cos + ballB.vel.y * sin;
+                const vy2 = ballB.vel.y * cos - ballB.vel.x * sin;
+                
+                // 交换x方向速度
+                ballA.vel.x = vx2 * cos - vy1 * sin;
+                ballA.vel.y = vy1 * cos + vx2 * sin;
+                ballB.vel.x = vx1 * cos - vy2 * sin;
+                ballB.vel.y = vy2 * cos + vx1 * sin;
+                
+                // 位置修正避免重叠
+                const overlap = (ballA.radius + ballB.radius) - distance;
+                const correctionX = (overlap * dx / distance) * 0.5;
+                const correctionY = (overlap * dy / distance) * 0.5;
+                
+                ballA.pos.x -= correctionX;
+                ballA.pos.y -= correctionY;
+                ballB.pos.x += correctionX;
+                ballB.pos.y += correctionY;
+                
+                // 处理碰撞效果
+                handleCollisionEffect(ballA);
+                handleCollisionEffect(ballB);
+            }
+        }
+    }
+    
+    // 多边形碰撞检测 (增加5px安全边距)
+    if (polygon && polygon.vertices.length > 1) {
+        for (const ball of balls) {
+            for (let i = 0; i < polygon.vertices.length; i++) {
+                // 跳过缺口边
+                if (gapChangeEnabled && i === polygon.fixedGapEdge) continue;
+                
+                const nextIndex = (i + 1) % polygon.vertices.length;
+                const edge = {
+                    start: polygon.vertices[i],
+                    end: polygon.vertices[nextIndex]
+                };
+                
+                // 动态安全边距：旋转时20px，静止时6px
+                const safeMargin = polygon.rotationSpeed !== 0 ? 20 : 6;
+                
+                // 计算点到线段距离
+                const distance = pointToLineDistance(ball.pos, edge);
+                if (distance < ball.radius + safeMargin) {
+                    // 碰撞响应 (简化版: 反射速度)
+                    const edgeVector = new Vector2(edge.end.x - edge.start.x, edge.end.y - edge.start.y);
+                    const normal = new Vector2(-edgeVector.y, edgeVector.x).normalize();
+                    
+                    // 计算入射速度在法线方向的投影
+                    const dot = ball.vel.x * normal.x + ball.vel.y * normal.y;
+                    
+                    // 反射速度
+                    ball.vel.x -= 2 * dot * normal.x;
+                    ball.vel.y -= 2 * dot * normal.y;
+                    
+                    // 处理碰撞效果
+                    handleCollisionEffect(ball);
+                }
+            }
+        }
+    }
+}
+
+// 计算点到线段距离
+function pointToLineDistance(point, line) {
+    const lineVec = new Vector2(line.end.x - line.start.x, line.end.y - line.start.y);
+    const pointVec = new Vector2(point.x - line.start.x, point.y - line.start.y);
+    
+    const lineLength = lineVec.magnitude();
+    const lineUnitVec = lineVec.clone().normalize();
+    
+    // 计算投影长度
+    const projectionLength = pointVec.x * lineUnitVec.x + pointVec.y * lineUnitVec.y;
+    
+    let closestPoint;
+    if (projectionLength < 0) {
+        closestPoint = line.start;
+    } else if (projectionLength > lineLength) {
+        closestPoint = line.end;
+    } else {
+        closestPoint = new Vector2(
+            line.start.x + lineUnitVec.x * projectionLength,
+            line.start.y + lineUnitVec.y * projectionLength
+        );
+    }
+    
+    // 返回点到最近点的距离
+    return Math.sqrt(
+        Math.pow(point.x - closestPoint.x, 2) + 
+        Math.pow(point.y - closestPoint.y, 2)
+    );
+}
+
+// 处理碰撞效果
+function handleCollisionEffect(ball) {
+    // 碰撞变色
+    if (colorChangeEnabled) {
+        ball.color = getRandomColor();
+    }
+    
+    // 不再更新多边形缺口（保持固定）
+}
+
+// ===== 初始化函数 =====
+function init() {
+    // 获取画布元素
+    canvas = document.getElementById('mainCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // 初始调整画布大小
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // 初始化小球
+    initBalls();
+    
+    // 绑定事件监听器
+    setupEventListeners();
+    
+    // 开始动画循环
+    startAnimation();
+}
+
+// 调整画布大小
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // 如果有多边形，重新计算位置
+    if (polygon) {
+        polygon.center = new Vector2(canvas.width/2, canvas.height/2);
+        polygon.radius = Math.min(canvas.width, canvas.height) * 0.8 / 2;
+        polygon.vertices = polygon.calculateVertices();
+    }
+}
+
+// 初始化小球
+function initBalls() {
+    balls.length = 0; // 清空数组
+    
+    // 生成不重叠的小球
+    for (let i = 0; i < config.ballCount; i++) {
+        let validPosition = false;
+        let attempts = 0;
+        let x, y;
+        
+        while (!validPosition && attempts < 100) {
+            // 在多边形内生成或全屏生成
+            if (polygon && polygon.vertices.length > 0) {
+                // TODO: 多边形内随机点生成（简化版）
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * polygon.radius * 0.8;
+                x = polygon.center.x + radius * Math.cos(angle);
+                y = polygon.center.y + radius * Math.sin(angle);
+            } else {
+                x = Math.random() * (canvas.width - config.ballSize * 2) + config.ballSize;
+                y = Math.random() * (canvas.height - config.ballSize * 2) + config.ballSize;
+            }
+            
+            // 检查是否重叠
+            validPosition = true;
+            for (const ball of balls) {
+                const dx = ball.pos.x - x;
+                const dy = ball.pos.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < ball.radius + config.ballSize) {
+                    validPosition = false;
+                    break;
+                }
+            }
+            
+            attempts++;
+        }
+        
+        if (validPosition) {
+            balls.push(new Ball(x, y, config.ballSize / 2));
+        }
+    }
+}
+
+// 设置事件监听器
+function setupEventListeners() {
+    // 多边形边数滑块
+    const sidesSlider = document.getElementById('sidesSlider');
+    const sidesValue = document.getElementById('sidesValue');
+    
+    sidesSlider.addEventListener('input', () => {
+        const sides = parseInt(sidesSlider.value) * 2; // 0=无多边形, 2-16
+        sidesValue.textContent = sides === 0 ? '无多边形' : `${sides}边`;
+        
+        if (sides > 0) {
+            // 创建新多边形并随机生成缺口索引
+            polygon = new Polygon(sides);
+        } else {
+            polygon = null;
+        }
+        
+        // 重新生成小球
+        initBalls();
+    });
+    
+    // 旋转速度滑块
+    const rotationSlider = document.getElementById('rotationSlider');
+    const rotationValue = document.getElementById('rotationValue');
+    
+    rotationSlider.addEventListener('input', () => {
+        const speed = parseInt(rotationSlider.value);
+        rotationValue.textContent = speed;
+        
+        if (polygon) {
+            polygon.rotationSpeed = speed * Math.PI / 180; // 转弧度/秒
+        }
+    });
+    
+    // 复选框状态
+    document.getElementById('gravityToggle').addEventListener('change', (e) => {
+        gravityEnabled = e.target.checked;
+    });
+    
+    document.getElementById('trailToggle').addEventListener('change', (e) => {
+        trailEnabled = e.target.checked;
+    });
+    
+    document.getElementById('colorChangeToggle').addEventListener('change', (e) => {
+        colorChangeEnabled = e.target.checked;
+    });
+    
+    document.getElementById('gapChangeToggle').addEventListener('change', (e) => {
+        gapChangeEnabled = e.target.checked;
+    });
+    
+    // 可折叠菜单参数
+    document.getElementById('ballCount').addEventListener('change', (e) => {
+        config.ballCount = parseInt(e.target.value);
+        initBalls();
+    });
+    
+    document.getElementById('ballSize').addEventListener('input', (e) => {
+        config.ballSize = parseInt(e.target.value);
+        document.getElementById('ballSizeValue').textContent = config.ballSize;
+        initBalls();
+    });
+    
+    document.getElementById('ballSpeed').addEventListener('input', (e) => {
+        config.ballSpeed = parseInt(e.target.value);
+        document.getElementById('ballSpeedValue').textContent = config.ballSpeed;
+        
+        // 更新小球速度
+        for (const ball of balls) {
+            ball.vel.normalize().scale(config.ballSpeed);
+        }
+    });
+    
+    document.getElementById('gravityValue').addEventListener('input', (e) => {
+        config.gravityValue = parseInt(e.target.value);
+        document.getElementById('gravityValueValue').textContent = config.gravityValue;
+    });
+    
+    document.getElementById('trailLength').addEventListener('input', (e) => {
+        config.trailLength = parseInt(e.target.value);
+        document.getElementById('trailLengthValue').textContent = config.trailLength;
+    });
+}
+
+// ===== 动画循环 =====
+function startAnimation() {
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(animate);
+}
+
+function animate(timestamp) {
+    // 计算时间增量 (秒)
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+    
+    // 清空画布
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 更新多边形
+    if (polygon) {
+        polygon.update(dt);
+        polygon.draw();
+    }
+    
+    // 更新小球
+    for (const ball of balls) {
+        ball.update(dt);
+    }
+    
+    // 碰撞检测
+    checkCollisions();
+    
+    // 绘制小球
+    for (const ball of balls) {
+        ball.draw();
+    }
+    
+    // 继续动画循环
+    animationId = requestAnimationFrame(animate);
+}
+
+// ===== 启动应用 =====
+window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
