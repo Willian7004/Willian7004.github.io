@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用three.js写一个程序，实现以下功能：
+1. 需要时使用cdn导入库文件。
+2. 创建天空球，在菜单中选择“日出”、“中午”和“夜晚”分别用于创建对应的天空球和环境光。选中“夜晚”时创建星空效果。创建边长为64的颜色为#4c566a的平面。使用鼠标拖动旋转场景。
+3. 输入1到9的数字分别设置长方体的长、宽、高，连续输入数字时设置下一个值。设置后长方体跟随鼠标移动并堆叠在平面或其它长方体上方，以半透明显示预览，在平面上显示栅格并确保长方体坐标为整数。鼠标点击时确定放置。已设置尺寸时关闭使用鼠标拖动旋转场景的功能，多次点击时连续放置当前尺寸的长方体，按右键清除尺寸设置并恢复使用鼠标拖动旋转场景功能。
+4. 按q、w、e、r、t键分别把长方体颜色设为#bf616a、#d08770、#ebcb8b、#a3be8c或、#b48ead。未设置尺寸时点击鼠标左键删除选中的长方体。在菜单添加一个复选框，选中时改为双击删除长方体。
+5. 使用json记录场景数据，创建下载和上传场景的功能。
+6. 开启PBR渲染和阴影渲染，使用塑料材质。
+
+注：高小于长和宽且为奇数的长方体存在额外高度偏移，多次修复未解决。星空场景清除问题未解决。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js 场景编辑器</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    font-family: 'Microsoft YaHei', sans-serif;
+}
+
+#scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+#menu button, #upload {
+    padding: 5px 10px;
+    background: #4c566a;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#menu button:hover {
+    background: #3b4252;
+}
+
+#status {
+    margin-left: 10px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="menu">
+        <button id="sunrise">日出</button>
+        <button id="noon">中午</button>
+        <button id="night">夜晚</button>
+        <button id="download">下载场景</button>
+        <input type="file" id="upload" accept=".json">
+        <div>
+            <label>
+                <input type="checkbox" id="doubleClickDelete"> 双击删除
+            </label>
+        </div>
+        <div id="status">
+            尺寸: <span id="size-display">1x1x1</span> | 
+            颜色: <span id="color-display" style="background:#a3be8c;width:15px;height:15px;display:inline-block;border:1px solid #000;"></span>
+            <button id="help-btn">帮助</button>
+        </div>
+        <div id="help-panel" style="display:none;position:absolute;top:60px;left:10px;background:rgba(255,255,255,0.9);padding:10px;border-radius:5px;z-index:1000;">
+            <h4>操作说明</h4>
+            <ul>
+                <li>1-9: 设置长方体尺寸</li>
+                <li>Q/W/E/R/T: 设置颜色</li>
+                <li>左键: 放置/删除长方体</li>
+                <li>右键: 取消尺寸设置</li>
+                <li>鼠标拖动: 旋转场景</li>
+                <li>复选框: 选中时需双击删除</li>
+            </ul>
+        </div>
+    </div>
+    <canvas id="scene"></canvas>
+    <script>
+// 初始化场景
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 10, 15);
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+// 启用阴影
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+// 初始化控制器
+let controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enabled = true;
+
+// 状态管理
+let state = {
+    environment: 'noon',
+    boxSize: [1, 1, 1],
+    boxColor: '#a3be8c',
+    isSettingSize: false,
+    sizeInputStep: 0,
+    previewBox: null,
+    boxes: [],
+    doubleClickDeleteEnabled: false // 双击删除模式
+};
+
+// 初始化灯光
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+scene.add(ambientLight);
+
+// 添加方向光
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(5, 20, 7.5);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 2048; // 提高阴影分辨率
+directionalLight.shadow.mapSize.height = 2048;
+
+// 设置阴影相机参数
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 100;
+directionalLight.shadow.camera.left = -50;
+directionalLight.shadow.camera.right = 50;
+directionalLight.shadow.camera.top = 50;
+directionalLight.shadow.camera.bottom = -50;
+
+scene.add(directionalLight);
+
+// 添加环境光作为补充光源
+const fillLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(fillLight);
+
+// 创建地面
+const planeGeometry = new THREE.PlaneGeometry(64, 64);
+const planeMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x4c566a, 
+    side: THREE.DoubleSide,
+    roughness: 0.8,
+    metalness: 0.2
+});
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.rotation.x = -Math.PI / 2;
+plane.receiveShadow = true; // 接收阴影
+scene.add(plane);
+
+// 添加栅格辅助
+const gridHelper = new THREE.GridHelper(64, 64, 0xffffff, 0x888888);
+gridHelper.position.y = 0.01; // 稍微高于平面避免z-fighting
+gridHelper.visible = false; // 初始隐藏
+scene.add(gridHelper);
+
+// 初始化天空球
+let skySphere = null;
+createSky('noon');
+
+// 动画循环
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    controls.update();
+}
+animate();
+
+// 窗口大小调整
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 创建天空球函数
+function createSky(time) {
+    state.environment = time;
+    
+    // 移除旧的天空球和星空
+    if (skySphere) {
+        scene.remove(skySphere);
+        skySphere = null;
+    }
+    
+    // 清除星空（如果存在）
+    if (state.starField) {
+        scene.remove(state.starField);
+        state.starField = null;
+    }
+    
+    // 创建新天空球
+    const skyGeometry = new THREE.SphereGeometry(500, 60, 60);
+    
+    // 创建程序化天空纹理
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    
+    if (time === 'sunrise') {
+        // 日出：橙色到黄色渐变
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#ff7b00');
+        gradient.addColorStop(0.5, '#ffb300');
+        gradient.addColorStop(1, '#ffdb4d');
+        ctx.fillStyle = gradient;
+    } else if (time === 'noon') {
+        // 中午：蓝色渐变
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#4fa3f7');
+        gradient.addColorStop(0.5, '#87ceeb');
+        gradient.addColorStop(1, '#b3e0ff');
+        ctx.fillStyle = gradient;
+    } else if (time === 'night') {
+        // 夜晚：深蓝色渐变
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#0a192f');
+        gradient.addColorStop(1, '#1a365d');
+        ctx.fillStyle = gradient;
+    }
+    
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const texture = new THREE.CanvasTexture(canvas);
+    
+    const skyMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        side: THREE.BackSide
+    });
+    
+    skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
+    scene.add(skySphere);
+    
+    // 更新环境光强度
+    if (time === 'sunrise') ambientLight.intensity = 0.8;
+    else if (time === 'noon') ambientLight.intensity = 1.0;
+    else if (time === 'night') ambientLight.intensity = 0.3;
+    
+    // 如果是夜晚，创建星空
+    if (time === 'night') createStars();
+}
+
+// 创建星空函数
+function createStars() {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 1.5,
+        transparent: true
+    });
+    
+    // 生成100000个随机星点
+    const starsVertices = [];
+    for (let i = 0; i < 100000; i++) {
+        const x = (Math.random() - 0.5) * 2000;
+        const y = (Math.random() - 0.5) * 2000;
+        const z = (Math.random() - 0.5) * 2000;
+        
+        // 确保星星在天空球内
+        const distance = Math.sqrt(x*x + y*y + z*z);
+        if (distance < 450 && distance > 400) {
+            starsVertices.push(x, y, z);
+        }
+    }
+    
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starField);
+}
+
+// 更新状态显示
+function updateStatusDisplay() {
+    document.getElementById('size-display').textContent = 
+        `${state.boxSize[0]}x${state.boxSize[1]}x${state.boxSize[2]}`;
+    document.getElementById('color-display').style.background = state.boxColor;
+}
+
+// 创建预览长方体
+function createPreviewBox() {
+    if (state.previewBox) {
+        scene.remove(state.previewBox);
+    }
+    
+    const [l, w, h] = state.boxSize;
+    // 修正高度方向垂直于平面
+    const geometry = new THREE.BoxGeometry(l, h, w);
+    const material = new THREE.MeshStandardMaterial({
+        color: state.boxColor,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.5,
+        metalness: 0.5
+    });
+    
+    state.previewBox = new THREE.Mesh(geometry, material);
+    state.previewBox.castShadow = true; // 投射阴影
+    scene.add(state.previewBox);
+    return state.previewBox;
+}
+
+// 放置长方体
+function placeBox(position) {
+    const [l, w, h] = state.boxSize;
+    // 修正高度方向垂直于平面
+    const geometry = new THREE.BoxGeometry(l, h, w);
+    const material = new THREE.MeshStandardMaterial({
+        color: state.boxColor,
+        roughness: 0.5,
+        metalness: 0.5
+    });
+    
+    const box = new THREE.Mesh(geometry, material);
+    // 对奇数边长应用0.5偏移（确保中心在网格交点）
+    const adjustX = l % 2 === 1 ? 0.5 : 0;
+    const adjustZ = w % 2 === 1 ? 0.5 : 0;
+    
+    box.position.set(
+        Math.round(position.x) + adjustX, 
+        position.y, 
+        Math.round(position.z) + adjustZ
+    );
+    box.castShadow = true; // 投射阴影
+    box.receiveShadow = true; // 接收阴影
+    scene.add(box);
+    state.boxes.push(box);
+    
+    // 保持预览框，继续放置相同尺寸的长方体
+    createPreviewBox();
+}
+
+// 删除选中长方体
+function deleteBox(box) {
+    scene.remove(box);
+    const index = state.boxes.indexOf(box);
+    if (index !== -1) {
+        state.boxes.splice(index, 1);
+    }
+}
+
+// 导出场景数据
+function exportScene() {
+    const sceneData = {
+        environment: state.environment,
+        camera: {
+            position: camera.position.toArray(),
+            rotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z]
+        },
+        objects: state.boxes.map(box => ({
+            position: box.position.toArray(),
+            size: [box.geometry.parameters.width, box.geometry.parameters.height, box.geometry.parameters.depth],
+            color: '#' + new THREE.Color(box.material.color).getHexString()
+        }))
+    };
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sceneData));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "scene.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    document.body.removeChild(downloadAnchor);
+}
+
+// 导入场景数据
+function importScene(json) {
+    // 清除现有长方体
+    state.boxes.forEach(box => scene.remove(box));
+    state.boxes = [];
+    
+    // 设置环境
+    createSky(json.environment);
+    
+    // 设置相机
+    camera.position.set(...json.camera.position);
+    camera.rotation.set(...json.camera.rotation);
+    
+    // 创建导入的长方体
+    json.objects.forEach(obj => {
+        const geometry = new THREE.BoxGeometry(...obj.size);
+        const material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(obj.color),
+            roughness: 0.5,
+            metalness: 0.5
+        });
+        const box = new THREE.Mesh(geometry, material);
+        box.position.set(...obj.position);
+        box.castShadow = true;
+        box.receiveShadow = true;
+        scene.add(box);
+        state.boxes.push(box);
+    });
+}
+
+// 事件监听
+document.getElementById('sunrise').addEventListener('click', () => createSky('sunrise'));
+document.getElementById('noon').addEventListener('click', () => createSky('noon'));
+document.getElementById('night').addEventListener('click', () => createSky('night'));
+document.getElementById('download').addEventListener('click', exportScene);
+document.getElementById('upload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => importScene(JSON.parse(event.target.result));
+        reader.readAsText(file);
+    }
+});
+
+// 帮助按钮事件
+document.getElementById('help-btn').addEventListener('click', () => {
+    const helpPanel = document.getElementById('help-panel');
+    helpPanel.style.display = helpPanel.style.display === 'none' ? 'block' : 'none';
+});
+
+// 键盘事件
+document.addEventListener('keydown', (e) => {
+    // 设置颜色
+    const colorMap = {
+        'q': '#bf616a', // 红色
+        'w': '#d08770', // 橙色
+        'e': '#ebcb8b', // 黄色
+        'r': '#a3be8c', // 绿色
+        't': '#b48ead'  // 紫色
+    };
+    
+    if (colorMap[e.key]) {
+        state.boxColor = colorMap[e.key];
+        if (state.previewBox) {
+            state.previewBox.material.color.set(state.boxColor);
+        }
+        updateStatusDisplay(); // 更新颜色显示
+        return;
+    }
+    
+    // 设置尺寸 (1-9)
+    if (e.key >= '1' && e.key <= '9') {
+        const value = parseInt(e.key);
+        state.boxSize[state.sizeInputStep] = value;
+        
+        // 更新输入步骤
+        state.sizeInputStep = (state.sizeInputStep + 1) % 3;
+        
+        // 创建预览长方体
+        if (!state.previewBox) {
+            createPreviewBox();
+        } else {
+            // 更新预览长方体尺寸
+            scene.remove(state.previewBox);
+            createPreviewBox();
+        }
+        
+        // 更新尺寸显示
+        updateStatusDisplay();
+        
+        // 禁用场景旋转并显示栅格
+        state.isSettingSize = true;
+        controls.enabled = false;
+        gridHelper.visible = true; // 显示栅格
+    }
+});
+
+// 鼠标事件
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// 获取堆叠高度
+function getStackHeight(x, z) {
+    let maxY = 0;
+    const gridX = Math.floor(x);
+    const gridZ = Math.floor(z);
+    
+    state.boxes.forEach(box => {
+        const boxSizeX = box.geometry.parameters.width;
+        const boxSizeZ = box.geometry.parameters.depth;
+        
+        // 计算长方体覆盖的网格范围
+        const minX = Math.floor(box.position.x - boxSizeX/2);
+        const maxX = Math.floor(box.position.x + boxSizeX/2);
+        const minZ = Math.floor(box.position.z - boxSizeZ/2);
+        const maxZ = Math.floor(box.position.z + boxSizeZ/2);
+        
+        // 检查目标网格是否被当前长方体覆盖
+        if (gridX >= minX && gridX <= maxX && gridZ >= minZ && gridZ <= maxZ) {
+            const height = box.geometry.parameters.height;
+            const topY = box.position.y + height/2;
+            if (topY > maxY) maxY = topY;
+        }
+    });
+    return maxY;
+}
+
+renderer.domElement.addEventListener('click', (e) => {
+    // 计算鼠标位置归一化坐标
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, camera);
+    
+    if (state.isSettingSize && state.previewBox) {
+        // 放置长方体
+        const intersects = raycaster.intersectObject(plane);
+        if (intersects.length > 0) {
+            const point = intersects[0].point;
+            // 坐标取整
+            const x = Math.round(point.x);
+            const z = Math.round(point.z);
+            
+            // 计算堆叠高度
+            const stackHeight = getStackHeight(x, z);
+            
+            // 放置位置
+            const y = stackHeight > 0 ? stackHeight + state.boxSize[1]/2 : state.boxSize[1]/2;
+            
+            placeBox(new THREE.Vector3(x, y, z));
+        }
+    } else if (!state.doubleClickDeleteEnabled) {
+        // 只有在非双击删除模式下才执行单击删除
+        const intersects = raycaster.intersectObjects(state.boxes);
+        if (intersects.length > 0) {
+            deleteBox(intersects[0].object);
+        }
+    }
+});
+
+// 双击事件：用于双击删除模式
+renderer.domElement.addEventListener('dblclick', (e) => {
+    // 只有在双击删除模式下才执行双击删除
+    if (!state.doubleClickDeleteEnabled) return;
+    
+    // 计算鼠标位置归一化坐标
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, camera);
+    
+    const intersects = raycaster.intersectObjects(state.boxes);
+    if (intersects.length > 0) {
+        deleteBox(intersects[0].object);
+    }
+});
+
+// 监听复选框状态变化
+document.getElementById('doubleClickDelete').addEventListener('change', (e) => {
+    state.doubleClickDeleteEnabled = e.target.checked;
+});
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+    if (!state.isSettingSize || !state.previewBox) return;
+    
+    // 计算鼠标位置归一化坐标
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(plane);
+    
+    if (intersects.length > 0) {
+        const point = intersects[0].point;
+        // 坐标取整
+        const x = Math.round(point.x);
+        const z = Math.round(point.z);
+        
+        // 计算堆叠高度
+        const stackHeight = getStackHeight(x, z);
+        
+        // 预览位置
+        // 对奇数边长应用0.5偏移（确保中心在网格交点）
+        const adjustX = state.boxSize[0] % 2 === 1 ? 0.5 : 0;
+        const adjustZ = state.boxSize[2] % 2 === 1 ? 0.5 : 0;
+        
+        const y = stackHeight > 0 ? stackHeight + state.boxSize[1]/2 : state.boxSize[1]/2;
+        
+        state.previewBox.position.set(
+            x + adjustX, 
+            y, 
+            z + adjustZ
+        );
+    }
+});
+
+renderer.domElement.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (state.isSettingSize) {
+        // 清除尺寸设置
+        state.isSettingSize = false;
+        state.sizeInputStep = 0;
+        
+        // 移除预览长方体
+        if (state.previewBox) {
+            scene.remove(state.previewBox);
+            state.previewBox = null;
+        }
+        
+        // 恢复场景旋转并隐藏栅格
+        controls.enabled = true;
+        gridHelper.visible = false; // 隐藏栅格
+    }
+});
+
+// 初始化状态显示
+updateStatusDisplay();
+    </script>
+</body>
+</html>
