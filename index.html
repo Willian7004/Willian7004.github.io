@@ -13,17 +13,18 @@
     <title>Willian7004的HTML项目</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
-            --tool-color: #8fbcbb;
-            --d2-color: #88c0d0;
-            --d3-color: #81a1c1;
-            --readme-color: #5e81ac;
-            --card-bg: #2e3440;
-            --page-bg: #3b4252;
-            --text-color: #e5e9f0;
-            --link-color: #ebcb8b;
-            --link-hover: #a3be8c;
-        }
+:root {
+    --tool-color: #8fbcbb;
+    --d2-color: #88c0d0;
+    --d3-color: #81a1c1;
+    --article-color: #5e81ac;
+    --readme-color: #d08770;
+    --card-bg: #2e3440;
+    --page-bg: #3b4252;
+    --text-color: #e5e9f0;
+    --link-color: #ebcb8b;
+    --link-hover: #a3be8c;
+}
         * {
             box-sizing: border-box;
             margin: 0;
@@ -81,10 +82,11 @@
             overflow-y: auto;
             flex-grow: 1;
         }
-        .card.tool .card-header { background-color: var(--tool-color); }
-        .card.d2 .card-header { background-color: var(--d2-color); }
-        .card.d3 .card-header { background-color: var(--d3-color); }
-        .card.readme .card-header { background-color: var(--readme-color); }
+.card.tool .card-header { background-color: var(--tool-color); }
+.card.d2 .card-header { background-color: var(--d2-color); }
+.card.d3 .card-header { background-color: var(--d3-color); }
+.card.article .card-header { background-color: var(--article-color); }
+.card.readme .card-header { background-color: var(--readme-color); }
         
         /* 文件列表链接样式 */
         .card-content a {
@@ -122,6 +124,10 @@
             <div class="card-header">3D</div>
             <div class="card-content" id="d3-content"></div>
         </div>
+        <div class="card article">
+            <div class="card-header">文章</div>
+            <div class="card-content" id="article-content"></div>
+        </div>
         <div class="card readme">
             <div class="card-header">说明</div>
             <div class="card-content" id="readme-content"></div>
@@ -136,6 +142,7 @@
                 renderList('tool-content', data['工具']);
                 renderList('d2-content', data['2D']);
                 renderList('d3-content', data['3D']);
+                renderList('article-content', data['文章']);
             })
             .catch(error => {
                 console.error('加载文件列表失败:', error);

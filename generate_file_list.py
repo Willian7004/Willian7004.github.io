@@ -22,7 +22,7 @@ def generate_file_list(dirs):
     return data
 
 if __name__ == "__main__":
-    target_dirs = ["工具", "2D", "3D"]
+    target_dirs = ["工具", "2D", "3D", "文章"]
     result = generate_file_list(target_dirs)
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)

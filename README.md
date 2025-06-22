@@ -1,4 +1,4 @@
-本项目收录了我的比较新的HTML项目，目前使用Deepseek R1 0528进行编写。项目主页也使用这一模型编写，使用了[Nord](https://github.com/nordtheme/nord)配色，提示词位于对应文件开头的多行注释。
+本项目收录了我的比较新的HTML项目，目前使用Deepseek R1 0528进行编写。项目主页也使用这一模型编写，使用了[Nord](https://github.com/nordtheme/nord)配色，提示词位于对应文件开头的多行注释。“文章”板块目前只包含使用豆包深入研究功能生成的网页。
 
 为了控制容量以及避免功能冗杂，博客类项目继续在[Streamlit Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud)部署，相应项目如下：
 
