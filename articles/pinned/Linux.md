@@ -133,19 +133,7 @@ services:
 （首次启动）`sudo chmod 777 -R /var/lib/docker/volumes/komga-config`\
 `sudo docker compose -p komga up`
 
-**5.FreshRSS，用于在浏览器使用多设备同步的RSS订阅**
-```bash
-docker run -d --restart unless-stopped --log-opt max-size=10m \
-  -p 8080:80 \
-  -e TZ=Asia/Shanghai \
-  -e 'CRON_MIN=1,31' \
-  -v freshrss_data:/var/www/FreshRSS/data \
-  -v freshrss_extensions:/var/www/FreshRSS/extensions \
-  --name freshrss \
-  freshrss/freshrss
-```
-
-**6.WatchOver，用于自动更新Docker镜像：**
+**5.Watchtowver，用于自动更新Docker镜像：**
 ```bash
 docker run -d \
     --name watchtower --restart unless-stopped \
@@ -153,7 +141,7 @@ docker run -d \
     containrrr/watchtower --cleanup
 ```
 
-**7.OpenWebUI，用于LLM对话，搜索和代码执行功能有优势：**
+**6.OpenWebUI，用于LLM对话，搜索和代码执行功能有优势：**
 ```bash
 docker run -d -p 3000:8080 \
 --add-host=host.docker.internal:host-gateway \

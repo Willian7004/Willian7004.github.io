@@ -2,7 +2,7 @@
 
 这是我把博客正式迁到web的项目，只保留原博客项目的部分内容，具体包含[New Blog](https://willian7004-new-blog.streamlit.app/)的动态文章（在本项目为置顶文章）以及从[Media Blog](https://willian7004-media-blog.streamlit.app/)选取背景（横屏背景使用Hidream i1 full生成，竖屏背景使用Cosmos Predict2生成），以上两个项目部署在[Streamlit Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud)，后续也会保留。
 
-在本页面点击右上角"相册模式"按钮可进入背景浏览模式，通过滑块选择具体的背景，背景根据横竖屏自动切换，点击另外两个卡片在新标签页打开对应页面。
+在本页面点击右上角"相册模式"按钮可进入背景浏览模式，通过滑块选择具体的背景，背景根据横竖屏自动切换，点击另外两个卡片在新标签页打开对应页面。竖屏使用侧边栏可能默认折叠，要在展开后选择文章。
 
 本项目文章存储在articles文件夹，其中置顶文章在pinned文件夹。网页存储在pages文件夹。添加或移除这部分文件后使用generate.py生成列表。背景存储在backgrounds文件夹。
 
