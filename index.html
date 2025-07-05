@@ -1,186 +1,48 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
 <!--
-根据以下要求编写GitHub Pages：
-1. 在页面上创建卡片，标题分别为“工具”、“2D”、“3D”和“说明”。在 宽度>高度 的窗口中横向排列，在 宽度<高度 的窗口中纵向排列。
-2. 在前三个卡片中显示对应名称的文件夹中的网页名称（不含扩展名），按修改时间从新到旧排序，点击时在新标签页打开相应网页的内容，超出卡片高度时设为可滚动。在需要时创建python程序生成列表。引入合适的库在“说明”卡片中显示当前目录下 README.md 文件的内容。
-3. 卡片横向排列时，高度设为窗口高度的95%，纵向排列时布局总高度设为窗口高度的95%。
-4. 卡片顶部配色分别使用#8fbcbb、#88c0d0、#81a1c1、#5e81ac，卡片背景颜色设为#2e3440，窗口背景颜色设为#3b4252。文字颜色设为#e5e9f0，链接颜色设为#4c566a，鼠标移到链接上时链接颜色改为#eceff4，不标记已范围链接。
--->    
+编写静态网页，实现以下功能：
+1. 需要通过json记录目录中的文件时，编写python程序用于创建json。
+2. 如果页面 宽度＞高度随机选择backgrounds文件夹中horizontal文件夹中的一张图片作为背景，反之选择vertical文件夹中的图片。
+3. 在首页创建3个卡片，卡片使用高斯模糊，左侧两个上下排列的卡片分别显示article-card.md以及pages-card.md中的内容，点击卡片时分别用于在新标签页打开“文章”页面和“网页”页面。右侧“说明”卡片显示README.md中的内容。如果页面 宽度＜高度 则改为所有卡片上下排列且“说明”卡片在下半部分。
+4. 在首页右上角创建一个按钮，用于切换到“相册模式”，切换后隐藏卡片并显示一个滑块用于切换当前背景文件夹中的其它图片作为背景，滑块数字与背景文件名中的数字对应。再次点击按钮后退出“相册模式”。
+5. “文章”和“网页”页面均使用带高斯模糊的卡片式侧边栏，侧边栏可单独滚动。“文章”页面侧边栏按articles文件夹中的文件夹显示分组，其中pinned在顶部，其它文件夹按年份+月份命名，按对应的月份从新到旧排序。“网页”页面侧边栏按pages文件夹中的文件夹创建分组。对于分组内的文件，按创建时间从新到旧排序。可以通过拖动侧边栏调整大小，但如果页面 宽度<高度 ，侧边栏改为覆盖在页面上并显示折叠按钮。
+6. articles文件夹的子文件夹包含 .md 文件，在侧边栏选中文件时在页面上的卡片显示文件内容，卡片背景使用高斯模糊。pages文件夹的子文件夹包含html文件，选中文件后在页面上创建iframe显示对应html文件的内容。
+
+注：本项目生成后对css进行了大幅度手动修改。
+-->
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Willian7004的HTML项目</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-:root {
-    --tool-color: #8fbcbb;
-    --d2-color: #88c0d0;
-    --d3-color: #81a1c1;
-    --article-color: #5e81ac;
-    --readme-color: #d08770;
-    --card-bg: #2e3440;
-    --page-bg: #3b4252;
-    --text-color: #e5e9f0;
-    --link-color: #ebcb8b;
-    --link-hover: #a3be8c;
-}
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background-color: var(--page-bg);
-            color: var(--text-color);
-            font-family: sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-        .container {
-            display: flex;
-            width: 100%;
-            height: 95vh;
-        }
-        /* 横向布局 (宽>高) */
-        @media (min-aspect-ratio: 1/1) {
-            .container {
-                flex-direction: row;
-            }
-            .card {
-                height: 95vh;
-            }
-        }
-        /* 纵向布局 (宽<高) */
-        @media (max-aspect-ratio: 1/1) {
-            .container {
-                flex-direction: column;
-            }
-            .card {
-                width: 100%;
-            }
-        }
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            margin: 5px;
-            flex: 1;
-        }
-        .card-header {
-            padding: 15px;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        .card-content {
-            padding: 15px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-.card.tool .card-header { background-color: var(--tool-color); }
-.card.d2 .card-header { background-color: var(--d2-color); }
-.card.d3 .card-header { background-color: var(--d3-color); }
-.card.article .card-header { background-color: var(--article-color); }
-.card.readme .card-header { background-color: var(--readme-color); }
-        
-        /* 文件列表链接样式 */
-        .card-content a {
-            color: var(--link-color);
-            text-decoration: none;
-            display: block;
-            padding: 5px 0;
-            transition: color 0.3s;
-        }
-        a:hover { 
-            color: var(--link-hover);
-        }
-        /* README链接样式 */
-        #readme-content a {
-            display: inline-block;
-            padding: 0 3px;
-        }
-        a:hover { 
-            color: var(--link-hover);
-        }
-
-    </style>
+    <title>Willian7004的博客</title>
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/cards.css">
 </head>
 <body>
-    <div class="container">
-        <div class="card tool">
-            <div class="card-header">工具</div>
-            <div class="card-content" id="tool-content"></div>
+    <div id="background-container"></div>
+    
+    <div class="content-wrapper">
+        <button id="gallery-toggle" class="floating-button">相册模式</button>
+        
+        <div class="cards-container">
+            <div class="card-column left-column">
+                <div class="card article-card" data-md="article-card.md"></div>
+                <div class="card pages-card" data-md="pages-card.md"></div>
+            </div>
+            <div class="card-column right-column">
+                <div class="card info-card" data-md="README.md"></div>
+            </div>
         </div>
-        <div class="card d2">
-            <div class="card-header">2D</div>
-            <div class="card-content" id="d2-content"></div>
-        </div>
-        <div class="card d3">
-            <div class="card-header">3D</div>
-            <div class="card-content" id="d3-content"></div>
-        </div>
-        <div class="card article">
-            <div class="card-header">文章</div>
-            <div class="card-content" id="article-content"></div>
-        </div>
-        <div class="card readme">
-            <div class="card-header">说明</div>
-            <div class="card-content" id="readme-content"></div>
+        
+        <div id="gallery-controls" class="hidden">
+            <input type="range" id="bg-slider" min="1" max="100" value="1">
+            <div id="slider-value">1</div>
         </div>
     </div>
 
-    <script>
-        // 加载文件列表
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                renderList('tool-content', data['工具']);
-                renderList('d2-content', data['2D']);
-                renderList('d3-content', data['3D']);
-                renderList('article-content', data['文章']);
-            })
-            .catch(error => {
-                console.error('加载文件列表失败:', error);
-            });
-
-        // 渲染文件列表
-        function renderList(containerId, items) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            container.innerHTML = '';
-            items.forEach(item => {
-                const link = document.createElement('a');
-                link.href = item.path;
-                link.target = "_blank";
-                link.textContent = item.name;
-                container.appendChild(link);
-            });
-        }
-
-        // 渲染README.md
-        fetch('README.md')
-            .then(response => response.text())
-            .then(markdown => {
-                const readmeContainer = document.getElementById('readme-content');
-                if (readmeContainer) {
-                    readmeContainer.innerHTML = marked.parse(markdown);
-                    
-                    // 设置所有链接在新标签页打开
-                    const links = readmeContainer.querySelectorAll('a');
-                    links.forEach(link => {
-                        link.target = '_blank';
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('加载README失败:', error);
-            });
-    </script>
+    <script src="scripts/marked.min.js"></script>
+    <script src="scripts/background.js"></script>
+    <script src="scripts/gallery.js"></script>
+    <script src="scripts/cards.js"></script>
 </body>
 </html>

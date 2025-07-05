@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页浏览</title>
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/sidebar.css">
+</head>
+<body>
+    <div id="background-container"></div>
+    
+    <div class="content-wrapper">
+        <div class="sidebar" id="sidebar">
+            <button class="toggle-button">≡</button>
+            <div class="sidebar-content"></div>
+        </div>
+        <div class="main-content">
+            <iframe class="page-frame"></iframe>
+        </div>
+    </div>
+
+    <script src="scripts/background.js"></script>
+    <script src="scripts/sidebar.js"></script>
+</body>
+</html>

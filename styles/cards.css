@@ -1,0 +1,85 @@
+/* 卡片基础样式 */
+.card {
+    background: rgba(30, 30, 30, 0.7); /* 深色半透明背景 */
+    backdrop-filter: blur(var(--blur-intensity));
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: var(--card-spacing);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.cards-container {
+    display: flex;
+    gap: var(--card-spacing);
+    padding-top: 60px;
+}
+
+.card-column {
+    flex: 1;
+}
+
+.left-column {
+    flex-basis: 45%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-spacing);
+}
+
+.right-column {
+    flex: 0 0 50%; /* 精确控制宽度 */
+    max-height: 75vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    padding: 0px;
+    margin-left: 2%; /* 精确间距控制 */
+    position: relative;
+}
+
+/* 移动端优化 */
+@media (max-width: 767px) {
+    .card {
+        padding: 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .cards-container {
+        padding-top: 40px;
+        gap: 15px;
+    }
+    
+    .left-column,
+    .right-column {
+        flex: 1 0 100%;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .right-column {
+        max-height: 50vh;
+    }
+}
+
+/* 内容加载状态 */
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.markdown-content {
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+.markdown-content h1, 
+.markdown-content h2 {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.3em;
+}
