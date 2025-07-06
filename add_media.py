@@ -27,7 +27,7 @@ def get_media_html(media_path, rel_path):
                 if width > height:  # 横图不分列
                     return f'<img src="{github_path}" style="max-width:100%;height:auto;"/>'
                 else:  # 竖图分列显示
-                    return f'<img src="{github_path}" style="width:{COLUMN_WIDTH}px;height:auto;display: flex; justify-content: center;"/>'
+                    return f'<img src="{github_path}" style="max-height:90%;display: flex; justify-content: center;"/>'
         except:
             return f'<img src="{github_path}" style="max-width:100%;height:auto;"/>'
     
