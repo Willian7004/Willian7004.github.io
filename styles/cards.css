@@ -7,6 +7,9 @@
     margin-bottom: var(--card-spacing);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    min-height: 30vh;
+    max-height: 69vh;
+    overflow-y: auto;
 }
 
 .card:hover {
@@ -32,8 +35,6 @@
 
 .right-column {
     flex: 0 0 50%; /* 精确控制宽度 */
-    max-height: 75vh;
-    overflow-y: auto;
     border-radius: 12px;
     padding: 0px;
     margin-left: 2%; /* 精确间距控制 */
@@ -46,6 +47,8 @@
         padding: 12px;
         width: 100%;
         box-sizing: border-box;
+        min-height: 15vh;
+        max-height: 40vh
     }
     
     .cards-container {
@@ -61,9 +64,6 @@
         margin-right: 0;
     }
     
-    .right-column {
-        max-height: 40vh;
-    }
 }
 
 /* 小屏幕手机优化 */
@@ -71,6 +71,7 @@
     .card {
         padding: 12px;
         border-radius: 8px;
+        max-height: 25vh;
     }
     
     .markdown-content {
@@ -83,9 +84,6 @@
     
     .file-item {
         padding: 6px 10px;
-    }
-    .right-column {
-        max-height: 25vh;
     }
 }
 

@@ -93,8 +93,8 @@
     
     .sidebar {
         width: 100%;
-        height: 25vh; /* 限制侧边栏高度为30% */
-        max-height: 25vh;
+        height: 30vh; /* 限制侧边栏高度为30% */
+        max-height: 30vh;
         position: relative;
         overflow-y: auto;
     }

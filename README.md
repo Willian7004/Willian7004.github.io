@@ -4,7 +4,11 @@
 
 在本页面点击右上角"相册模式"按钮可进入背景浏览模式，通过滑块选择具体的背景，背景根据横竖屏自动切换，点击另外两个卡片在新标签页打开对应页面。竖屏使用侧边栏可能默认折叠，要在展开后选择文章。
 
-本项目文章存储在articles文件夹，其中置顶文章在pinned文件夹。网页存储在pages文件夹，暂时只使用单文件。添加或移除这部分文件后使用generate.py生成列表。背景存储在backgrounds文件夹。由于跨仓库请求有速率限制，选择在本仓库files文件夹存储文章。
+资源方面，本项目文章存储在articles文件夹，其中置顶文章在pinned文件夹。网页存储在pages文件夹，暂时只使用单文件。添加或移除这部分文件后使用generate.py生成列表。背景存储在backgrounds文件夹。由于跨仓库请求有速率限制，选择在本仓库files文件夹存储文章。
+
+程序方面，index.html、articles.html和pages.html分别对应首页、文章和网页页面，css文件位于styles文件夹，js文件位于scripts文件夹。引入了marked.min.js用于markdown解析，也放到scripts文件夹。
+
+本项目使用Deepseek R1 0528编写，手动修改了不少css。在功能上，如果要实现更复杂的功能，还是要等下一代模型。
 
 更多项目见[博客项目中的相应文件](https://github.com/Willian7004/new-blog/blob/main/dynamic/%E6%88%91%E7%9A%84%E7%BC%96%E7%A8%8B%E6%8A%80%E6%9C%AF%E6%A0%88.md)。
 
