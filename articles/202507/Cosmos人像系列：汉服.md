@@ -42,3 +42,72 @@ Here are 30 distinct storyboard shots featuring a man in Han Chinese clothing wi
 28. **A man in Han Chinese clothing** sits by a glowing paper lantern illuminating a small, intimate pavilion nestled beside a stream at dusk.
 29. **A man in Han Chinese clothing** ascends a steep, narrow staircase inside a multi-storied pagoda, looking out through a latticed window.
 30. **A man in Han Chinese clothing** stands silently in a moonlit courtyard, gazing up at the silhouette of elaborate roof guardians against the night sky.
+
+<!-- AUTO-GENERATED MEDIA -->
+
+<style>
+/* 竖图组容器 - 大屏使用flex布局 */
+@media (min-width: 900px) {
+  .portrait-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  .portrait-item {
+    max-width: 450px;
+    flex: 1 1 auto;
+  }
+}
+
+/* 小屏竖图组布局 */
+@media (max-width: 899px) {
+  .portrait-group {
+    display: block;
+  }
+  .portrait-item {
+    margin-bottom: 20px;
+  }
+}
+
+/* 单独竖图容器 */
+.portrait-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+/* 横图和媒体容器 */
+.image-container, .media-container {
+  margin: 20px 0;
+}
+
+/* 确保图片在容器内正确缩放 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+</style>
+
+<div class="portrait-group">
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00122_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00125_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00129_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00134_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00135_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00137_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00140_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00142_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00149_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00151_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00158_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00161_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00163_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00166_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00167_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00170_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00173_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00176_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：汉服/ComfyUI_00179_.jpg" style="max-width:100%;"></div>
+</div>
