@@ -43,50 +43,76 @@ Here are 30 storyboard frames, each starting with "a teenage girl wearing kimono
 29. **Perspective Shot:** A teenage girl wearing kimono looks out from the second-story balcony of a machiya (townhouse) over its small, private courtyard garden.
 30. **Closing Shot:** A teenage girl wearing kimono bows slightly before a small stone Jizo statue nestled among ferns in a quiet garden corner.
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00001_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+<!-- AUTO-GENERATED MEDIA -->
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00006_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+<style>
+/* 竖图组容器 - 大屏使用flex布局 */
+@media (min-width: 900px) {
+  .portrait-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  .portrait-item {
+    max-width: 450px;
+    flex: 1 1 auto;
+  }
+}
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00007_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+/* 小屏竖图组布局 */
+@media (max-width: 899px) {
+  .portrait-group {
+    display: block;
+  }
+  .portrait-item {
+    margin-bottom: 20px;
+  }
+}
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00009_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+/* 单独竖图容器 */
+.portrait-container {
+  margin: 20px 0;
+  text-align: center;
+}
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00014_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+/* 横图和媒体容器 */
+.image-container, .media-container {
+  margin: 20px 0;
+}
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00020_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+/* 确保图片在容器内正确缩放 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+</style>
 
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00022_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00024_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00026_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00027_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00029_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00031_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00033_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00035_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00038_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00040_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00045_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00048_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00049_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00052_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00054_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00056_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00058_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
-
-<img src="https://github.com/Willian7004/Willian7004.github.io/raw/main/files/202507/Cosmos人像系列：和服/ComfyUI_00059_.jpg?raw=true" style="max-height:90%;display: flex; justify-content: center;"/>
+<div class="portrait-group">
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00001_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00006_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00007_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00009_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00014_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00020_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00022_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00024_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00026_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00027_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00029_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00031_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00033_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00035_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00038_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00040_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00045_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00048_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00049_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00052_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00054_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00056_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00058_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00059_.jpg" style="max-width:100%;"></div>
+</div>
