@@ -3,7 +3,7 @@
     background: rgba(30, 30, 30, 0.7); /* 深色半透明背景 */
     backdrop-filter: blur(var(--blur-intensity));
     border-radius: 12px;
-    padding: 24px;
+    padding: 16px;
     margin-bottom: var(--card-spacing);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
@@ -43,14 +43,14 @@
 /* 移动端优化 */
 @media (max-width: 767px) {
     .card {
-        padding: 16px;
+        padding: 12px;
         width: 100%;
         box-sizing: border-box;
     }
     
     .cards-container {
-        padding-top: 40px;
-        gap: 15px;
+        padding-top: 45px;
+        gap: 10px;
     }
     
     .left-column,
@@ -62,7 +62,7 @@
     }
     
     .right-column {
-        max-height: 50vh;
+        max-height: 40vh;
     }
 }
 
@@ -85,7 +85,7 @@
         padding: 6px 10px;
     }
     .right-column {
-        max-height: 30vh;
+        max-height: 25vh;
     }
 }
 

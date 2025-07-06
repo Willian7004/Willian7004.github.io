@@ -1,7 +1,7 @@
 .sidebar {
     position: relative;
     width: 300px;
-    height: 90%;
+    height: 88%;
     overflow-y: auto;
     background: rgba(30, 30, 30, 0.8);
     backdrop-filter: blur(8px);
@@ -38,7 +38,7 @@
 
 .content-wrapper {
     display: flex;
-    height: calc(100vh - 0px); /* 增加高度减少量防止溢出 */
+    height: 100vh; 
     margin-top: 20px;
     gap: 20px;
     overflow: hidden;
@@ -88,7 +88,7 @@
 @media (max-width: 767px) {
     .content-wrapper {
         flex-direction: column;
-        height: 90vh;
+        height: 100vh;
     }
     
     .sidebar {
@@ -110,7 +110,7 @@
     }
     
     .main-content {
-        height: 50vh; /* 主内容区域占剩余50%高度 */
-        overflow-y: hidden;
+        flex: 1;
+        height: 50%;
     }
 }
