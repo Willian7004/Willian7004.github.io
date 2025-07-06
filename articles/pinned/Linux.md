@@ -16,7 +16,7 @@ Linux Mint也有一些缺点：
 3. 默认外观不算优秀。由于外观较好的Solus Linux的主题实际上是使用了materia主题包和papirus图标包，可以用于其它不少发行版，在Linux Mint安装了这一主题，效果如下图。
 
 <center class="half">
-    <img src="https://github.com/Willian7004/new-blog/blob/main/files/dynamic/materia.jpg" width="500"/>
+    <img src="../../files/pinned/materia.jpg" width="500"/>
 </center>
 
 基本配置和软件使用情况：
