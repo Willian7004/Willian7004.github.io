@@ -108,9 +108,7 @@
     .sidebar.collapsed .sidebar-content {
         display: none;
     }
-    
-    .main-content {
-        flex: 1;
-        height: 50%;
+    .article-content {
+    height: 85%;
     }
 }
