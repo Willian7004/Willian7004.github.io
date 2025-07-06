@@ -84,6 +84,9 @@
     .file-item {
         padding: 6px 10px;
     }
+    .right-column {
+        max-height: 30vh;
+    }
 }
 
 /* 内容加载状态 */
