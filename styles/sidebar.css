@@ -109,6 +109,12 @@
         display: none;
     }
     .article-content {
+    height: 87%;
+    }
+}
+/* 小屏幕手机优化 (max-width: 480px) */
+@media (max-width: 480px) {
+    .article-content {
     height: 70%;
     }
 }
