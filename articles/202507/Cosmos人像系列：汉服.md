@@ -43,6 +43,8 @@ Here are 30 distinct storyboard shots featuring a man in Han Chinese clothing wi
 29. **A man in Han Chinese clothing** ascends a steep, narrow staircase inside a multi-storied pagoda, looking out through a latticed window.
 30. **A man in Han Chinese clothing** stands silently in a moonlit courtyard, gazing up at the silhouette of elaborate roof guardians against the night sky.
 
+
+
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
