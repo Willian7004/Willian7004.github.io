@@ -72,3 +72,22 @@ body {
         margin-top: var(--card-spacing);
     }
 }
+
+/* 小屏幕手机优化 (max-width: 480px) */
+@media (max-width: 480px) {
+    :root {
+        --card-spacing: 12px;
+        --blur-intensity: 4px;
+    }
+
+    .content-wrapper {
+        padding: 10px;
+    }
+
+    .floating-button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+        top: 10px;
+        right: 10px;
+    }
+}
