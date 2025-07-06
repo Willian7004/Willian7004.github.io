@@ -1,3 +1,8 @@
+'''
+写一个python程序，实现以下功能：
+1.当前目录下articles文件夹中有多个包含.md文件的文件夹。当前目录下files文件夹中有与.md文件路径对应的包含图片、视频或音频的文件夹。
+2.在结尾插入html把文件夹中的图片、视频或音频文件添加到对应的.md文件，宽度＞高度 的图片不分列， 宽度<高度 的图片分3列显示，每列宽度400像素。音频和视频使用html添加。如果.md文件已有重复内容则不添加。添加时把路径转换为 https://github.com/Willian7004/Willian7004.github.io 仓库中的相应路径并使用raw=true 加载文件。
+'''
 import os
 import glob
 from PIL import Image
@@ -22,7 +27,7 @@ def get_media_html(media_path, rel_path):
                 if width > height:  # 横图不分列
                     return f'<img src="{github_path}" style="max-width:100%;height:auto;"/>'
                 else:  # 竖图分列显示
-                    return f'<img src="{github_path}" style="width:{COLUMN_WIDTH}px;height:auto;display:inline-block;"/>'
+                    return f'<img src="{github_path}" style="width:{COLUMN_WIDTH}px;height:auto;display: flex; justify-content: center;"/>'
         except:
             return f'<img src="{github_path}" style="max-width:100%;height:auto;"/>'
     
