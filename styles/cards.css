@@ -61,6 +61,7 @@
 }
 
 /* 桌面端优化 */
+
 @media (min-width: 768px) {
     .left-column .markdown-content {
         font-size: 1.4em;
@@ -68,11 +69,22 @@
     
     .left-column .card {
         padding: 20px;
+        min-height: 30.5vh;
     }
 
     .right-column .card {
         padding: 20px;
-        max-height: 73vh;
+        height: 73vh;
+    }
+}
+
+@media (min-width: 1550px) {
+    .left-column .markdown-content {
+        font-size: 1.8em;
+    }
+    
+    .left-column .card {
+        min-height: 32vh;
     }
 }
 
