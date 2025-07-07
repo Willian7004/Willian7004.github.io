@@ -47,7 +47,6 @@ Here are **30 distinct image descriptions** for an American-style villa, coverin
 30. **Formal Dining Room:** Long mahogany table for 12, silk-upholstered chairs, silver candelabras, and landscape oil paintings in gilded frames.
 
 Each description balances architectural details, ambiance, and lifestyle elements to inspire unique visuals. Let me know if you’d like refined versions for specific styles (e.g., Hamptons, Craftsman, Mediterranean)! 🏡✨
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

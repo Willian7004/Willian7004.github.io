@@ -47,7 +47,6 @@ Here are 30 distinct image descriptions for a French villa, covering both interi
 28. **Powder Room Detail:** A small, opulent guest bathroom featuring dramatic floral wallpaper, a pedestal sink with gold fixtures, and an ornate gilded mirror.
 29. **Linen Closet Order:** Floor-to-ceiling shelves neatly stacked with crisp, ironed white linens, lace-edged pillowcases, and lavender sachets in a cool, airy closet.
 30. **Game Room Relaxation:** A paneled room with a worn billiards table under a shaded lamp, leather club chairs, a chess set, and a well-stocked bar cart in the corner.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
