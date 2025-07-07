@@ -15,11 +15,6 @@ class Sidebar {
         this.renderSidebar();
         this.setupEvents();
         
-        // 移动端默认折叠侧边栏
-        if (window.innerWidth <= 767) {
-            this.sidebar.classList.add('collapsed');
-        }
-        
         // 默认选中第一个文件项
         const firstFileItem = this.sidebarContent.querySelector('.file-item');
         if (firstFileItem) {
