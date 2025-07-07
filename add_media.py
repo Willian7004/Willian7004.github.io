@@ -35,7 +35,7 @@ def generate_media_html(media_dir, md_rel_path):
                     width, height = img.size
                 
                 # 竖图添加到当前分组
-                if width < height:
+                if width <= height:
                     current_group.append(file_path)
                 else:
                     # 横图结束当前分组

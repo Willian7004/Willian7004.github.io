@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots, each starting with "an offroad car runnin
 28. **Climbing:** An offroad car running (straining) up an incredibly steep, loose gravel incline, rear tires digging for purchase, engine roaring.
 29. **Forest Floor:** An offroad car running over moss-covered roots and damp earth on the shaded floor of a dense, old-growth forest.
 30. **Golden Hour:** An offroad car running across rolling hills covered in long grass, bathed in the warm, golden light of late afternoon, casting long shadows.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
