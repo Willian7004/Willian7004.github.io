@@ -42,7 +42,6 @@ Here are 30 storyboard shots, alternating between street and castle settings, ea
 28. **Castle (Wine Cellar):** A man wearing tailcoat and hat selects a dusty bottle from a rack in a cool, dim cellar. (Medium Shot)
 29. **Street (Thunderstorm):** A man wearing tailcoat and hat takes shelter under an awning during a downpour, watching lightning flash. (Close Up on face, lit by flashes)
 30. **Castle (Secret Door):** A man wearing tailcoat and hat inserts an ornate key into a hidden lock within a stone wall panel. (Extreme Close Up on key/lock)
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

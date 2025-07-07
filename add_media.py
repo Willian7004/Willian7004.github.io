@@ -187,7 +187,7 @@ img {
             continue
             
         # 添加CSS样式
-        full_html = f'\n\n<!-- AUTO-GENERATED MEDIA -->\n{css_style}\n{media_html}'
+        full_html = f'\n<!-- AUTO-GENERATED MEDIA -->\n{css_style}\n{media_html}'
         
         # 读取Markdown文件内容
         with open(md_path, 'r', encoding='utf-8') as f:
@@ -195,10 +195,12 @@ img {
         
         # 检查是否已包含相同内容
         if '<!-- AUTO-GENERATED MEDIA -->' in content:
-            # 移除旧的媒体内容
             parts = content.split('<!-- AUTO-GENERATED MEDIA -->', 1)
-            new_content = parts[0] + full_html
+            existing_content = parts[0].rstrip('\n')
+            new_content = existing_content + full_html
         else:
+            if content and not content.endswith('\n'):
+                content += '\n'
             new_content = content + full_html
         
         # 写回文件

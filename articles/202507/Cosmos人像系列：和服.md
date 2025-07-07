@@ -42,11 +42,6 @@ Here are 30 storyboard frames, each starting with "a teenage girl wearing kimono
 28. **Detail Shot:** A teenage girl wearing kimono adjusts her obi (sash) while standing in the doorway of a traditional storehouse (kura).
 29. **Perspective Shot:** A teenage girl wearing kimono looks out from the second-story balcony of a machiya (townhouse) over its small, private courtyard garden.
 30. **Closing Shot:** A teenage girl wearing kimono bows slightly before a small stone Jizo statue nestled among ferns in a quiet garden corner.
-
-
-
-
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

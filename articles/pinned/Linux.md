@@ -70,135 +70,17 @@ Ubuntu25.04使用了新的Gnome版本，性能有一定提升，在j1800也达�
 3. 需要额外的工具链进行具体监测。
 
 目前部署的应用包括：
-
-**1.Streamlit：**
-
-指令：
-```bash
-docker run -d -p 8501:8501 -v /home/william/github/new-blog:/program --name new-blog --restart unless-stopped python:3.12-slim /bin/bash -c "apt update && apt-get install -y git && pip install streamlit gitpython -i https://mirrors.aliyun.com/pypi/simple/ && cd /program && streamlit run streamlit_app.py --server.port 8501"
-```
-
-**2.dpanel，用于图形化Docker管理：**
-
-指令：
-```bash
-docker run -d --name dpanel --restart=always \
- -p 8807:8080 -e APP_NAME=dpanel \
- -v /var/run/docker.sock:/var/run/docker.sock \
- -v /home/dpanel:/dpanel dpanel/dpanel:lite
-```
-
-**3.Jellyfin,用于以图片/视频为主的媒体库：**
-
-docker-compose.yml:
-```yaml
-services:
-  jellyfin:
-    image: jellyfin/jellyfin
-    container_name: jellyfin
-    network_mode: 'host'
-    restart: 'unless-stopped'
-    volumes:
-      - /var/lib/docker/volumes/jellyfin-config/_data:/config
-      - /var/lib/docker/volumes/jellyfin-cache/_data:/cache
-      - type: bind
-        source: /mnt/sda/Documents
-        target: /media
-```
-指令：
-`sudo docker compose -p jellyfin-server up`\
-创建docker卷：
-`docker volume create jellyfin-config`\
-删除docker卷：
-`docker volume rm jellyfin-config`
-
-**4.Komga，用于文档媒体库**
-
-docker-compose.yml:
-```yaml
-version: '3.3'
-services:
-  komga:
-    image: gotson/komga
-    container_name: komga
-    volumes:
-      - type: bind
-        source: /var/lib/docker/volumes/komga-config
-        target: /config
-      - type: bind
-        source: /mnt/sda/Documents
-        target: /data
-    ports:
-      - 25600:25600
-    user: "1000:1000"
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-```
-指令：\
-（首次启动）`sudo chmod 777 -R /var/lib/docker/volumes/komga-config`\
-`sudo docker compose -p komga up`
-
-**5.Watchtowver，用于自动更新Docker镜像：**
-```bash
-docker run -d \
-    --name watchtower --restart unless-stopped \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    containrrr/watchtower --cleanup
-```
-
-**6.OpenWebUI，用于LLM对话，搜索和代码执行功能有优势：**
-```bash
-docker run -d -p 3000:8080 \
---add-host=host.docker.internal:host-gateway \
--v open-webui:/app/backend/data \
---name open-webui --restart unless-stopped \
-ghcr.io/open-webui/open-webui:main
-```
+1. Dpanel，用于图形化Docker管理。
+2. Jellyfin,用于以图片/视频为主的媒体库。
+3. Komga，用于文档媒体库。
+4. Watchtowver，用于自动更新Docker镜像。
+5. Openwebui，用于调用LLM，并执行生成的python程序。
 
 ##### 下载服务器
 
 由于百度网盘Linux版没有p2p加速且wine版本不能正常运行，阿里云盘官方速度只略高于1mb/s且第三方客户端更慢，目前不在Linux使用网盘客户端。
 
-使用图形界面时，通过Xtreme Download Manager进行下载，能实现资源嗅探和多线程下载等功能。
-
-由于前面提到的安卓连接xrdp延时过长的问题，需要通过终端进行远程连接，目前会用到以下两个下载应用：
-
-**1.hfd，由hf-mirror开发，用于下载AI模型和数据集：**
-
-获取：
-```bash
-wget https://hf-mirror.com/hfd/hfd.sh
-chmod a+x hfd.sh
-```
-设置环境变量（每次打开终端）：
-```bash
-export HF_ENDPOINT=https://hf-mirror.com
-export HF_TOKEN=
-```
-下载模型：
-```bash
-cd /mnt/sda/Documents/Download/hfd
-./hfd.sh gpt2
-```
-下载数据集：
-```bash
-cd /mnt/sda/Documents/Download/hfd
-./hfd.sh wikitext --dataset
-```
-匹配文件名:\
-1.指定格式，`-r`为递归：`--include -r *.json`\
-2.排除文件：`--exclude readme.md`\
-3.文件范围：`--include model-0000[1-4]-of-00004.safetensors`
-
-**2.aria2，用于下载链接：**
-
-前台下载（关闭终端会终止下载）：\
-`aria2c https://hf-mirror.com/deepseek-ai/DeepSeek-V3-0324/resolve/main/README.md?download=true`\
-后台下载：\
-`nohub aria2c https://hf-mirror.com/deepseek-ai/DeepSeek-V3-0324/resolve/main/README.md?download=true`\
-查看后台任务（仅在当前SSH有效）：`jobs -l`\
-全局检查进程：`ps aux | grep aria2c`
+由于Ubuntu25.04优化了xrdp，不再使用通过命令行下载的方式。由于Xtreme Download Manager已停止维护且不支持Wayland导致在新系统不可用，改用猫抓进行资源嗅探，暂不使用新的下载管理器。
 
 ### 未采用的软件
 
