@@ -49,7 +49,6 @@ Here are **30 unique image descriptions** of British-style villas, capturing bot
 30. **Garden Room**: French doors open to a patio, rattan furniture, botanical sketches, and potted ferns on flagstone floors.  
 
 Each description blends architectural details (Georgian symmetry, Tudor beams) with atmospheric touches (crackling fires, misty gardens) for vivid visuals. Would you like more variations or a focus on specific eras?
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
@@ -97,50 +96,50 @@ img {
 }
 </style>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00121_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00121_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00124_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00124_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00130_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00130_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00131_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00131_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00133_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00133_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00136_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00136_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00138_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00138_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00139_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00139_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00142_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00142_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00144_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00144_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00146_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00146_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00149_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00149_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00154_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00154_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00156_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00156_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00157_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00157_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00160_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00160_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00161_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00161_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00166_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00166_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00167_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00167_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00170_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00170_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00171_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00171_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00175_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00175_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00178_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00178_.jpg" style="width:100%;"></div>
 
-<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00180_.png" style="width:100%;"></div>
+<div class="image-container"><img src="../../files/202507/Cosmos别墅系列：英式/ComfyUI_00180_.jpg" style="width:100%;"></div>
