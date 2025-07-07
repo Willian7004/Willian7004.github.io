@@ -11,14 +11,28 @@
     border-radius: 12px; /* 统一圆角 */
 }
 
+.sidebar-header {
+    position: relative;
+    padding: 10px 15px;
+    background: rgba(40, 40, 40, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-title {
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .sidebar-content {
-    padding-top: 40px;
+    padding-top: 10px;
 }
 
 .toggle-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: static;
+    margin-left: 10px;
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
@@ -99,11 +113,15 @@
         overflow-y: auto;
     }
     
-    .sidebar.collapsed {
-        height: 40px;
-        max-height: 40px;
-        overflow: hidden;
-    }
+.sidebar.collapsed {
+    height: 40px;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-header {
+    border-bottom: none;
+}
     
     .sidebar.collapsed .sidebar-content {
         display: none;

@@ -8,7 +8,6 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
     min-height: 30vh;
-    max-height: 69vh;
     overflow-y: auto;
 }
 
@@ -26,19 +25,55 @@
     flex: 1;
 }
 
+/* 左列卡片样式 */
+.left-column .card {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 右列卡片样式 */
+.right-column .card {
+    height: calc(100% - var(--card-spacing));
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
 .left-column {
     flex-basis: 45%;
     display: flex;
     flex-direction: column;
     gap: var(--card-spacing);
+    height: 100%; /* 确保左列有高度 */
 }
 
 .right-column {
-    flex: 0 0 50%; /* 精确控制宽度 */
+    flex: 0 0 50%;
     border-radius: 12px;
     padding: 0px;
-    margin-left: 2%; /* 精确间距控制 */
+    margin-left: 2%;
     position: relative;
+    height: 100%; /* 确保右列有高度 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 桌面端优化 */
+@media (min-width: 768px) {
+    .left-column .markdown-content {
+        font-size: 1.4em;
+    }
+    
+    .left-column .card {
+        padding: 20px;
+    }
+
+    .right-column .card {
+        padding: 20px;
+        max-height: 73vh;
+    }
 }
 
 /* 移动端优化 */

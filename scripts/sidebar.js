@@ -19,6 +19,13 @@ class Sidebar {
         if (window.innerWidth <= 767) {
             this.sidebar.classList.add('collapsed');
         }
+        
+        // 默认选中第一个文件项
+        const firstFileItem = this.sidebarContent.querySelector('.file-item');
+        if (firstFileItem) {
+            firstFileItem.classList.add('active');
+            this.showFileContent(firstFileItem.dataset.path);
+        }
     }
     
     async loadData() {
@@ -81,6 +88,18 @@ class Sidebar {
     }
     
     showFileContent(filePath) {
+        // 先移除所有active状态
+        this.sidebarContent.querySelectorAll('.file-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // 设置当前选中项
+        const activeItem = [...this.sidebarContent.querySelectorAll('.file-item')]
+            .find(item => item.dataset.path === filePath);
+        if (activeItem) {
+            activeItem.classList.add('active');
+        }
+
         if (this.type === 'articles') {
             // 文章页面显示Markdown内容
             fetch(filePath)
@@ -91,10 +110,17 @@ class Sidebar {
                             ${marked.parse(text)}
                         </div>
                     `;
+                })
+                .catch(() => {
+                    activeItem?.classList.remove('active');
                 });
         } else {
             // 网页页面显示iframe
-            document.querySelector('.page-frame').src = filePath;
+            const iframe = document.querySelector('.page-frame');
+            iframe.onload = () => {
+                iframe.contentWindow.focus();
+            };
+            iframe.src = filePath;
         }
     }
 }

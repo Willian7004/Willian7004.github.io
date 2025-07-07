@@ -47,7 +47,6 @@ Here are 30 distinct image descriptions capturing the essence of Spanish-style v
 28. **Staircase Elegance:** An internal staircase with a sturdy, dark wood banister and wrought-iron balustrade, ascending from a tiled hallway. Sunlight highlights the texture of the stucco wall beside it.
 29. **Cigar Room:** A masculine den with deep leather armchairs, a humidor cabinet, dark wood paneling on the lower walls, and textured plaster above. A low, wrought-iron table holds decanters.
 30. **Chapel Corner:** A small, serene private chapel or prayer niche within the villa. A simple wooden altar with a crucifix, flanked by candles, set against a whitewashed wall beneath a small arched window. A worn kneeler sits in front.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
