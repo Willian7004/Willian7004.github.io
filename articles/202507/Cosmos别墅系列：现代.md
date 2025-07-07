@@ -49,7 +49,6 @@ Here are 30 distinct image descriptions for a modern-style villa, covering diver
 30. **Indoor-Outdoor Flow:** Seamless transition captured: interior polished concrete floor continuing onto an external deck, with sliding glass walls fully retracted.
 
 These descriptions provide varied angles, focal points, times of day, and details to inspire visualizations of a sophisticated modern villa.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

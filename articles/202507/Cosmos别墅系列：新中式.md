@@ -52,7 +52,6 @@ Here are 30 unique image descriptions for a New Chinese-style villa, blending tr
 30. **Internal Courtyard Glimpse:** View from an upper floor hallway looking down into the sunlit central courtyard. The geometric patterns of the walkways and the reflection in the pool create a harmonious abstract composition.
 
 Each description emphasizes the blend of clean modern lines, natural materials (wood, stone, bamboo), traditional Chinese forms and motifs (moon gates, pavilions, latticework, ink art), and the crucial connection to nature and light.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
