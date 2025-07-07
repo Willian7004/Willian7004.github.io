@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots starting with "a pickup truck running," se
 28. **EXT. LANDSCAPE BUSINESS (SUBURB) - DAY:** A pickup truck running with a loaded trailer full of mulch bags and tools down a suburban street.
 29. **EXT. FISHING SPOT ACCESS - DAWN:** A pickup truck running carefully over large, smooth river rocks towards a popular fishing bank.
 30. **EXT. COUNTRY HIGHWAY - NIGHT:** A pickup truck running under a star-filled sky, its headlights cutting twin beams through the darkness on a long, straight, empty road.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

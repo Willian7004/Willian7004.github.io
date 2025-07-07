@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots starting with "a truck running," set in in
 28. **Industrial:** A truck running under an elevated freeway overpass near industrial loading docks.
 29. **Wild Road:** A truck running through a sudden, heavy downpour on a remote, tree-lined road.
 30. **Suburban:** A truck running past a suburban gas station/convenience store lit brightly at night.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
