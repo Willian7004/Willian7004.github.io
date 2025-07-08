@@ -1,6 +1,6 @@
 ## Cosmos人像系列：巫师服
 
-本系列与之前的博客项目中的类似，在markdown图片中改用3列布局。
+本系列与之前的博客项目中的类似，图片改用flex布局。
 
 生成图片的提示词如下：
 
@@ -42,7 +42,6 @@ Here are 30 storyboard shots starting with "A woman in wizard costumes," alterna
 28. **Architecture:** A woman in wizard costumes examines a large, detailed tapestry map of the realm hanging in a dimly lit council chamber.
 29. **Forest:** A woman in wizard costumes stands firm, staff raised defensively, as a low growl echoes from the dark undergrowth ahead.
 30. **Architecture:** A woman in wizard costumes stands on a balcony overlooking a moonlit city of spires and tiled roofs, a look of determination on her face as she prepares a spell.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

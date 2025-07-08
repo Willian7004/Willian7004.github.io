@@ -1,6 +1,6 @@
 ## Cosmos人像系列：厨师服
 
-本系列与之前的博客项目中的类似，在markdown图片中改用3列布局。
+本系列与之前的博客项目中的类似，图片改用flex布局。
 
 生成图片的提示词如下：
 
@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots featuring a man in chef uniform, set in ki
 28. **Shot 28:** A man in chef uniform scans the horizon of his chaotic kitchen during service, a look of determined calm on his face.
 29. **Shot 29:** A man in chef uniform gently places a single, perfect oyster on a bed of ice for plating.
 30. **Shot 30:** A man in chef uniform stands silhouetted in the early morning light streaming into the empty, silent kitchen before service begins.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

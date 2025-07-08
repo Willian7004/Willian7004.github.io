@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots, each starting with "a sedan running" in a
 28. **a sedan running** up a steep, winding city hill, engine laboring slightly.
 29. **a sedan running** through a car wash, brushes and soap suds engulfing it momentarily.
 30. **a sedan running** smoothly along a riverside boulevard, sunlight glinting off its polished roof.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

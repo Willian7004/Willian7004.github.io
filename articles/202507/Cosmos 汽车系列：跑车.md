@@ -42,7 +42,6 @@ Here are 30 distinct storyboard shots starting with "a sports car running", alte
 28. **Suburban:** A sports car running along a canal path with cyclists and joggers.
 29. **Urban:** A sports car running in pouring rain through Times Square-like bright billboards.
 30. **Suburban:** A sports car running down a long driveway towards a secluded modern mansion at dusk.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
