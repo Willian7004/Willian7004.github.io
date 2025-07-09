@@ -113,7 +113,7 @@
     }
     
 .sidebar.collapsed {
-    height: 8%;
+    height: 10%;
     overflow: hidden;
 }
 
@@ -125,19 +125,6 @@
         display: none;
     }
     .article-content {
-    height: 83%;
+    height: 80%;
     }
-}
-/* 小屏幕手机优化 (max-width: 480px) */
-@media (max-width: 480px) {
-    .article-content {
-    height: 65%;
-    }
-    .sidebar {
-        height: 25vh; 
-    }
-    .sidebar.collapsed {
-    height: 11%;
-    overflow: hidden;
-}
 }
