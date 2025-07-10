@@ -42,7 +42,6 @@ Here are 30 distinct anime school scenes, each starting with "An anime girl in s
 28. **An anime girl in school uniform** sits alone on the gymnasium stage after hours, bathed in a single spotlight beam.
 29. **An anime girl in school uniform** examines a detailed world map on the geography classroom wall, tracing a route with her finger.
 30. **An anime girl in school uniform** walks slowly down the empty, long main hallway at dusk, her silhouette framed by the setting sun through the windows.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

@@ -42,7 +42,6 @@ Here are 30 distinct anime magical girl scenes, each starting as requested and s
 28. **An anime magical girl** senses a magical disturbance emanating from a nondescript, modern office building amidst towering downtown skyscrapers.
 29. **An anime magical girl** finds a rare, glowing magical bloom pushing its way through a crack in the concrete next to a busy freeway overpass.
 30. **An anime magical girl** sits exhausted but satisfied on the ledge of a low-rise apartment building, watching the first rays of sunrise paint the city skyline pink and orange, her transformation fading.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

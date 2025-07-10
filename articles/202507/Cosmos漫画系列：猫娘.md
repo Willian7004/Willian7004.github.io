@@ -42,7 +42,6 @@ Here are 30 anime storyboard panels featuring a cat-eared girl in a city setting
 28. **Long Shot (Park):** An anime girl with cat ears and tail wearing miniskirt jogs along a path in a large, tree-lined city park during golden hour.
 29. **Medium Close-Up (Joy):** An anime girl with cat ears and tail wearing miniskirt giggles as she tries on a silly hat in a quirky vintage shop.
 30. **Final Shot (Contemplative):** An anime girl with cat ears and tail wearing miniskirt leans on a railing overlooking the city harbor at night, city lights reflecting on the water, tail swaying slowly.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

@@ -42,7 +42,6 @@ Here are 30 anime mecha scenes set in the wilderness, each starting with "An ani
 28. **An anime mecha** struggles to free its legs, buried up to the knees in shifting desert sands during a storm.
 29. **An anime mecha** uses a fallen giant sequoia as a makeshift bridge over a deep chasm.
 30. **An anime mecha** stands triumphant on a cliff edge, overlooking a vast, unexplored wilderness bathed in the light of a rising alien moon.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

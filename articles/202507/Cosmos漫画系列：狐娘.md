@@ -42,7 +42,6 @@ Here are 30 storyboard panels featuring an anime girl with fennec ears and tail,
 28. **Forest - Moonlight:** An anime girl with fennec ears and tail wearing jacket and shorts walks quietly along a moonlit forest path, bathed in silvery light, her ears alert.
 29. **Suburb - Puddle Jumping:** An anime girl with fennec ears and tail wearing jacket and shorts leaps with both feet into a large, muddy puddle on the edge of a suburban road after rain, splashing water.
 30. **Forest - Resting Spot:** An anime girl with fennec ears and tail wearing jacket and shorts lies back on a soft patch of moss in a quiet forest glade, gazing up at the shifting leaves and sky, her tail relaxed.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
