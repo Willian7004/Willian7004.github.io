@@ -34,7 +34,6 @@ Here are 20 unique French-style interior design image prompts, covering various 
 20. **Provence Terrace Living:** Seamless indoor-outdoor Provencal living space. Stone archway opening to a sun-drenched terrace with lavender pots. Inside: comfortable linen sofas, coffee table made from an old wine crate, stone floor, rustic beams, large fireplace. Sunlight flooding both areas, view of rolling hills.
 
 Each prompt emphasizes distinct elements (furniture styles, materials, colors, lighting, textures, specific decorative items) to ensure unique and evocative visuals for generating French-inspired interior images.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
