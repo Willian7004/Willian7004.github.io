@@ -32,7 +32,6 @@ Here are 20 distinct neoclassical interior design descriptions for images:
 18. **Grand Staircase Landing:** A spacious landing acts as a sitting area. A large round rug in muted neoclassical patterns anchors a pair of antique Directoire fauteuils facing a tall Palladian window. A classical statue niche is carved into one wall.
 19. **Walk-In Dressing Room:** Elegant built-in wardrobes with paneled doors and fluted pilasters. A central island with a marble top for folding. A plush velvet ottoman sits before a large, ornate gilt-framed cheval mirror. Crystal sconces provide glamorous lighting.
 20. **Domed Rotunda Sitting Area:** A breathtaking circular room under a shallow dome adorned with a delicate coffered pattern and central oculus. The curved walls feature niches holding classical urns. Low, curved sofas in cream linen face inward, centered on a monumental stone fireplace.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

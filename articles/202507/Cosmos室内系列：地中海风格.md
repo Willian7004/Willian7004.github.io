@@ -34,7 +34,6 @@ Here are 20 unique Mediterranean-style interior design descriptions, focusing on
 20. **Courtyard Fountain Atrium:** Central open-air courtyard within the home. Trickling stone fountain as the focal point. Surrounding arched loggia with colorful tile accents. Potted citrus trees, bougainvillea climbing walls, wrought-iron benches with tile insets.
 
 Each description emphasizes key Mediterranean elements: natural materials (stone, wood, terracotta), arches, vibrant tiles, wrought iron, connection to outdoors, rustic charm, and a sun-drenched palette.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
