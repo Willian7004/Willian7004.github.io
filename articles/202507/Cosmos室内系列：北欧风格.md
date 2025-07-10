@@ -34,7 +34,6 @@ Here are **20 unique Nordic-style interior design image descriptions**, each cap
 20. **Muted Tone Bedroom:** A calming master bedroom featuring walls in a soft, dusty blue. Light birch wood nightstands flank a upholstered bed in a warm grey fabric. Textured linen curtains filter light from a large window. A single woven basket holds extra blankets.
 
 Each description emphasizes the core Nordic principles: **light, simplicity, natural materials, functionality, and a connection to nature**, while offering unique settings and details.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
