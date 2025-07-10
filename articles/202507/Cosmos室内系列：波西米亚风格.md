@@ -34,7 +34,6 @@ Here are 20 distinct Bohemian-style interior design image descriptions:
 20. **Rustic Alchemy Apothecary:** Dark wood apothecary cabinet filled with amber bottles, dried herbs, and crystals. A worn wooden table holds mortar and pestles, scales, and open books with botanical illustrations. Low, moody candlelight.
 
 Each description offers a unique take on Bohemian style, emphasizing different elements like color palettes, key furniture pieces, textiles, global influences, and overall ambiance.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

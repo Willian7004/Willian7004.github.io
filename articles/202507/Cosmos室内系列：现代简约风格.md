@@ -34,7 +34,6 @@ Here are 20 unique modern minimalist interior design descriptions in English:
 20. **Zen Meditation Space:** Empty room with pale, textured walls. A single low, black wooden platform holds a meditation cushion. A small niche in the wall contains one smooth stone. Soft, diffused natural light.
 
 Each description focuses on clean lines, uncluttered spaces, neutral palettes with intentional accents, natural light, functional furniture, and a sense of calm – key tenets of modern minimalism.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

@@ -34,7 +34,6 @@ Here are 20 unique modern luxury interior design descriptions, each capturing a 
 20. **Evening Terrace Lounge:** An outdoor sectional with deep cushions in weather-resistant charcoal grey surrounds a low gas fire pit table. Oversized black planters hold sculptural evergreens. String lights overhead and recessed step lighting create a warm, inviting ambiance.
 
 Each description focuses on key modern luxury elements: clean lines, high-quality materials (marble, metal, velvet, wood), sophisticated neutral palettes with strategic pops of color or texture, statement lighting, and an overall sense of curated elegance and spaciousness.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
