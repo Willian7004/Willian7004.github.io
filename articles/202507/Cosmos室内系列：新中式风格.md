@@ -34,7 +34,6 @@ Here are 20 unique **New Chinese Style** interior design image descriptions, emp
 20. **Boutique Hotel Lobby:** A reception area featuring a dramatic wall covered in large, overlapping panels of textured, dark gray fabric resembling scholar's rocks. The reception desk is a single slab of pale, striated marble on a dark wood base. Low, sculptural armchairs in deep plum velvet provide seating.
 
 Each description focuses on the blend of traditional Chinese elements (materials, philosophy, subtle motifs) with contemporary design principles (clean lines, open space, minimalist forms, modern lighting).
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

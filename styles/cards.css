@@ -62,7 +62,7 @@
 
 /* 桌面端优化 */
 
-@media (min-width: 768px) {
+@media (min-width: 1000px) {
     .left-column .markdown-content {
         font-size: 1.4em;
     }
@@ -89,7 +89,7 @@
 }
 
 /* 移动端优化 */
-@media (max-width: 767px) {
+@media (max-width: 999px) {
     .card {
         padding: 12px;
         width: 100%;

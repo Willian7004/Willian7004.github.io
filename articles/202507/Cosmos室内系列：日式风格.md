@@ -34,7 +34,6 @@ Here are 20 unique Japanese-style interior design descriptions, each focusing on
 20. **Bamboo Fountain Courtyard:** An interior view looking out through wide sliding glass doors onto a small enclosed courtyard. A traditional bamboo water fountain (shishi-odoshi) slowly fills and tips, creating a gentle rhythmic sound amidst ferns and mossy stones.
 
 Each description emphasizes key Japanese design principles: connection to nature, asymmetry, simplicity, natural materials, and mindful use of space and light.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>

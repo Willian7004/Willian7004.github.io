@@ -99,7 +99,7 @@
 }
 
 /* 移动端样式 */
-@media (max-width: 767px) {
+@media (max-width: 999px) {
     .content-wrapper {
         flex-direction: column;
         height: 100vh;

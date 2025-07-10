@@ -34,7 +34,6 @@ Here are 20 distinct descriptions for Chinese classical-style interior design im
 20. **Incense Appreciation Alcove:** A small, intimate space dedicated to the art of incense. A low table holds an ash-filled censer, delicate silver tongs, and carved wood chips for sampling rare aromatics. A single scroll depicting a mountain peak hangs above, emphasizing focus and refinement.
 
 Each description provides a unique vignette within the broad spectrum of Chinese classical interior design.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
