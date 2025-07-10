@@ -34,7 +34,6 @@ Here are 20 independent Southeast Asian-inspired interior design descriptions, e
 20. **Spicy Singaporean Hawker Stall-Inspired Kitchen Bar:** A vibrant kitchen breakfast bar area with stools upholstered in bold chili-red vinyl, countertops in dark green speckled granite resembling Peranakan tiles, hanging stainless steel cookware, and small potted chili plants on the counter.
 
 Each description evokes a unique facet of Southeast Asia's diverse design heritage, from rustic simplicity to colonial elegance and vibrant cultural expressions.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
