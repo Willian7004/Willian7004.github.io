@@ -34,7 +34,6 @@ Here are 20 unique and independent prompts for Islamic-style interior design ima
 20. **Smart Home with Islamic Design Elements:** High-tech living room blending tradition and modernity. Voice-controlled lighting illuminating a large geometric plaster screen, automated shades revealing a courtyard view, sleek furniture complemented by a vintage Persian rug and brass accent pieces, digital display showing abstract Islamic patterns.
 
 Each description emphasizes key Islamic design elements (geometry, calligraphy, arches, water features, specific materials like tile, wood, plaster, brass) while creating distinct atmospheres and functions.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
