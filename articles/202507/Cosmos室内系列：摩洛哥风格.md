@@ -34,7 +34,6 @@ Here are **20 unique and independent descriptions** for Moroccan-style interior 
 20. **Desert Palette Lounge:** A sophisticated lounge using a muted desert-inspired palette: sandy beige walls, a large rug in charcoal and ochre geometric patterns, deep terracotta leather poufs, and accents of black wrought iron in the furniture and lighting.
 
 Each description offers a unique vignette of Moroccan design, emphasizing different elements, colors, textures, lighting, and moods.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
