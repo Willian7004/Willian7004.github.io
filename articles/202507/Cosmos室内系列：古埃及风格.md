@@ -34,7 +34,6 @@ Here are 20 unique image descriptions for independent Ancient Egyptian-style int
 20. **Middle-Class Home Courtyard at Dusk:** The heart of a modest home. A small, paved courtyard open to the stars. A simple mudbrick oven glows. Low stools surround a central mat where a family might gather. Potted plants (mandrake?) line the edges. Warm light spills from surrounding rooms' doorways. Peaceful and domestic.
 
 Each description aims for a distinct setting, function, and atmosphere while incorporating key Egyptian elements like hieroglyphs, specific colors (ochre, turquoise, blue, red), column styles, materials (limestone, mudbrick, wood, reeds), and thematic murals.
-
 <!-- AUTO-GENERATED MEDIA -->
 
 <style>
