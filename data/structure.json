@@ -2,6 +2,12 @@
   "articles": {
     "pinned": [
       {
+        "name": "我的信息获取途径.md",
+        "path": "articles/pinned/我的信息获取途径.md",
+        "ctime": "Sat Jul 12 18:04:48 2025",
+        "mtime": "Sat Jul 12 18:04:48 2025"
+      },
+      {
         "name": "Linux.md",
         "path": "articles/pinned/Linux.md",
         "ctime": "Sat Jul 12 14:44:53 2025",
@@ -22,12 +28,6 @@
       {
         "name": "电脑硬件.md",
         "path": "articles/pinned/电脑硬件.md",
-        "ctime": "Fri Jul 11 19:49:37 2025",
-        "mtime": "Fri Jul 11 12:18:36 2025"
-      },
-      {
-        "name": "我的资讯获取途径.md",
-        "path": "articles/pinned/我的资讯获取途径.md",
         "ctime": "Fri Jul 11 19:49:37 2025",
         "mtime": "Fri Jul 11 12:18:36 2025"
       },
