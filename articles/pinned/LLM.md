@@ -52,7 +52,7 @@
 1. Transformers兼容性强，但优化较差。
 2. Ollama基于llama.cpp，稳定性和显存优化较好，但对多模态模型的支持比上游慢。
 3. LM Studio同样基于llama.cpp，兼容性与上游一致，提供图形界面并集成RAG功能。
-4. VLLM注重张量并行和并发优化。
+4. VLLM注重张量并行和并发优化，对多模态模型的兼容性也有优势。
 5. KTransformer注重异构计算，长上下文和并发速度相比CPU部署有一定优势。
 
 移动端：
@@ -72,12 +72,12 @@
 1. Qwen3 4b用于通用任务。
 2. Qwen2.5 vl 3b用于多模态任务。
 3. Qwen2.5 Omni 3b用于有语音输入的任务，TTS速度较慢。
-   （考虑到内存带宽瓶颈，16g设备用Ring Lite比较合适，待Llama.cpp支持后也可以用Kimi VL）
+
+（考虑到内存带宽瓶颈，16g设备用Ring Lite比较合适，待Llama.cpp支持后也可以用Kimi VL）
 
 ##### api使用情况
 
 我个人偏向开源模型，使用的api如下：
 
 1. Deepseek api，使用Deepseek模型，因为其模型在开源模型中比较优秀，成本也不太高。
-2. Siliconflow api，以前Deepseek api繁忙时用于Deepseek模型，在Openrouter使用多账号策略后基本弃用。
-3. Openrouter api，主要使用免费模型，提供Dolphin3等无审查模型相比国内api也有优势。
+2. Openrouter api，主要使用免费模型，提供Dolphin3等无审查模型相比国内api也有优势。
