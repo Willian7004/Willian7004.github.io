@@ -2,6 +2,7 @@
 
 本文介绍了一些LLM的测试数据，我使用的LLM以及使用体验。（live code bench统一使用最新数据，官方未测试的小模型成绩会偏高。Humanity’s Last Exam也以官网为准。）
 
+更新：近期有报道，kimi k2等非推理模型在swe bench等agent测试集表现较好，可能考虑引入这部分模型，只包含agent测试结果。
 
 | Model                     | AIME2025 | GPQA Diamond | Codeforces(rating) | LiveCodeBench | SWE-Bench | Humanity’s Last Exam | ARC AGI2 |
 | --------------------------- | ---------- | -------------- | -------------------- | --------------- | ----------- | ----------------------- | ---------- |
