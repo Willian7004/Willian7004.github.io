@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!--
+创建html页面，在32×32的区域生成地形分形，高度范围为0到8，可在菜单选择分形类型、分形水平缩放、高度范围和生成区域大小。高度为3的平面添加水面材质，高度大于7的地形上添加岩石材质，其它部分添加草地材质。创建天空球并开启pbr渲染。通过鼠标控制场景旋转，在菜单添加按钮用于重新生成分形。
+
+注：本次网页版完成度不高，但另外生成时也遇到不少问题，决定由网页版的结果进行修改，只修复了缩放和柏林噪声和Simplex噪声无随机偏移的问题，仍然存在柏林噪声和Simplex噪声默认缩放比例过大以及大小为48时钻石分形无法生成的问题。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分形地形生成器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #canvas {
+            display: block;
+        }
+        #gui {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        #gui label {
+            display: block;
+            margin: 5px 0;
+        }
+        #gui select, #gui input, #gui button {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #gui button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-top: 10px;
+        }
+        #gui button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="gui">
+        <label>
+            分形类型:
+            <select id="fractalType">
+                <option value="diamondSquare">钻石分形</option>
+                <option value="perlin">柏林噪声</option>
+                <option value="simplex">Simplex噪声</option>
+            </select>
+        </label>
+        <label>
+            水平缩放: <span id="scaleValue">1.0</span>
+            <input type="range" id="scale" min="0.1" max="3" step="0.1" value="1">
+        </label>
+        <label>
+            最小高度: <span id="minHeightValue">0</span>
+            <input type="range" id="minHeight" min="0" max="7" step="1" value="0">
+        </label>
+        <label>
+            最大高度: <span id="maxHeightValue">8</span>
+            <input type="range" id="maxHeight" min="1" max="8" step="1" value="8">
+        </label>
+        <label>
+            区域大小: <span id="terrainSizeValue">32</span>
+            <input type="range" id="terrainSize" min="16" max="64" step="16" value="32">
+        </label>
+        <button onclick="regenerateTerrain()">重新生成地形</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, terrain, water, controls;
+        let terrainSize = 32;
+        let heightData = [];
+        
+        // 初始化场景
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(25, 20, 25);
+            camera.lookAt(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // 添加环境光和方向光
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(50, 50, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // 创建天空球
+            const skyGeometry = new THREE.SphereGeometry(100, 32, 32);
+            const skyMaterial = new THREE.MeshBasicMaterial({
+                color: 0x87CEEB,
+                side: THREE.BackSide
+            });
+            const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(sky);
+            
+            // 添加轨道控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 创建地形
+            createTerrain();
+            
+            // 绑定事件
+            bindEvents();
+        }
+        
+        // 钻石分形算法
+        function diamondSquare(size) {
+            const data = new Array(size * size);
+            const maxSize = size - 1;
+            const roughness = 0.7;
+            
+            // 初始化四个角
+            data[0] = Math.random();
+            data[maxSize] = Math.random();
+            data[size * maxSize] = Math.random();
+            data[size * maxSize + maxSize] = Math.random();
+            
+            let step = maxSize;
+            let scale = 1;
+            
+            while (step > 1) {
+                const halfStep = step / 2;
+                
+                // 钻石步骤
+                for (let y = halfStep; y < size; y += step) {
+                    for (let x = halfStep; x < size; x += step) {
+                        const avg = (data[(y - halfStep) * size + (x - halfStep)] +
+                                    data[(y - halfStep) * size + (x + halfStep)] +
+                                    data[(y + halfStep) * size + (x - halfStep)] +
+                                    data[(y + halfStep) * size + (x + halfStep)]) / 4;
+                        data[y * size + x] = avg + (Math.random() - 0.5) * scale;
+                    }
+                }
+                
+                // 方形步骤
+                for (let y = 0; y < size; y += halfStep) {
+                    for (let x = (y + halfStep) % step; x < size; x += step) {
+                        let avg = 0;
+                        let count = 0;
+                        
+                        if (x >= halfStep) {
+                            avg += data[y * size + (x - halfStep)];
+                            count++;
+                        }
+                        if (x + halfStep < size) {
+                            avg += data[y * size + (x + halfStep)];
+                            count++;
+                        }
+                        if (y >= halfStep) {
+                            avg += data[(y - halfStep) * size + x];
+                            count++;
+                        }
+                        if (y + halfStep < size) {
+                            avg += data[(y + halfStep) * size + x];
+                            count++;
+                        }
+                        
+                        data[y * size + x] = avg / count + (Math.random() - 0.5) * scale;
+                    }
+                }
+                
+                step = halfStep;
+                scale *= roughness;
+            }
+            
+            return data;
+        }
+        
+        // 柏林噪声简化版
+        function perlinNoise(size) {
+            const data = new Array(size * size);
+            const scale = 0.03; // 减小默认缩放比例
+            
+            // 添加随机偏移以避免每次生成相同场景
+            const offsetX = Math.random() * 1000;
+            const offsetY = Math.random() * 1000;
+            
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const nx = (x + offsetX) * scale;
+                    const ny = (y + offsetY) * scale;
+                    // 使用更复杂的噪声模式
+                    const value = Math.sin(nx) * 0.5 + Math.sin(ny) * 0.5 + 
+                                 Math.sin(nx * 2.1 + ny * 1.7) * 0.25;
+                    data[y * size + x] = (value + 1) * 0.5;
+                }
+            }
+            
+            return data;
+        }
+        
+        // Simplex噪声简化版
+        function simplexNoise(size) {
+            const data = new Array(size * size);
+            const scale = 0.02; // 减小默认缩放比例
+            
+            // 添加随机偏移以避免每次生成相同场景
+            const offsetX = Math.random() * 1000;
+            const offsetY = Math.random() * 1000;
+            
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const nx = (x + offsetX) * scale;
+                    const ny = (y + offsetY) * scale;
+                    // 使用更复杂的噪声模式
+                    const value = Math.sin(nx) * Math.cos(ny) * 0.5 + 
+                                 Math.sin(nx * 1.9) * Math.cos(ny * 2.3) * 0.3;
+                    data[y * size + x] = (value + 1) * 0.5;
+                }
+            }
+            
+            return data;
+        }
+        
+        // 创建地形
+        function createTerrain() {
+            const scale = parseFloat(document.getElementById('scale').value);
+            const minHeight = parseInt(document.getElementById('minHeight').value);
+            const maxHeight = parseInt(document.getElementById('maxHeight').value);
+            const size = parseInt(document.getElementById('terrainSize').value);
+            
+            const fractalType = document.getElementById('fractalType').value;
+            
+            // 生成高度数据
+            switch(fractalType) {
+                case 'diamondSquare':
+                    heightData = diamondSquare(size + 1);
+                    break;
+                case 'perlin':
+                    heightData = perlinNoise(size + 1);
+                    break;
+                case 'simplex':
+                    heightData = simplexNoise(size + 1);
+                    break;
+            }
+            
+            // 移除旧的地形
+            if (terrain) scene.remove(terrain);
+            if (water) scene.remove(water);
+            
+            // 创建地形几何体，应用水平缩放
+            const geometry = new THREE.PlaneGeometry(size * scale, size * scale, size, size);
+            geometry.rotateX(-Math.PI / 2);
+            
+            // 设置顶点高度
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0; i <= size; i++) {
+                for (let j = 0; j <= size; j++) {
+                    const index = (i * (size + 1) + j) * 3 + 1;
+                    let height = heightData[i * (size + 1) + j];
+                    height = minHeight + height * (maxHeight - minHeight);
+                    vertices[index] = height;
+                }
+            }
+            
+            geometry.computeVertexNormals();
+            
+            // 创建材质
+            const grassMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x4CAF50,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            
+            const rockMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x795548,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            
+            // 创建地形网格
+            terrain = new THREE.Mesh(geometry, [grassMaterial, rockMaterial]);
+            terrain.receiveShadow = true;
+            terrain.castShadow = true;
+            scene.add(terrain);
+            
+            // 创建水面，确保水面大小与地形匹配
+            const waterGeometry = new THREE.PlaneGeometry(size * scale, size * scale);
+            waterGeometry.rotateX(-Math.PI / 2);
+            const waterMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2196F3,
+                transparent: true,
+                opacity: 0.7,
+                roughness: 0.1,
+                metalness: 0.8
+            });
+            water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.position.y = 3;
+            scene.add(water);
+            
+            // 应用材质
+            applyMaterials(size, minHeight, maxHeight);
+        }
+        
+        // 应用材质
+        function applyMaterials(size, minHeight, maxHeight) {
+            const geometry = terrain.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = [];
+            
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const index = (i * (size + 1) + j) * 3 + 1;
+                    const height = vertices[index];
+                    
+                    if (height > 7) {
+                        // 岩石
+                        indices.push(i * size + j);
+                    }
+                }
+            }
+            
+            // 这里简化处理，实际应该使用多材质或纹理混合
+            terrain.material = new THREE.MeshStandardMaterial({
+                color: 0x4CAF50,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+        }
+        
+        // 重新生成地形
+        function regenerateTerrain() {
+            createTerrain();
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            document.getElementById('scale').addEventListener('input', function(e) {
+                document.getElementById('scaleValue').textContent = e.target.value;
+            });
+            
+            document.getElementById('minHeight').addEventListener('input', function(e) {
+                document.getElementById('minHeightValue').textContent = e.target.value;
+            });
+            
+            document.getElementById('maxHeight').addEventListener('input', function(e) {
+                document.getElementById('maxHeightValue').textContent = e.target.value;
+            });
+            
+            document.getElementById('terrainSize').addEventListener('input', function(e) {
+                document.getElementById('terrainSizeValue').textContent = e.target.value;
+            });
+            
+            window.addEventListener('resize', function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 启动
+        init();
+        animate();
+    </script>
+</body>
+</html>
