@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!--
+写一个html程序，生成程序化星球，使用pbr材质并生成包含星空的天空球，通过鼠标控制旋转。星球类型可选恒星、岩石行星、海洋行星和气体行星。对创建4到6种颜色预设供选择，海洋行星陆地部分为植被材质，可选海洋高度（取值范围为陆地的最小到最大高度）。在菜单添加重新生成按钮用于再次生成包含随机噪波偏移的星球。
+
+注：本次在网页版进行了修改，手动修改了OrbitControls.min.js地址以及背景颜色深度，背景星球数量未成功修复。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <title>程序化星球生成器</title>
+    <style>
+        body{margin:0;font-family:Arial,Helvetica,sans-serif;overflow:hidden;background:#000;}
+        #canvas{display:block;}
+        #controls{
+            position:absolute;top:20px;left:20px;
+            background:rgba(0,0,0,.75);padding:20px;border-radius:10px;
+            color:#fff;font-size:14px;min-width:260px;
+        }
+        .control-group{margin-bottom:15px;}
+        label{display:block;margin-bottom:5px;}
+        select,input,button{width:100%;padding:6px;border-radius:5px;border:none;margin-bottom:8px;}
+        button{background:#4CAF50;color:#fff;cursor:pointer;}
+        button:hover{background:#45a049;}
+        .color-presets{display:flex;gap:6px;flex-wrap:wrap;}
+        .color-preset{
+            width:30px;height:30px;border-radius:50%;cursor:pointer;
+            border:2px solid transparent;
+        }
+        .color-preset.active{border-color:#fff;}
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div id="controls">
+    <div class="control-group">
+        <label>星球类型</label>
+        <select id="planetType">
+            <option value="star">恒星</option>
+            <option value="rocky">岩石行星</option>
+            <option value="ocean">海洋行星</option>
+            <option value="gas">气体行星</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>颜色预设</label>
+        <div id="colorPresets" class="color-presets"></div>
+    </div>
+
+    <div class="control-group" id="oceanHeightGroup" style="display:none;">
+        <label>海平面高度：<span id="oceanHeightValue">0.5</span></label>
+        <input type="range" id="oceanHeight" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <button onclick="regeneratePlanet()">重新生成</button>
+</div>
+
+<!-- Three.js & OrbitControls -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+<script>
+/* 基础设置 */
+let scene, camera, renderer, controls;
+let planetMesh, skyMesh, light;
+let currentType = 'star';
+let noiseSeed = Math.random()*10000;
+
+const planetCfgs = {
+    star:{
+        colors:['#ff5a2b','#ffb700','#ffe100','#ffee55','#ff3c5a','#ff75b0'],
+        shader:'star'
+    },
+    rocky:{
+        colors:['#8b4513','#a0522d','#696969','#2f4f4f','#556b2f','#8b7355'],
+        shader:'rocky'
+    },
+    ocean:{
+        colors:['#228b22','#006400','#32cd32','#9acd32'],
+        shader:'ocean'
+    },
+    gas:{
+        colors:['#4fc3f7','#29b6f6','#ff7043','#ff9800','#9c27b0','#7b1fa2'],
+        shader:'gas'
+    }
+};
+
+/* 初始化场景 */
+function init(){
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);
+    camera.position.set(0,0,5);
+
+    renderer = new THREE.WebGLRenderer({canvas:document.getElementById('canvas'),antialias:true});
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setPixelRatio(devicePixelRatio);
+
+    /* 固定光源（不随星球旋转） */
+    light = new THREE.DirectionalLight(0xffffff,1.5);
+    light.position.set(5,5,5);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x202020));
+
+    /* 天空盒（深色+更多星星） */
+    createSkybox();
+
+    /* 星球 */
+    createPlanet();
+
+    /* 轨道控制器 */
+    controls = new THREE.OrbitControls(camera,renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = .05;
+
+    /* 事件 */
+    window.addEventListener('resize',onResize);
+    document.getElementById('planetType').addEventListener('change',onTypeChange);
+    document.getElementById('oceanHeight').addEventListener('input',onOceanHeight);
+
+    /* 首屏预设 */
+    updateColorPresets();
+
+    animate();
+}
+
+/* 天空盒 */
+function createSkybox(){
+    const skyGeo = new THREE.SphereGeometry(100,32,32);
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms:{time:{value:0}},
+        vertexShader:`varying vec3 vPos;
+        void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+        fragmentShader:`
+        varying vec3 vPos;
+        uniform float time;
+        float rand(vec2 c){return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453123);}
+        void main(){
+            vec3 dir=normalize(vPos);
+            vec3 col=vec3(0,0,0); /* 更深背景 */
+            for(int i=0;i<50;i++){        /* 更多星星 */
+                vec2 p=vec2(rand(vec2(float(i),0.)),rand(vec2(0.,float(i))));
+                float d=length(dir.xy-p*2.+1.);
+                col+=1./(1.+d*200.)*.4;
+            }
+            gl_FragColor=vec4(col,1.);
+        }`,
+        side:THREE.BackSide
+    });
+    skyMesh = new THREE.Mesh(skyGeo,skyMat);
+    scene.add(skyMesh);
+}
+
+/* 创建星球 */
+function createPlanet(){
+    if(planetMesh){
+        scene.remove(planetMesh);
+        planetMesh.geometry.dispose();
+        planetMesh.material.dispose();
+    }
+    const g = new THREE.SphereGeometry(2,64,64);
+    let mat;
+
+    const cfg = planetCfgs[currentType];
+    const sel = document.querySelector('.color-preset.active');
+    const baseColor = sel?sel.dataset.color:cfg.colors[0];
+
+    switch(currentType){
+        case 'star':
+            mat = createStarMat(baseColor);
+            break;
+        case 'rocky':
+            mat = createRockyMat(baseColor);
+            break;
+        case 'ocean':
+            const h = parseFloat(document.getElementById('oceanHeight').value);
+            mat = createOceanMat(h,baseColor);
+            break;
+        case 'gas':
+            mat = createGasMat(baseColor);
+            break;
+    }
+    planetMesh = new THREE.Mesh(g,mat);
+    scene.add(planetMesh);
+}
+
+/* 材质函数 */
+function createStarMat(color){
+    return new THREE.ShaderMaterial({
+        uniforms:{color:new THREE.Uniform(new THREE.Color(color)),time:{value:0},noiseSeed:{value:noiseSeed}},
+        vertexShader:`varying vec2 vUv;varying vec3 vNormal;
+        void main(){vUv=uv;vNormal=normal;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+        fragmentShader:`
+        uniform vec3 color;uniform float time, noiseSeed;
+        varying vec2 vUv;varying vec3 vNormal;
+        float noise(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,45.164)))*43758.5453123);}
+        void main(){
+            vec3 p=vNormal*4.+noiseSeed;
+            float n=noise(p+time*.2);
+            gl_FragColor=vec4(color*(.8+.3*n),1.);
+        }`
+    });
+}
+function createRockyMat(color){
+    return new THREE.ShaderMaterial({
+        uniforms:{color:new THREE.Uniform(new THREE.Color(color)),noiseSeed:{value:noiseSeed}},
+        vertexShader:`uniform float noiseSeed;
+        varying vec3 vNormal;varying vec3 vPos;
+        float noise(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,45.164)))*43758.5453123);}
+        void main(){
+            vNormal=normal;
+            float n=noise(position*3.+noiseSeed)*.15;
+            vec3 pos=position+normal*n;
+            vPos=pos;
+            gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);
+        }`,
+        fragmentShader:`
+        uniform vec3 color;varying vec3 vNormal;varying vec3 vPos;
+        void main(){
+            vec3 light=normalize(vec3(1.,1.,1.));
+            float diff=max(dot(vNormal,light),0.);
+            gl_FragColor=vec4(color*(.4+.6*diff),1.);
+        }`
+    });
+}
+function createOceanMat(height,landColor){
+    return new THREE.ShaderMaterial({
+        uniforms:{
+            oceanHeight:{value:height},
+            landColor:{value:new THREE.Color(landColor)},
+            waterColor:{value:new THREE.Color(0x006994)},
+            noiseSeed:{value:noiseSeed}
+        },
+        vertexShader:`uniform float noiseSeed;
+        varying vec2 vUv;varying vec3 vNormal;varying float vElev;
+        float noise(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,45.164)))*43758.5453123);}
+        void main(){
+            vUv=uv;
+            vNormal=normal;
+            float n=noise(position*2.+noiseSeed);
+            vElev=n;
+            vec3 pos=position+normal*n*.2;
+            gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);
+        }`,
+        fragmentShader:`
+        uniform float oceanHeight;uniform vec3 landColor,waterColor;
+        varying float vElev;
+        void main(){
+            vec3 col=mix(waterColor,landColor,smoothstep(oceanHeight-.1,oceanHeight+.1,vElev));
+            gl_FragColor=vec4(col,1.);
+        }`
+    });
+}
+function createGasMat(color){
+    return new THREE.ShaderMaterial({
+        uniforms:{color:new THREE.Uniform(new THREE.Color(color)),time:{value:0},noiseSeed:{value:noiseSeed}},
+        vertexShader:`varying vec2 vUv;
+        void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+        fragmentShader:`
+        uniform vec3 color;uniform float time,noiseSeed;
+        varying vec2 vUv;
+        float noise(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453123);}
+        void main(){
+            vec2 p=vUv*4.+vec2(time*.05,noiseSeed);
+            float n=noise(p);
+            n+=noise(p*2.)*.5;
+            n+=noise(p*4.)*.25;
+            gl_FragColor=vec4(color*(.6+.4*n),1.);
+        }`
+    });
+}
+
+/* UI更新 */
+function updateColorPresets(){
+    const box=document.getElementById('colorPresets');
+    const cfg=planetCfgs[currentType];
+    box.innerHTML='';
+    cfg.colors.forEach((c,i)=>{
+        const d=document.createElement('div');
+        d.className='color-preset'+(i===0?' active':'');
+        d.style.backgroundColor=c;
+        d.dataset.color=c;
+        d.onclick=()=>{document.querySelectorAll('.color-preset').forEach(x=>x.classList.remove('active'));d.classList.add('active');createPlanet();};
+        box.appendChild(d);
+    });
+}
+function onTypeChange(e){
+    currentType=e.target.value;
+    document.getElementById('oceanHeightGroup').style.display=currentType==='ocean'?'block':'none';
+    updateColorPresets();
+    createPlanet();
+}
+function onOceanHeight(e){
+    document.getElementById('oceanHeightValue').textContent=e.target.value;
+    if(currentType==='ocean')createPlanet();
+}
+function regeneratePlanet(){
+    noiseSeed=Math.random()*10000;
+    createPlanet();
+}
+function onResize(){
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+}
+function animate(){
+    requestAnimationFrame(animate);
+    if(planetMesh&&planetMesh.material.uniforms.time)
+        planetMesh.material.uniforms.time.value+=0.01;
+    if(skyMesh.material.uniforms.time)
+        skyMesh.material.uniforms.time.value+=0.002;
+    controls.update();
+    renderer.render(scene,camera);
+}
+
+init();
+</script>
+</body>
+</html>

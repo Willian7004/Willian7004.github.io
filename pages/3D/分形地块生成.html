@@ -2,7 +2,7 @@
 <!--
 创建html页面，在32×32的区域生成地形分形，高度范围为0到8，可在菜单选择分形类型、分形水平缩放、高度范围和生成区域大小。高度为3的平面添加水面材质，高度大于7的地形上添加岩石材质，其它部分添加草地材质。创建天空球并开启pbr渲染。通过鼠标控制场景旋转，在菜单添加按钮用于重新生成分形。
 
-注：本次网页版完成度不高，但另外生成时也遇到不少问题，决定由网页版的结果进行修改，只修复了缩放和柏林噪声和Simplex噪声无随机偏移的问题，仍然存在柏林噪声和Simplex噪声默认缩放比例过大以及大小为48时钻石分形无法生成的问题。
+注：本次网页版完成度不高，但另外生成时也遇到不少问题，决定由网页版的结果进行修改，只修复了缩放和柏林噪声和Simplex噪声无随机偏移的问题，手动修复了柏林噪声和Simplex噪声默认缩放比例过大的问题，仍然存在大小为48时钻石分形无法生成的问题。
 -->
 <html lang="zh-CN">
 <head>
@@ -192,7 +192,7 @@
                 }
                 
                 step = halfStep;
-                scale *= roughness;
+                scale *= 0.8*roughness;
             }
             
             return data;
@@ -201,7 +201,7 @@
         // 柏林噪声简化版
         function perlinNoise(size) {
             const data = new Array(size * size);
-            const scale = 0.03; // 减小默认缩放比例
+            const scale = 0.2; // 减小默认缩放比例
             
             // 添加随机偏移以避免每次生成相同场景
             const offsetX = Math.random() * 1000;
@@ -224,7 +224,7 @@
         // Simplex噪声简化版
         function simplexNoise(size) {
             const data = new Array(size * size);
-            const scale = 0.02; // 减小默认缩放比例
+            const scale = 0.2; // 减小默认缩放比例
             
             // 添加随机偏移以避免每次生成相同场景
             const offsetX = Math.random() * 1000;
