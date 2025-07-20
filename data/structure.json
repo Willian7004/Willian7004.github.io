@@ -404,6 +404,12 @@
   "pages": {
     "2D": [
       {
+        "name": "实时分形生成.html",
+        "path": "pages\\2D\\实时分形生成.html",
+        "ctime": "Sun Jul 20 22:22:12 2025",
+        "mtime": "Sun Jul 20 22:58:34 2025"
+      },
+      {
         "name": "沃洛诺伊分形动画.html",
         "path": "pages\\2D\\沃洛诺伊分形动画.html",
         "ctime": "Sat Jul 19 22:35:46 2025",
