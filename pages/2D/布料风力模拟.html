@@ -2,399 +2,267 @@
 <!--
 创建一个2d布料模拟，布料使用方形网格形式，固定顶部部分点。点击并拖动界面时绘制箭头并模拟风力效果，通过拖动方向确定风向，拖动距离确定风力强度。在菜单设置风力强度倍数以及是否开启多个风力。关闭多个风力时结束拖动撤销风力并删除相应箭头；开启多个风力时结束拖动仍保留风力并可创建其它风力，点击相应箭头撤销风力。
 
-注：本程序风力效果不符合预期，但不确定修改方法，暂时保留。调整了布料生成规格的逻辑。
+注：本程序在网页版进行修改，处理了生成逻辑、风力逻辑和触屏支持问题，手动修改了风力倍数。
 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D布料模拟 - 风力交互</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2D布料模拟</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+        *{margin:0;padding:0;box-sizing:border-box;overflow:hidden;}
+        body{font-family:Arial,Helvetica,sans-serif;background:#111;color:#fff;}
+        #canvas{display:block;background:#fff;}
+        #controls{
+            position:absolute;top:0;left:0;
+            background:rgba(0,0,0,.6);color:#fff;
+            padding:10px;border-radius:0 0 8px 0;
+            font-size:14px;line-height:1.4;
+            user-select:none;-webkit-user-select:none;
         }
-        
-        #canvas {
-            border: 1px solid #ccc;
-            cursor: crosshair;
-            display: block;
-            margin: 20px auto;
-            background-color: white;
-        }
-        
-        #controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .control-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #333;
-        }
-        
-        input[type="range"] {
-            width: 150px;
-        }
-        
-        input[type="checkbox"] {
-            margin-right: 5px;
-        }
-        
-        #windForce {
-            width: 50px;
-            text-align: center;
-            margin-left: 10px;
-        }
+        #controls label{display:block;margin-bottom:4px;}
+        #controls input[type=range]{width:120px;vertical-align:middle;}
+        #windForceVal{margin-left:4px;font-weight:bold;}
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    
     <div id="controls">
-        <div class="control-group">
-            <label>
-                风力强度倍数：<span id="windForce">1.0</span>
-            </label>
-            <input type="range" id="windMultiplier" min="0.1" max="5" step="0.1" value="1">
-        </div>
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="multiWind" checked>
-                开启多个风力
-            </label>
-        </div>
+        <label>
+            风力倍数：<span id="windForceVal">0.001</span>
+            <input type="range" id="windMul" min="0.0003" max="0.003" step="0.0001" value="0.001">
+        </label>
+        <label>
+            <input type="checkbox" id="multiWind" checked>
+            多风力
+        </label>
     </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const windMultiplierSlider = document.getElementById('windMultiplier');
-        const windForceDisplay = document.getElementById('windForce');
-        const multiWindCheckbox = document.getElementById('multiWind');
-        
-        // 设置画布大小
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        // 布料参数
-        const GRID_SIZE = 20;
-        const CLOTH_WIDTH = Math.round(window.innerWidth*0.05);
-        const CLOTH_HEIGHT = Math.round(window.innerHeight*0.05);
-        const SPACING = 15;
-        
-        // 物理参数
-        const GRAVITY = 0.2;
-        const DAMPING = 0.99;
-        const CONSTRAINT_ITERATIONS = 3;
-        
-        // 风力相关
-        let winds = [];
-        let currentWind = null;
-        let isDragging = false;
-        let dragStart = null;
-        
-        // 布料点类
-        class Point {
-            constructor(x, y, pinned = false) {
-                this.x = x;
-                this.y = y;
-                this.oldX = x;
-                this.oldY = y;
-                this.pinned = pinned;
-            }
-            
-            update() {
-                if (!this.pinned) {
-                    const vx = (this.x - this.oldX) * DAMPING;
-                    const vy = (this.y - this.oldY) * DAMPING;
-                    
-                    this.oldX = this.x;
-                    this.oldY = this.y;
-                    
-                    this.x += vx;
-                    this.y += vy;
-                    this.y += GRAVITY;
-                    
-                    // 应用风力
-                    winds.forEach(wind => {
-                        const dx = wind.endX - wind.startX;
-                        const dy = wind.endY - wind.startY;
-                        const force = Math.sqrt(dx * dx + dy * dy) * windMultiplierSlider.value * 0.01;
-                        
-                        const distance = Math.sqrt(
-                            Math.pow(this.x - wind.startX, 2) + 
-                            Math.pow(this.y - wind.startY, 2)
-                        );
-                        
-                        if (distance < 200) {
-                            const factor = (200 - distance) / 200;
-                            this.x += dx * force * factor;
-                            this.y += dy * force * factor;
-                        }
-                    });
-                }
-            }
-            
-            constrain() {
-                if (this.x < 0) this.x = 0;
-                if (this.x > canvas.width) this.x = canvas.width;
-                if (this.y < 0) this.y = 0;
-                if (this.y > canvas.height) this.y = canvas.height;
+    // ================== 基础设置 ==================
+    const cv = document.getElementById('canvas');
+    const ctx = cv.getContext('2d');
+
+    // 全屏
+    function resize(){
+        cv.width = window.innerWidth;
+        cv.height = window.innerHeight;
+    }
+    window.addEventListener('resize',resize);
+    resize();
+
+    // 控制面板
+    const mulSlider = document.getElementById('windMul');
+    const mulVal    = document.getElementById('windForceVal');
+    const multiChk  = document.getElementById('multiWind');
+    mulSlider.addEventListener('input',()=>mulVal.textContent = mulSlider.value);
+
+    // ================== 布料参数 ==================
+    const GRAVITY = 0.25;
+    const DAMPING = 0.99;
+    const INTS    = 3;
+
+    let points = [], cons = [];
+    let cols,rows,space;
+
+    function initCloth(){
+        // 根据窗口决定网格
+        cols = Math.floor(cv.width/30);
+        rows = Math.floor(cv.height/30);
+        space = Math.min(cv.width/(cols+1), cv.height/(rows+1));
+
+        points = [];
+        cons   = [];
+
+        // 创建点
+        const startX = (cv.width - cols*space)/2;
+        const startY = 40;
+        for(let r=0;r<=rows;r++){
+            for(let c=0;c<=cols;c++){
+                const x = startX + c*space;
+                const y = startY + r*space;
+                const pinned = r===0 && c%3===0;
+                points.push(new Point(x,y,pinned));
             }
         }
-        
-        // 布料约束类
-        class Constraint {
-            constructor(p1, p2) {
-                this.p1 = p1;
-                this.p2 = p2;
-                this.length = Math.sqrt(
-                    Math.pow(p2.x - p1.x, 2) + 
-                    Math.pow(p2.y - p1.y, 2)
-                );
-            }
-            
-            satisfy() {
-                const dx = this.p2.x - this.p1.x;
-                const dy = this.p2.y - this.p1.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const difference = this.length - distance;
-                const percent = difference / distance / 2;
-                const offsetX = dx * percent;
-                const offsetY = dy * percent;
-                
-                if (!this.p1.pinned) {
-                    this.p1.x -= offsetX;
-                    this.p1.y -= offsetY;
-                }
-                if (!this.p2.pinned) {
-                    this.p2.x += offsetX;
-                    this.p2.y += offsetY;
-                }
-            }
-        }
-        
-        // 初始化布料
-        const points = [];
-        const constraints = [];
-        
-        for (let y = 0; y <= CLOTH_HEIGHT; y++) {
-            for (let x = 0; x <= CLOTH_WIDTH; x++) {
-                const px = canvas.width / 2 - (CLOTH_WIDTH * SPACING) / 2 + x * SPACING;
-                const py = 50 + y * SPACING;
-                const pinned = y === 0 && (x % 3 === 0);
-                points.push(new Point(px, py, pinned));
-            }
-        }
-        
+
         // 创建约束
-        for (let y = 0; y <= CLOTH_HEIGHT; y++) {
-            for (let x = 0; x <= CLOTH_WIDTH; x++) {
-                const i = y * (CLOTH_WIDTH + 1) + x;
-                
-                if (x < CLOTH_WIDTH) {
-                    constraints.push(new Constraint(points[i], points[i + 1]));
-                }
-                if (y < CLOTH_HEIGHT) {
-                    constraints.push(new Constraint(points[i], points[i + CLOTH_WIDTH + 1]));
-                }
+        for(let r=0;r<=rows;r++){
+            for(let c=0;c<=cols;c++){
+                const idx = r*(cols+1)+c;
+                if(c<cols)   cons.push(new Constraint(points[idx],points[idx+1]));
+                if(r<rows)   cons.push(new Constraint(points[idx],points[idx+cols+1]));
             }
         }
-        
-        // 绘制箭头
-        function drawArrow(startX, startY, endX, endY, color = 'rgba(255, 0, 0, 0.5)') {
-            const dx = endX - startX;
-            const dy = endY - startY;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            
-            if (length === 0) return;
-            
-            ctx.save();
-            ctx.strokeStyle = color;
-            ctx.fillStyle = color;
-            ctx.lineWidth = 3;
-            
-            // 绘制线
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-            
-            // 绘制箭头头部
-            const angle = Math.atan2(dy, dx);
-            const headLength = 10;
-            
-            ctx.beginPath();
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(
-                endX - headLength * Math.cos(angle - Math.PI / 6),
-                endY - headLength * Math.sin(angle - Math.PI / 6)
-            );
-            ctx.lineTo(
-                endX - headLength * Math.cos(angle + Math.PI / 6),
-                endY - headLength * Math.sin(angle + Math.PI / 6)
-            );
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.restore();
+    }
+
+    // ================== 物理类 ==================
+    class Point{
+        constructor(x,y,p=false){
+            this.x=x;this.y=y;
+            this.ox=x;this.oy=y;
+            this.p=p;
         }
-        
-        // 更新和绘制
-        function update() {
-            // 更新物理
-            points.forEach(point => point.update());
-            
-            for (let i = 0; i < CONSTRAINT_ITERATIONS; i++) {
-                constraints.forEach(constraint => constraint.satisfy());
+        update(){
+            if(this.p) return;
+            let vx=(this.x-this.ox)*DAMPING;
+            let vy=(this.y-this.oy)*DAMPING;
+            this.ox=this.x;this.oy=this.y;
+            this.x+=vx;this.y+=vy;
+            this.y+=GRAVITY;
+
+            // 统一风力
+            for(const w of winds){
+                const dx = w.ex-w.sx;
+                const dy = w.ey-w.sy;
+                const f  = Math.sqrt(dx*dx+dy*dy)*mulSlider.value*0.008;
+                this.x += dx*f;
+                this.y += dy*f;
             }
-            
-            points.forEach(point => point.constrain());
-            
-            // 清空画布
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 绘制布料
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
-            
-            // 绘制三角形网格
-            for (let y = 0; y < CLOTH_HEIGHT; y++) {
-                for (let x = 0; x < CLOTH_WIDTH; x++) {
-                    const i1 = y * (CLOTH_WIDTH + 1) + x;
-                    const i2 = i1 + 1;
-                    const i3 = i1 + CLOTH_WIDTH + 1;
-                    const i4 = i3 + 1;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(points[i1].x, points[i1].y);
-                    ctx.lineTo(points[i2].x, points[i2].y);
-                    ctx.lineTo(points[i3].x, points[i3].y);
-                    ctx.closePath();
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(points[i2].x, points[i2].y);
-                    ctx.lineTo(points[i4].x, points[i4].y);
-                    ctx.lineTo(points[i3].x, points[i3].y);
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-            }
-            
-            // 绘制固定点
-            ctx.fillStyle = '#ff0000';
-            points.forEach(point => {
-                if (point.pinned) {
-                    ctx.beginPath();
-                    ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
-            
-            // 绘制风力箭头
-            winds.forEach((wind, index) => {
-                const alpha = wind === currentWind ? 0.8 : 0.5;
-                drawArrow(wind.startX, wind.startY, wind.endX, wind.endY, `rgba(255, 0, 0, ${alpha})`);
-            });
-            
-            // 绘制当前拖动箭头
-            if (isDragging && dragStart) {
-                drawArrow(dragStart.x, dragStart.y, dragStart.x + dragStart.dx, dragStart.y + dragStart.dy, 'rgba(0, 255, 0, 0.7)');
-            }
-            
-            requestAnimationFrame(update);
         }
-        
-        // 鼠标事件
-        canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // 检查是否点击了现有风力箭头
-            for (let i = winds.length - 1; i >= 0; i--) {
-                const wind = winds[i];
-                const dx = wind.endX - wind.startX;
-                const dy = wind.endY - wind.startY;
-                const len = Math.sqrt(dx * dx + dy * dy);
-                
-                // 检查点击是否在箭头附近
-                const distToLine = Math.abs(
-                    (wind.endY - wind.startY) * x - (wind.endX - wind.startX) * y + 
-                    wind.endX * wind.startY - wind.endY * wind.startX
-                ) / len;
-                
-                if (distToLine < 10 && 
-                    x >= Math.min(wind.startX, wind.endX) - 10 && 
-                    x <= Math.max(wind.startX, wind.endX) + 10 &&
-                    y >= Math.min(wind.startY, wind.endY) - 10 && 
-                    y <= Math.max(wind.startY, wind.endY) + 10) {
-                    
-                    winds.splice(i, 1);
-                    return;
-                }
+        constrain(){
+            this.x = Math.max(0,Math.min(cv.width,this.x));
+            this.y = Math.max(0,Math.min(cv.height,this.y));
+        }
+    }
+
+    class Constraint{
+        constructor(a,b){this.a=a;this.b=b;this.len=Math.hypot(b.x-a.x,b.y-a.y);}
+        satisfy(){
+            const dx=this.b.x-this.a.x;
+            const dy=this.b.y-this.a.y;
+            const d = Math.hypot(dx,dy);
+            const diff = (this.len-d)/d/2;
+            const ox = dx*diff;
+            const oy = dy*diff;
+            if(!this.a.p){this.a.x-=ox;this.a.y-=oy;}
+            if(!this.b.p){this.b.x+=ox;this.b.y+=oy;}
+        }
+    }
+
+    // ================== 风力管理 ==================
+    let winds = [];
+    let curWind = null;
+    let drag = null;
+
+    function drawArrow(sx,sy,ex,ey,color='rgba(255,0,0,0.6)'){
+        ctx.save();
+        ctx.strokeStyle=color;
+        ctx.fillStyle=color;
+        ctx.lineWidth=3;
+        ctx.beginPath();
+        ctx.moveTo(sx,sy);
+        ctx.lineTo(ex,ey);
+        ctx.stroke();
+        const ang = Math.atan2(ey-sy,ex-sx);
+        const h=12;
+        ctx.beginPath();
+        ctx.moveTo(ex,ey);
+        ctx.lineTo(ex-h*Math.cos(ang-Math.PI/6),ey-h*Math.sin(ang-Math.PI/6));
+        ctx.lineTo(ex-h*Math.cos(ang+Math.PI/6),ey-h*Math.sin(ang+Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ================== 触摸/鼠标事件 ==================
+    function pointerPos(e){
+        const rect = cv.getBoundingClientRect();
+        return {x:e.clientX-rect.left,y:e.clientY-rect.top};
+    }
+
+    function onDown(e){
+        const p = pointerPos(e);
+        // 检查是否点击箭头
+        for(let i=winds.length-1;i>=0;i--){
+            const w=winds[i];
+            const d = Math.hypot(w.ex-w.sx,w.ey-w.sy);
+            const dist = Math.abs((w.ey-w.sy)*p.x-(w.ex-w.sx)*p.y+w.ex*w.sy-w.ey*w.sx)/d;
+            if(dist<15 &&
+               p.x>=Math.min(w.sx,w.ex)-15 && p.x<=Math.max(w.sx,w.ex)+15 &&
+               p.y>=Math.min(w.sy,w.ey)-15 && p.y<=Math.max(w.sy,w.ey)+15){
+                winds.splice(i,1);
+                return;
             }
-            
-            isDragging = true;
-            dragStart = { x, y, dx: 0, dy: 0 };
-        });
-        
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDragging || !dragStart) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            dragStart.dx = x - dragStart.x;
-            dragStart.dy = y - dragStart.y;
-        });
-        
-        canvas.addEventListener('mouseup', (e) => {
-            if (!isDragging || !dragStart) return;
-            
-            if (Math.abs(dragStart.dx) > 5 || Math.abs(dragStart.dy) > 5) {
-                const wind = {
-                    startX: dragStart.x,
-                    startY: dragStart.y,
-                    endX: dragStart.x + dragStart.dx,
-                    endY: dragStart.y + dragStart.dy
-                };
-                
-                if (!multiWindCheckbox.checked) {
-                    winds = [wind];
-                } else {
-                    winds.push(wind);
-                }
+        }
+        drag = {sx:p.x,sy:p.y,ex:p.x,ey:p.y};
+    }
+
+    function onMove(e){
+        if(!drag) return;
+        const p = pointerPos(e);
+        drag.ex=p.x;drag.ey=p.y;
+    }
+
+    function onUp(e){
+        if(!drag) return;
+        const dx = drag.ex-drag.sx;
+        const dy = drag.ey-drag.sy;
+        if(Math.hypot(dx,dy)>20){
+            const w = {sx:drag.sx,sy:drag.sy,ex:drag.ex,ey:drag.ey};
+            if(!multiChk.checked) winds=[w];
+            else winds.push(w);
+        }
+        drag=null;
+    }
+
+    // 鼠标
+    cv.addEventListener('mousedown',onDown);
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('mouseup',onUp);
+    // 触屏
+    cv.addEventListener('touchstart',e=>{e.preventDefault();onDown(e.touches[0]);});
+    window.addEventListener('touchmove',e=>{e.preventDefault();onMove(e.touches[0]);});
+    window.addEventListener('touchend',e=>{e.preventDefault();onUp(e.changedTouches[0]);});
+
+    // ================== 主循环 ==================
+    function loop(){
+        // 物理
+        points.forEach(pt=>pt.update());
+        for(let i=0;i<INTS;i++) cons.forEach(c=>c.satisfy());
+        points.forEach(pt=>pt.constrain());
+
+        // 绘制
+        ctx.clearRect(0,0,cv.width,cv.height);
+
+        // 布料
+        ctx.strokeStyle='#222';
+        ctx.lineWidth=1;
+        for(let r=0;r<rows;r++){
+            for(let c=0;c<cols;c++){
+                const i1 = r*(cols+1)+c;
+                const i2 = i1+1;
+                const i3 = i1+cols+1;
+                const i4 = i3+1;
+                ctx.beginPath();
+                ctx.moveTo(points[i1].x,points[i1].y);
+                ctx.lineTo(points[i2].x,points[i2].y);
+                ctx.lineTo(points[i3].x,points[i3].y);
+                ctx.closePath();ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(points[i2].x,points[i2].y);
+                ctx.lineTo(points[i4].x,points[i4].y);
+                ctx.lineTo(points[i3].x,points[i3].y);
+                ctx.closePath();ctx.stroke();
             }
-            
-            isDragging = false;
-            dragStart = null;
+        }
+
+        // 固定点
+        ctx.fillStyle='red';
+        points.forEach(p=>{
+            if(p.p){ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();}
         });
-        
-        // 更新风力显示
-        windMultiplierSlider.addEventListener('input', (e) => {
-            windForceDisplay.textContent = e.target.value;
-        });
-        
-        // 开始动画
-        update();
+
+        // 风力箭头
+        winds.forEach(w=>drawArrow(w.sx,w.sy,w.ex,w.ey,'rgba(255,0,0,0.6)'));
+        if(drag) drawArrow(drag.sx,drag.sy,drag.ex,drag.ey,'rgba(0,255,0,0.7)');
+
+        requestAnimationFrame(loop);
+    }
+
+    // 首次初始化
+    initCloth();
+    loop();
     </script>
 </body>
 </html>
