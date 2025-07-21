@@ -136,7 +136,7 @@
     }
     
 .sidebar.collapsed {
-    height: 10%;
+    height: 6%;
     overflow: hidden;
 }
 
@@ -148,7 +148,7 @@
         display: none;
     }
     .article-content {
-    height: 80%;
+    height: 85%;
     }
 }
 
