@@ -86,6 +86,7 @@ Ubuntu25.04使用了新的Gnome版本，性能有一定提升，在j1800也达�
 3. Komga，用于文档媒体库。
 4. Watchtowver，用于自动更新Docker镜像。
 5. Openwebui，用于调用LLM，并执行生成的python程序。
+6. Jekyll,用于本地构建并部署Github Pages,需要jekyll：pages镜像并执行`gem install webrick`安装依赖。
 
 ##### 下载服务器
 
