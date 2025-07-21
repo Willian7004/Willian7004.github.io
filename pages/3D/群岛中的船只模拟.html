@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<!--
+使用html创建水面场景，使用pbr渲染。在水面上随机生成基于椭圆柱形变得到的带有树的岛屿。创建第一人称视角的船只模拟，有键盘的设备使用WASD键控制，无键盘的设备使用摇杆控制，摄像机跟随船只旋转。根据与摄像机的距离创建和删除场景。
+
+注：本期修改了参数但效果不太理想，船只转向方法没有成功修改。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水面船只模拟器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        #joystick {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            display: none;
+            touch-action: none;
+        }
+        
+        #joystickKnob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+            #joystick {
+                display: block;
+            }
+            #controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <div>WASD 控制船只移动</div>
+        <div>鼠标移动 控制视角</div>
+    </div>
+    <div id="joystick">
+        <div id="joystickKnob"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 初始化场景、相机和渲染器
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+
+        // 创建天空盒
+        const skyGeometry = new THREE.SphereGeometry(10000, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0x87CEEB),
+            side: THREE.BackSide
+        });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        // 创建水面
+        const waterGeometry = new THREE.PlaneGeometry(10000, 10000, 100, 100);
+        const waterMaterial = new THREE.MeshStandardMaterial({
+            color: 0x0077be,
+            metalness: 0.9,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        // 添加水面波浪效果
+        const waterVertices = waterGeometry.attributes.position.array;
+        for (let i = 0; i < waterVertices.length; i += 3) {
+            waterVertices[i + 2] = Math.sin(waterVertices[i] * 0.05) * Math.cos(waterVertices[i + 1] * 0.05) * 2;
+        }
+        waterGeometry.attributes.position.needsUpdate = true;
+        waterGeometry.computeVertexNormals();
+        
+        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        water.rotation.x = -Math.PI / 2;
+        water.receiveShadow = true;
+        scene.add(water);
+
+        // 创建船只
+        const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
+        const boatMaterial = new THREE.MeshStandardMaterial({
+            color: 0x654321,
+            metalness: 0.3,
+            roughness: 0.7
+        });
+        const boat = new THREE.Mesh(boatGeometry, boatMaterial);
+        boat.position.set(0, 0.5, 0);
+        boat.castShadow = true;
+        scene.add(boat);
+
+        // 船只控制变量
+        const boatVelocity = new THREE.Vector3();
+        const boatDirection = new THREE.Vector3();
+        const keys = { w: false, a: false, s: false, d: false };
+
+        // 创建树的函数
+        function createTree(x, y, z, scale) {
+            const treeGroup = new THREE.Group();
+            
+            // 树干
+            const trunkGeometry = new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 2 * scale, 8);
+            const trunkMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4B3621,
+                metalness: 0.1,
+                roughness: 0.9
+            });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 1 * scale;
+            trunk.castShadow = true;
+            treeGroup.add(trunk);
+
+            // 树冠
+            const leavesGeometry = new THREE.SphereGeometry(1.5 * scale, 8, 6);
+            const leavesMaterial = new THREE.MeshStandardMaterial({
+                color: 0x228B22,
+                metalness: 0.1,
+                roughness: 0.8
+            });
+            const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+            leaves.position.y = 2.5 * scale;
+            leaves.castShadow = true;
+            treeGroup.add(leaves);
+
+            treeGroup.position.set(x, y, z);
+            return treeGroup;
+        }
+
+        // 创建岛屿的函数
+        function createIsland(x, z) {
+            const islandGroup = new THREE.Group();
+            
+            // 随机参数
+            const baseRadius = 10 + Math.random() * 10;
+            const topRadius = 5 + Math.random() * 5;
+            const height = 3 + Math.random() * 2;
+            const horizontalScaleX = 0.8 + Math.random() * 0.4;
+            const horizontalScaleZ = 0.8 + Math.random() * 0.4;
+            const rotation = Math.random() * Math.PI * 2;
+            
+            // 创建下大上小的岛屿结构
+            const islandGeometry = new THREE.CylinderGeometry(
+                topRadius, 
+                baseRadius, 
+                height, 
+                32
+            );
+            const islandMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8B7355,
+                metalness: 0.1,
+                roughness: 0.9
+            });
+            const island = new THREE.Mesh(islandGeometry, islandMaterial);
+            island.position.y = -height / 2;
+            island.scale.set(horizontalScaleX, 1, horizontalScaleZ);
+            island.rotation.y = rotation;
+            island.castShadow = true;
+            island.receiveShadow = true;
+            islandGroup.add(island);
+
+            // 在岛屿上随机位置创建多棵树
+            const treeCount = 3 + Math.floor(Math.random() * 5); // 3-7棵树
+            for (let i = 0; i < treeCount; i++) {
+                // 在岛屿表面随机位置
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * (baseRadius * 0.7);
+                const treeX = Math.cos(angle) * distance * horizontalScaleX;
+                const treeZ = Math.sin(angle) * distance * horizontalScaleZ;
+                
+                // 计算树在岛屿表面的高度
+                const heightRatio = 0.8 - (distance / (baseRadius * 0.8));
+                const treeY = -height / 2 + height * heightRatio;
+                
+                // 随机缩放树
+                const treeScale = 1 + Math.random() * 0.8;
+                
+                const tree = createTree(treeX, treeY, treeZ, treeScale);
+                tree.rotation.y = Math.random() * Math.PI * 2;
+                islandGroup.add(tree);
+            }
+
+            islandGroup.position.set(x, 0, z);
+            return islandGroup;
+        }
+
+        // 岛屿管理
+        const islands = new Map();
+        const renderDistance = 800;
+
+        // 添加光源
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(50, 100, 50);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -100;
+        directionalLight.shadow.camera.right = 100;
+        directionalLight.shadow.camera.top = 100;
+        directionalLight.shadow.camera.bottom = -100;
+        scene.add(directionalLight);
+
+        // 相机设置
+        const cameraOffset = new THREE.Vector3(0, 5, -10);
+        camera.position.copy(boat.position).add(cameraOffset);
+        camera.lookAt(boat.position);
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = true; break;
+                case 'a': keys.a = true; break;
+                case 's': keys.s = true; break;
+                case 'd': keys.d = true; break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = false; break;
+                case 'a': keys.a = false; break;
+                case 's': keys.s = false; break;
+                case 'd': keys.d = false; break;
+            }
+        });
+
+        // 鼠标控制
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+
+        // 摇杆控制
+        const joystick = document.getElementById('joystick');
+        const joystickKnob = document.getElementById('joystickKnob');
+        let joystickActive = false;
+        let joystickVector = { x: 0, y: 0 };
+
+        joystick.addEventListener('touchstart', (e) => {
+            joystickActive = true;
+            handleJoystick(e.touches[0]);
+        });
+
+        joystick.addEventListener('touchmove', (e) => {
+            if (joystickActive) {
+                handleJoystick(e.touches[0]);
+                e.preventDefault();
+            }
+        });
+
+        joystick.addEventListener('touchend', () => {
+            joystickActive = false;
+            joystickVector = { x: 0, y: 0 };
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+        });
+
+        function handleJoystick(touch) {
+            const rect = joystick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let deltaX = touch.clientX - centerX;
+            let deltaY = touch.clientY - centerY;
+            
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const maxDistance = rect.width / 2;
+            
+            if (distance > maxDistance) {
+                deltaX = (deltaX / distance) * maxDistance;
+                deltaY = (deltaY / distance) * maxDistance;
+            }
+            
+            joystickKnob.style.transform = `translate(${deltaX - 20}px, ${deltaY - 20}px)`;
+            joystickVector = { x: deltaX / maxDistance, y: -deltaY / maxDistance };
+        }
+
+        // 更新岛屿
+        function updateIslands() {
+            const chunkSize = 100;
+            const boatChunkX = Math.floor(boat.position.x / chunkSize);
+            const boatChunkZ = Math.floor(boat.position.z / chunkSize);
+
+            // 检查周围的区块
+            for (let dx = -8; dx <= 8; dx++) {
+                for (let dz = -8; dz <= 8; dz++) {
+                    const chunkKey = `${boatChunkX + dx},${boatChunkZ + dz}`;
+                    
+                    if (!islands.has(chunkKey)) {
+                        const x = (boatChunkX + dx) * chunkSize + (Math.random() - 0.5) * chunkSize;
+                        const z = (boatChunkZ + dz) * chunkSize + (Math.random() - 0.5) * chunkSize;
+                        
+                        if (Math.random() < 0.8) { // 30%概率生成岛屿
+                            const island = createIsland(x, z);
+                            islands.set(chunkKey, island);
+                            scene.add(island);
+                        } else {
+                            islands.set(chunkKey, null);
+                        }
+                    }
+                }
+            }
+
+            // 移除远处的岛屿
+            islands.forEach((island, key) => {
+                if (island) {
+                    const distance = island.position.distanceTo(boat.position);
+                    if (distance > renderDistance) {
+                        scene.remove(island);
+                        islands.delete(key);
+                    }
+                }
+            });
+        }
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 更新水面动画
+            const time = Date.now() * 0.001;
+            const waterVertices = waterGeometry.attributes.position.array;
+            for (let i = 0; i < waterVertices.length; i += 3) {
+                waterVertices[i + 2] = Math.sin(waterVertices[i] * 0.05 + time) * Math.cos(waterVertices[i + 1] * 0.05 + time) * 2;
+            }
+            waterGeometry.attributes.position.needsUpdate = true;
+            waterGeometry.computeVertexNormals();
+
+            // 船只移动
+            const speed = 0.5;
+            let moveX = 0, moveZ = 0;
+
+            if (window.innerWidth > 768) {
+                // 键盘控制
+                if (keys.w) moveZ = 1;
+                if (keys.s) moveZ = -1;
+                if (keys.a) moveX = -1;
+                if (keys.d) moveX = 1;
+            } else {
+                // 摇杆控制
+                moveX = joystickVector.x;
+                moveZ = joystickVector.y;
+            }
+
+            boatVelocity.x = moveX * speed;
+            boatVelocity.z = moveZ * speed;
+            
+            boat.position.add(boatVelocity);
+            
+            // 船只转向 - 基于当前方向的转向
+            if (moveX !== 0 || moveZ !== 0) {
+                const targetDirection = new THREE.Vector3(moveX, 0, moveZ).normalize();
+                const currentDirection = new THREE.Vector3(0, 0, 1).applyQuaternion(boat.quaternion);
+                
+                // 计算目标角度和当前角度
+                const targetAngle = Math.atan2(targetDirection.x, targetDirection.z);
+                const currentAngle = Math.atan2(currentDirection.x, currentDirection.z);
+                
+                // 计算角度差
+                let angleDiff = targetAngle - currentAngle;
+                
+                // 处理角度跨越±π的情况
+                if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // 平滑转向
+                const turnSpeed = 0.1;
+                const newAngle = currentAngle + angleDiff * turnSpeed;
+                boat.rotation.y = newAngle;
+                
+                // 根据转向角度调整速度
+                const speedMultiplier = Math.cos(angleDiff) * 0.5 + 0.5; // 0-1之间
+                boatVelocity.multiplyScalar(speedMultiplier);
+            }
+
+            // 相机跟随
+            const idealOffset = new THREE.Vector3(0, 5, -10);
+            idealOffset.applyQuaternion(boat.quaternion);
+            idealOffset.add(boat.position);
+            
+            camera.position.lerp(idealOffset, 0.1);
+            camera.lookAt(boat.position);
+
+            // 更新岛屿
+            updateIslands();
+
+            renderer.render(scene, camera);
+        }
+
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 开始动画
+        animate();
+    </script>
+</body>
+</html>
