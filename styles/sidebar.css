@@ -148,7 +148,10 @@
         display: none;
     }
     .article-content {
-    height: 85%;
+        height: 90%;
+    }
+    .page-frame {
+        height: 90%;
     }
 }
 
@@ -167,6 +170,9 @@
 }
 
     .article-content {
-    height: 70%;
+        height: 70%;
+    }
+    .page-frame {
+        height: 70%;
     }
 }
