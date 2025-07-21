@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<!--
+使用html创建星空场景并创建一个方形地块。在地块中心80%边长的区域随机生成烟花发射点，在菜单中调整发射点数量（默认为16）和标准发射间隔（默认为1秒，实际发射间隔取这个值的0.8到1.2倍的随机值）。基于粒子效果创建几种样式的烟花，颜色设为R、G、B值均大于127的随机值。每个发射点的烟花按设定的间隔发射到随机高度。创建重新生成按钮用于重新生成发射点。使用orbitcontrol.js控制场景旋转。
+
+注：本期经过调参。用cline添加了爆炸效果旋转，但这一效果与排除地块附近星星功能未生效。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D星空烟花场景</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+        
+        #control-panel label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        #control-panel input[type="range"] {
+            width: 150px;
+            margin-left: 10px;
+        }
+        
+        #control-panel button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        #control-panel button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <div id="control-panel">
+        <label>
+            发射点数量: <span id="launchers-count">16</span>
+            <input type="range" id="launchers-slider" min="1" max="50" value="16">
+        </label>
+        <label>
+            发射间隔(秒): <span id="interval-value">1.0</span>
+            <input type="range" id="interval-slider" min="0.5" max="3" step="0.1" value="1">
+        </label>
+        <button onclick="regenerateLaunchers()">重新生成发射点</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        let launchers = [];
+        let stars = [];
+        let fireworks = [];
+        let launcherCount = 16;
+        let baseInterval = 1.0;
+        
+        // 初始化场景
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000011);
+            
+            camera.position.set(0, 15, 30);
+            camera.lookAt(0, 0, 0);
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            createStarField();
+            createGround();
+            createLaunchers();
+            
+            animate();
+        }
+        
+        // 创建星空背景（排除靠近地块的粒子）
+        function createStarField() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 10000;
+            const positions = new Float32Array(starCount * 3);
+            
+            for (let i = 0; i < starCount * 3; i += 3) {
+                let x, y, z;
+                do {
+                    x = (Math.random() - 0.5) * 200;
+                    y = Math.random() * 100;
+                    z = (Math.random() - 0.5) * 200;
+                } while (Math.abs(x) < 60 && Math.abs(z) < 60 && y < 0); // 排除靠近地块的区域
+                
+                positions[i] = x;
+                positions[i + 1] = y;
+                positions[i + 2] = z;
+            }
+            
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const starField = new THREE.Points(starGeometry, starMaterial);
+            scene.add(starField);
+        }
+        
+        // 创建地面
+        function createGround() {
+            const groundGeometry = new THREE.PlaneGeometry(40, 40);
+            const groundMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x111111, 
+                side: THREE.DoubleSide 
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            scene.add(ground);
+        }
+        
+        // 创建发射点
+        function createLaunchers() {
+            // 清除旧的发射点
+            launchers.forEach(launcher => {
+                scene.remove(launcher.mesh);
+            });
+            launchers = [];
+            
+            const groundSize = 40;
+            const centerArea = groundSize * 0.8;
+            const startPos = -centerArea / 2;
+            
+            for (let i = 0; i < launcherCount; i++) {
+                const x = startPos + Math.random() * centerArea;
+                const z = startPos + Math.random() * centerArea;
+                
+                const launcherGeometry = new THREE.CylinderGeometry(0.1, 0.2, 0.5, 8);
+                const launcherMaterial = new THREE.MeshBasicMaterial({ color: 0x666666 });
+                const launcherMesh = new THREE.Mesh(launcherGeometry, launcherMaterial);
+                launcherMesh.position.set(x, 0.25, z);
+                scene.add(launcherMesh);
+                
+                launchers.push({
+                    mesh: launcherMesh,
+                    lastFireTime: 0,
+                    nextFireDelay: getRandomInterval()
+                });
+            }
+        }
+        
+        // 获取随机发射间隔
+        function getRandomInterval() {
+            return baseInterval * (0.8 + Math.random() * 0.4);
+        }
+        
+        // 创建烟花
+        function createFirework(position) {
+            const targetHeight = 5 + Math.random() * 8; // 降低高度到5-13单位
+            const colors = [
+                new THREE.Color(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5),
+                new THREE.Color(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5)
+            ];
+            
+            // 上升轨迹（缩短显示时间）
+            const trailGeometry = new THREE.BufferGeometry();
+            const trailCount = 10; // 减少轨迹点数量
+            const trailPositions = new Float32Array(trailCount * 3);
+            const trailColors = new Float32Array(trailCount * 3);
+            
+            for (let i = 0; i < trailCount; i++) {
+                const t = i / trailCount;
+                trailPositions[i * 3] = position.x;
+                trailPositions[i * 3 + 1] = position.y + t * targetHeight;
+                trailPositions[i * 3 + 2] = position.z;
+                
+                const intensity = 1 - t;
+                trailColors[i * 3] = intensity;
+                trailColors[i * 3 + 1] = intensity * 0.5;
+                trailColors[i * 3 + 2] = 0;
+            }
+            
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            trailGeometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+            
+            const trailMaterial = new THREE.PointsMaterial({
+                size: 0.15, // 减小轨迹点大小
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const trail = new THREE.Points(trailGeometry, trailMaterial);
+            scene.add(trail);
+            
+            // 爆炸效果（缩短轨迹显示时间）
+            setTimeout(() => {
+                scene.remove(trail);
+                explodeFirework(new THREE.Vector3(position.x, position.y + targetHeight, position.z), colors);
+            }, 400); // 从1000ms缩短到400ms
+        }
+        
+        // 爆炸效果
+        function explodeFirework(position, colors) {
+            const particleCount = 20 + Math.random() * 20; // 减少粒子数量
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < 3; i++) {
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                const velocities = new Float32Array(particleCount * 3);
+                const colorArray = new Float32Array(particleCount * 3);
+                
+                const color = colors[i % colors.length];
+                
+                for (let j = 0; j < particleCount; j++) {
+                    positions[j * 3] = position.x;
+                    positions[j * 3 + 1] = position.y;
+                    positions[j * 3 + 2] = position.z;
+                    
+                    const speed = 0.05 + Math.random() * 0.1; // 降低爆炸速度
+                    const angle = Math.random() * Math.PI * 2;
+                    const elevation = Math.random() * Math.PI;
+                    
+                    velocities[j * 3] = Math.cos(angle) * Math.sin(elevation) * speed;
+                    velocities[j * 1 + 1] = Math.cos(elevation) * speed;
+                    velocities[j * 3 + 2] = Math.sin(angle) * Math.sin(elevation) * speed;
+                    
+                    colorArray[j * 3] = color.r;
+                    colorArray[j * 3 + 1] = color.g;
+                    colorArray[j * 3 + 2] = color.b;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    size: 0.1, // 减小烟花粒子大小
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 1
+                });
+                
+                const particleSystem = new THREE.Points(geometry, material);
+                particles.add(particleSystem);
+                
+                // 添加随机旋转属性
+                fireworks.push({
+                    mesh: particleSystem,
+                    velocities: velocities,
+                    life: 1.0,
+                    decay: 0.015 + Math.random() * 0.01, // 稍微加快消失
+                    rotationSpeed: (Math.random() - 0.5) * 0.02, // 随机旋转速度
+                    rotationAxis: new THREE.Vector3(
+                        Math.random() - 0.5,
+                        Math.random() - 0.5,
+                        Math.random() - 0.5
+                    ).normalize() // 随机旋转轴
+                });
+            }
+            
+            scene.add(particles);
+        }
+        
+        // 更新烟花
+        function updateFireworks() {
+            fireworks = fireworks.filter(firework => {
+                const positions = firework.mesh.geometry.attributes.position.array;
+                const opacity = firework.mesh.material.opacity;
+                
+                // 计算爆炸中心
+                let centerX = 0, centerY = 0, centerZ = 0;
+                for (let i = 0; i < positions.length; i += 3) {
+                    centerX += positions[i];
+                    centerY += positions[i + 1];
+                    centerZ += positions[i + 2];
+                }
+                const particleCount = positions.length / 3;
+                centerX /= particleCount;
+                centerY /= particleCount;
+                centerZ /= particleCount;
+                
+                // 应用旋转
+                if (firework.rotationSpeed && firework.rotationAxis) {
+                    const rotationMatrix = new THREE.Matrix4();
+                    rotationMatrix.makeRotationAxis(firework.rotationAxis, firework.rotationSpeed);
+                    
+                    for (let i = 0; i < positions.length; i += 3) {
+                        // 将点移到原点
+                        const x = positions[i] - centerX;
+                        const y = positions[i + 1] - centerY;
+                        const z = positions[i + 2] - centerZ;
+                        
+                        // 应用旋转
+                        const rotated = new THREE.Vector3(x, y, z).applyMatrix4(rotationMatrix);
+                        
+                        // 移回原位置
+                        positions[i] = rotated.x + centerX;
+                        positions[i + 1] = rotated.y + centerY;
+                        positions[i + 2] = rotated.z + centerZ;
+                        
+                        // 更新位置
+                        positions[i] += firework.velocities[i];
+                        positions[i + 1] += firework.velocities[i + 1];
+                        positions[i + 2] += firework.velocities[i + 2];
+                        
+                        firework.velocities[i + 1] -= 0.001; // 减小重力影响
+                    }
+                } else {
+                    // 没有旋转时的默认更新
+                    for (let i = 0; i < positions.length; i += 3) {
+                        positions[i] += firework.velocities[i];
+                        positions[i + 1] += firework.velocities[i + 1];
+                        positions[i + 2] += firework.velocities[i + 2];
+                        
+                        firework.velocities[i + 1] -= 0.001; // 减小重力影响
+                    }
+                }
+                
+                firework.life -= firework.decay;
+                firework.mesh.material.opacity = firework.life;
+                
+                firework.mesh.geometry.attributes.position.needsUpdate = true;
+                
+                if (firework.life <= 0) {
+                    scene.remove(firework.mesh);
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const currentTime = Date.now() / 1000;
+            
+            // 检查发射点是否需要发射烟花
+            launchers.forEach(launcher => {
+                if (currentTime - launcher.lastFireTime >= launcher.nextFireDelay) {
+                    createFirework(launcher.mesh.position);
+                    launcher.lastFireTime = currentTime;
+                    launcher.nextFireDelay = getRandomInterval();
+                }
+            });
+            
+            updateFireworks();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 重新生成发射点
+        function regenerateLaunchers() {
+            createLaunchers();
+        }
+        
+        // 控制面板事件
+        document.getElementById('launchers-slider').addEventListener('input', (e) => {
+            launcherCount = parseInt(e.target.value);
+            document.getElementById('launchers-count').textContent = launcherCount;
+            createLaunchers();
+        });
+        
+        document.getElementById('interval-slider').addEventListener('input', (e) => {
+            baseInterval = parseFloat(e.target.value);
+            document.getElementById('interval-value').textContent = baseInterval.toFixed(1);
+        });
+        
+        // 窗口调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
