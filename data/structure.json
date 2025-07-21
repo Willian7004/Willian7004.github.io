@@ -35,7 +35,7 @@
         "name": "LLM.md",
         "path": "articles\\pinned\\LLM.md",
         "ctime": "Sat Jul  5 20:59:03 2025",
-        "mtime": "Sat Jul 19 08:02:20 2025"
+        "mtime": "Mon Jul 21 10:42:52 2025"
       },
       {
         "name": "Linux.md",
@@ -52,6 +52,18 @@
     ],
     "202507": [
       {
+        "name": "评Kimi K2.md",
+        "path": "articles\\202507\\评Kimi K2.md",
+        "ctime": "Mon Jul 21 10:06:39 2025",
+        "mtime": "Mon Jul 21 10:38:15 2025"
+      },
+      {
+        "name": "安卓与Linux对比以及Linux作为主流手机系统的影响.md",
+        "path": "articles\\202507\\安卓与Linux对比以及Linux作为主流手机系统的影响.md",
+        "ctime": "Mon Jul 21 10:00:15 2025",
+        "mtime": "Mon Jul 21 10:03:41 2025"
+      },
+      {
         "name": "AI生成文档功能分析.md",
         "path": "articles\\202507\\AI生成文档功能分析.md",
         "ctime": "Fri Jul 18 15:53:01 2025",
@@ -61,7 +73,7 @@
         "name": "几个国内c端AI应用对比.md",
         "path": "articles\\202507\\几个国内c端AI应用对比.md",
         "ctime": "Fri Jul 18 15:52:19 2025",
-        "mtime": "Sat Jul 19 00:58:48 2025"
+        "mtime": "Mon Jul 21 10:06:07 2025"
       },
       {
         "name": "业余无线电与模拟图传天线全面解析.md",
