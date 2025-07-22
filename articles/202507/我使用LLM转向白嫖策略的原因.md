@@ -1,4 +1,4 @@
- ## 我使用LLM转向白嫖策略的原因
+## 我使用LLM转向白嫖策略的原因
 
 Deepseek V2开启了LLM价格战，由于MoE架构和其它成本优化价格降到1元/M输入token、2元/M输出token仍然能保持合理利润，而其它厂商被迫压缩利润率来跟进降价。在这一时期，我的策略是支持开源。如果相应厂商提供的api以开源模型为主则接入。先后接入了Deepseek和Minimax的api。Qwen系列在Qwen3之前的api以Max和Tubro等闭源版本为主力因此改为接入Siliconflow以使用多模态模型。
 
