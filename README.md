@@ -18,6 +18,8 @@
 
 在html内容以外，本项目包含两个python程序。generate.py用于在添加或移除文章/网页后生成列表。add_media.py用于把名称对应的文件夹的媒体内容添加到markdown文件，使用内嵌html页面实现响应式设计，适用于把媒体文件放到文章末尾的需求，其它布局不使用同名文件夹并手动添加。
 
+另外，创建了libs文件夹保存库文件以避免重复加载。
+
 本项目使用Deepseek R1 0528编写，手动修改了不少css。在功能上，如果要实现更复杂的功能，还是要等下一代模型。
 
 更多项目见[本项目中的相应文件](https://github.com/Willian7004/Willian7004.github.io/blob/main/articles/pinned/%E6%88%91%E7%9A%84%E7%BC%96%E7%A8%8B%E6%8A%80%E6%9C%AF%E6%A0%88.md)。

@@ -80,9 +80,9 @@
             </div>
         </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Water.min.js"></script>
+    <script src="../../libs/three.min.js"></script>
+    <script src="../../libs/PointerLockControls.min.js"></script>
+    <script src="../../libs/Water.min.js"></script>
         <script>
         // 全局变量
         let scene, camera, renderer, controls;
@@ -218,7 +218,7 @@
             water = new THREE.Water(waterGeometry, {
                 textureWidth: 512,
                 textureHeight: 512,
-                waterNormals: new THREE.TextureLoader().load('https://threejs.org/examples/textures/waternormals.jpg'),
+                waterNormals: new THREE.TextureLoader().load('../../libs/waternormals.jpg'),
                 alpha: 0.9,
                 sunDirection: new THREE.Vector3(0, 1, 0).normalize(),
                 sunColor: 0xffffff,
