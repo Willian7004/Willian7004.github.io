@@ -497,21 +497,42 @@
                 
                 if (basePath === 'articles') {
                     itemElement.onclick = () => loadArticle(item);
+                    const mdPath = `articles/${item.path}`;
+                    const htmlPath = mdPath.replace('.md', '.html');
+                    itemElement.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="event.stopPropagation(); openArticleInNewTab('${mdPath}', '${htmlPath}')">↗</button>
+                        </div>
+                    `;
                 } else if (basePath === 'pages') {
                     itemElement.onclick = () => loadPage(item);
+                    itemElement.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('${basePath}/${item.path}')">↗</button>
+                        </div>
+                    `;
                 }
-                
-                itemElement.innerHTML = `
-                    <span class="item-name">${item.name}</span>
-                    <div class="item-actions">
-                        <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('${basePath}/${item.path}', ${basePath === 'articles'})">↗</button>
-                    </div>
-                `;
                 
                 group.appendChild(itemElement);
             });
             
             return group;
+        }
+
+        async function openArticleInNewTab(mdPath, htmlPath) {
+            try {
+                // Check if HTML version exists
+                const htmlResponse = await fetch(htmlPath);
+                if (htmlResponse.ok) {
+                    window.open(htmlPath, '_blank');
+                } else {
+                    window.open(mdPath, '_blank');
+                }
+            } catch (error) {
+                window.open(mdPath, '_blank');
+            }
         }
 
         // Content loading functions
@@ -604,22 +625,8 @@
             }
         }
 
-        function openInNewTab(url, isArticle = false) {
-            if(isArticle) {
-                const htmlUrl = url.replace('.md', '.html');
-                // 检查HTML文件是否存在
-                fetch(htmlUrl)
-                    .then(response => {
-                        if(response.ok) {
-                            window.open(htmlUrl, '_blank');
-                        } else {
-                            window.open(url, '_blank');
-                        }
-                    })
-                    .catch(() => window.open(url, '_blank'));
-            } else {
-                window.open(url, '_blank');
-            }
+        function openInNewTab(url) {
+            window.open(url, '_blank');
         }
 
         // Sidebar toggle
