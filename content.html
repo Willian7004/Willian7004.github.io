@@ -504,7 +504,7 @@
                 itemElement.innerHTML = `
                     <span class="item-name">${item.name}</span>
                     <div class="item-actions">
-                        <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('${basePath}/${item.path}')">↗</button>
+                        <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('${basePath}/${item.path}', ${basePath === 'articles'})">↗</button>
                     </div>
                 `;
                 
@@ -604,8 +604,22 @@
             }
         }
 
-        function openInNewTab(url) {
-            window.open(url, '_blank');
+        function openInNewTab(url, isArticle = false) {
+            if(isArticle) {
+                const htmlUrl = url.replace('.md', '.html');
+                // 检查HTML文件是否存在
+                fetch(htmlUrl)
+                    .then(response => {
+                        if(response.ok) {
+                            window.open(htmlUrl, '_blank');
+                        } else {
+                            window.open(url, '_blank');
+                        }
+                    })
+                    .catch(() => window.open(url, '_blank'));
+            } else {
+                window.open(url, '_blank');
+            }
         }
 
         // Sidebar toggle
