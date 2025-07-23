@@ -1,48 +1,199 @@
 <!DOCTYPE html>
-<!--
-编写静态网页，实现以下功能：
-1. 需要通过json记录目录中的文件时，编写python程序用于创建json。
-2. 如果页面 宽度＞高度随机选择backgrounds文件夹中horizontal文件夹中的一张图片作为背景，反之选择vertical文件夹中的图片。
-3. 在首页创建3个卡片，卡片使用高斯模糊，左侧两个上下排列的卡片分别显示article-card.md以及pages-card.md中的内容，点击卡片时分别用于在新标签页打开“文章”页面和“网页”页面。右侧“说明”卡片显示README.md中的内容。如果页面 宽度＜高度 则改为所有卡片上下排列且“说明”卡片在下半部分。
-4. 在首页右上角创建一个按钮，用于切换到“相册模式”，切换后隐藏卡片并显示一个滑块用于切换当前背景文件夹中的其它图片作为背景，滑块数字与背景文件名中的数字对应。再次点击按钮后退出“相册模式”。
-5. “文章”和“网页”页面均使用带高斯模糊的卡片式侧边栏，侧边栏可单独滚动。“文章”页面侧边栏按articles文件夹中的文件夹显示分组，其中pinned在顶部，其它文件夹按年份+月份命名，按对应的月份从新到旧排序。“网页”页面侧边栏按pages文件夹中的文件夹创建分组。对于分组内的文件，按创建时间从新到旧排序。可以通过拖动侧边栏调整大小，但如果页面 宽度<高度 ，侧边栏改为覆盖在页面上并显示折叠按钮。
-6. articles文件夹的子文件夹包含 .md 文件，在侧边栏选中文件时在页面上的卡片显示文件内容，卡片背景使用高斯模糊。pages文件夹的子文件夹包含html文件，选中文件后在页面上创建iframe显示对应html文件的内容。
-
-注：本项目生成后对css进行了大幅度手动修改。
--->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Willian7004的博客</title>
-    <link rel="stylesheet" href="styles/layout.css">
-    <link rel="stylesheet" href="styles/cards.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out;
+            overflow: hidden;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            min-height: 33vw+33vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .card p {
+            font-size: 16px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        /* Responsive for vertical layout */
+        @media (max-aspect-ratio: 1/1) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .cards-grid {
+                gap: 20px;
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 30px 20px;
+                min-height: 150px;
+            }
+            
+            .card h3 {
+                font-size: 20px;
+            }
+            
+            .card p {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="background-container"></div>
+    <div class="background-overlay"></div>
     
-    <div class="content-wrapper">
-        <button id="gallery-toggle" class="floating-button">相册模式</button>
-        
-        <div class="cards-container">
-            <div class="card-column left-column">
-                <div class="card article-card" data-md="article-card.md"></div>
-                <div class="card pages-card" data-md="pages-card.md"></div>
-            </div>
-            <div class="card-column right-column">
-                <div class="card info-card" data-md="README.md"></div>
-            </div>
-        </div>
-        
-        <div id="gallery-controls" class="hidden">
-            <input type="range" id="bg-slider" min="1" max="100" value="1">
-            <div id="slider-value">1</div>
+    <div class="container">
+        <div class="cards-grid" id="cardsGrid">
+            <!-- Cards will be populated by JavaScript -->
         </div>
     </div>
 
-    <script src="scripts/marked.min.js"></script>
-    <script src="scripts/background.js"></script>
-    <script src="scripts/gallery.js"></script>
-    <script src="scripts/cards.js"></script>
+    <script>
+        // Background image selection
+        function setBackground() {
+            const isHorizontal = window.innerWidth > window.innerHeight;
+            const folder = isHorizontal ? 'horizontal' : 'vertical';
+            const count = isHorizontal ? 93 : 90; // Based on actual file counts
+            const randomNum = Math.floor(Math.random() * count) + 1;
+            const imageUrl = `backgrounds/${folder}/${randomNum}.jpg`;
+            
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+        }
+
+        // Load cards from JSON
+        async function loadCards() {
+            try {
+                const response = await fetch('cards.json');
+                const data = await response.json();
+                const cardsGrid = document.getElementById('cardsGrid');
+                
+                data.cards.forEach(card => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card';
+                    cardElement.onclick = () => navigateToContent(card);
+                    
+                    cardElement.innerHTML = `
+                        <h3>${card.name}</h3>
+                        <p>${card.explanation}</p>
+                    `;
+                    
+                    cardsGrid.appendChild(cardElement);
+                });
+            } catch (error) {
+                console.error('Error loading cards:', error);
+                // Fallback cards
+                const fallbackCards = [
+                    { name: '文章', explanation: '我写的文章转换的网页' },
+                    { name: '网页', explanation: '使用LLM编写并手动修改的网页' },
+                    { name: '项目', explanation: '使用LLM编写并手动修改的多文件项目' },
+                    { name: '说明', explanation: '本项目的README' }
+                ];
+                
+                const cardsGrid = document.getElementById('cardsGrid');
+                fallbackCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card';
+                    cardElement.onclick = () => navigateToContent({ folder: index < 3 ? ['articles', 'pages', 'projects'][index] : null });
+                    
+                    cardElement.innerHTML = `
+                        <h3>${card.name}</h3>
+                        <p>${card.explanation}</p>
+                    `;
+                    
+                    cardsGrid.appendChild(cardElement);
+                });
+            }
+        }
+
+        // Navigation function
+        function navigateToContent(card) {
+            const folder = card.folder || 'README';
+            window.location.href = `content.html?type=${folder}`;
+        }
+
+        // Initialize
+        setBackground();
+        loadCards();
+
+        // Update background on resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(setBackground, 250);
+        });
+    </script>
 </body>
 </html>

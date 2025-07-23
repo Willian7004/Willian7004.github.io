@@ -1,0 +1,23 @@
+{
+    "cards": [
+        { 
+            "name":"文章" , 
+            "folder":"articles",
+            "explanation":"我写的文章转换的网页，按置顶文章以及月份分类。" 
+        }, 
+        { 
+            "name":"网页" , 
+            "folder":"pages",
+            "explanation":"使用LLM编写并手动修改的网页，按内容分类。" 
+        }, 
+        { 
+            "name":"项目" , 
+            "folder":"projects",
+            "explanation":"使用LLM编写并手动修改的多文件项目，包含额外说明。" 
+        }, 
+        { 
+            "name":"说明" , 
+            "explanation":"本项目的README。" 
+        }
+    ]
+}
