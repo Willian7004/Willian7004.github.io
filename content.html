@@ -214,11 +214,12 @@
         }
 
         /* Toggle button */
+        /* Default for portrait mode - top right */
         .toggle-btn {
             position: fixed;
             top: 20px;
-            left: auto;
             right: 20px;
+            left: auto;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             border: none;
@@ -228,6 +229,14 @@
             cursor: pointer;
             z-index: 2000;
             transition: opacity 0.3s ease;
+        }
+
+        /* Landscape mode - top left */
+        @media (min-aspect-ratio: 1/1) {
+            .toggle-btn {
+                right: auto;
+                left: 20px;
+            }
         }
 
         .toggle-btn:hover {
