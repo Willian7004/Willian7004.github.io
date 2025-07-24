@@ -217,7 +217,8 @@
         .toggle-btn {
             position: fixed;
             top: 20px;
-            left: 20px;
+            left: auto;
+            right: 20px;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             border: none;
@@ -268,6 +269,7 @@
         @media (max-aspect-ratio: 1/1) {
             .main-container {
                 flex-direction: column;
+                position: relative;
             }
 
             .sidebar {
@@ -280,6 +282,19 @@
                 transform: translateY(-100%);
             }
 
+            /* 修复竖屏模式下收起侧边栏时内容区域边界问题 */
+            .sidebar.collapsed + .content {
+                height: 100vh;
+                margin-top: 0;
+            }
+            
+            .sidebar.collapsed + .content.full-width {
+                height: 100vh;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            
             .resize-handle {
                 position: absolute;
                 bottom: -5px;
@@ -634,6 +649,7 @@
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('toggleBtn');
             const content = document.getElementById('content');
+            const mainContainer = document.querySelector('.main-container');
             
             const isCollapsing = !sidebar.classList.contains('collapsed');
             sidebar.classList.toggle('collapsed');
@@ -643,6 +659,12 @@
                 content.classList.add('full-width');
             } else {
                 content.classList.remove('full-width');
+            }
+
+            // 添加竖屏模式状态标记
+            const isVertical = window.innerWidth < window.innerHeight;
+            if (isVertical) {
+                mainContainer.classList.toggle('sidebar-collapsed');
             }
         }
 
