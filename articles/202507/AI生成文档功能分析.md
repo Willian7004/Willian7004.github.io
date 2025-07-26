@@ -6,6 +6,6 @@ docx和pdf格式方面，以前有人使用LLM生成包含转换为docx功能的
 
 ppt格式方面，由于需要额外排版，生成会复杂一些。目前腾讯文档和讯飞智文限次数，Kimi不限次数，因此主要使用Kimi。这类应用都套模板，可能出现模板与内容不匹配的情况，也没有完全解决排版问题。使用LLM生成带翻页功能的html文件可以避免套模板，但需要适当调整缩放才能使用。在提示词中应当说明分页形式，并且为了避免排版问题通常不添加图片。
 
-我在[files文件夹](https://github.com/Willian7004/Willian7004.github.io/tree/main/files/202507)添加了两个生成PPT和两个生成html（包含分页和不分页）的案例，前者使用Kimi（推测模型为Kimi K2）生成，后者使用Deepseek R1 0528生成，可以参考。
+我在[files文件夹](https://github.com/Willian7004/Willian7004.github.io/tree/main/files/202507/AI生成文档功能分析)添加了两个生成PPT和两个生成html（包含分页和不分页）的案例，前者使用Kimi生成，后者使用Deepseek R1 0528生成，可以参考。
 
-另外，有的项目用于使用markdown编写幻灯片，轻量化的有Mart，功能较多的有Slidev。虽然使用了LLM友好格式，但由于相关训练数据较少导致难以准确编写，人工编写复杂排版时也不如所见即所得编辑的pptx格式。
+另外，有的项目用于使用markdown编写幻灯片，Mart不支持mermaid，Slidev太重（复杂功能用起来不如office方便），个人认为支持分列和mermaid且比较轻量化的Moffee是比较合适的方案。如果使用LLM编写，由于列表不是标准markdown语法以及引入布局功能，即使在上下文添加了文档仍然容易出错。我用LLM制作了两个经过手动修改的文件并导出html，也添加到files文件夹。

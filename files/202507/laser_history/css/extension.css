@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+    --color-admonition-bg: hsl(0, 0%, 70%);
+    --color-admonition-fg: hsl(0, 0%, 20%);
+    --colour-warning-bg: hsl(28.5, 74%, 70%);
+    --colour-warning-fg: hsl(28.5, 74%, 20%);
+    --colour-note-bg: hsl(219.5, 84%, 70%);
+    --colour-note-fg: hsl(219.5, 84%, 20%);
+    --colour-success-bg: hsl(150, 36.7%, 70%);
+    --colour-success-fg: hsl(150, 36.7%, 20%);
+    --colour-error-bg: hsl(0, 37%, 70%);
+    --colour-error-fg: hsl(0, 37%, 20%);
+    --colour-todo-bg: hsl(266.8, 100%, 70%);
+    --colour-todo-fg: hsl(266.8, 100%, 20%);
+    --color-beamer-blue: #164994;
+    --color-beamer-dark: #0B244A;
+}
+
+body {
+    font-family: "Noto Serif", "Georgia", "SimSun", "STSong", "NSimSun", "PMingLiU", "MingLiU", serif;
+}
+
+.centered h1 {
+    padding: 20px;
+    font-size: 2rem;
+    background: var(--color-beamer-blue);
+}
+
+.centered h3,
+.centered h2 {
+    margin: 0 auto;
+    color: var(--color-beamer-blue);
+}
+
+.centered h1::before,
+.centered h2::before {
+    display: none;
+}
+
+h1 {
+    position: relative;
+    z-index: 1;
+    color: white;
+}
+
+h1::before {
+    content: '';
+    position: absolute;
+    left: -20%;
+    bottom: -11px;
+    top: -10px;
+    width: 140%;
+    z-index: -1;
+    background: var(--color-beamer-dark);
+}
+
+h2 {
+    color: white;
+    font-weight: 350;
+    font-size: 1.6rem;
+}
+
+h2::before {
+    content: '';
+    position: absolute;
+    left: -20%;
+    bottom: 5%;
+    width: 140%;
+    height: 95%;
+    z-index: -1;
+    display: inline-block;
+    background: var(--color-beamer-blue);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3),
+            0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+h3 {
+    font-size: 1.4em;
+}
+
+.content {
+    margin: 0 15px 35px 15px;
+}
+
+.header {
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: #78859A;
+    font-size: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    left: -20%;
+    bottom: 0;
+    width: 140%;
+    height: 100%;
+    z-index: -1;
+    display: inline-block;
+    background: var(--color-beamer-dark);
+}
+
+.headings-list{
+    display: flex;
+    justify-content: space-between;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.headings-list li {
+    padding: 0;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 2px;
+}
+
+.headings-list li.active {
+    color: white;
+}
+
+.footer {
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: white;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    background-color: var(--color-beamer-dark);
+    font-size: 12px;
+}
+
+.footer p {
+    margin: 2px 0 2px 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slide-number {
+    position: absolute;
+    right: 10px;
+    color: white;
+    font-size: inherit;
+}
+
+table {
+    font-size: 16px;
+    border-radius: 3px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+thead tr {
+    background-color: var(--color-beamer-blue);
+    color: white;
+}
+
+tbody tr {
+    border-bottom: 1px solid #ccc;
+}
+
+th,
+td {
+    padding: 10px;
+}
+
+div.admonition {
+    font-size: 0.9em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3),
+            0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    border: 1px solid #86989B;
+    background-color: #f7f7f7 !important;
+    padding: 1rem;
+}
+
+div.admonition>p {
+    margin: 0;
+    padding: 0;
+}
+
+div.admonition>pre {
+    margin: 0.4em 1em 0.4em 1em;
+}
+
+div.admonition>p.admonition-title {
+    position: relative;
+    font-weight: 500;
+    background-color: var(--color-admonition-bg);
+    margin: -1rem -1rem 0.8rem -1rem;
+    padding: 0.3rem 1rem 0.3rem 2rem;
+    border-radius: 5px 5px 0 0;
+}
+
+div.attention>p.admonition-title,
+div.danger>p.admonition-title,
+div.error>p.admonition-title {
+    background-color: var(--colour-error-bg);
+}
+
+div.important>p.admonition-title,
+div.caution>p.admonition-title,
+div.warning>p.admonition-title {
+    background-color: var(--colour-warning-bg);
+}
+
+div.note>p.admonition-title {
+    background-color: var(--colour-note-bg);
+}
+
+div.hint>p.admonition-title,
+div.tip>p.admonition-title,
+div.seealso>p.admonition-title {
+    background-color: var(--colour-success-bg);
+}
+
+div.admonition-todo>p.admonition-title {
+    background-color: var(--colour-todo-bg);
+}
+
+p.admonition-title::before {
+    content: "";
+    height: 1rem;
+    left: .5rem;
+    top: .5rem;
+    position: absolute;
+    width: 1rem;
+    background-color: #5f5f5f;
+}
