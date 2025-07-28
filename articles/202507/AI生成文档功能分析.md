@@ -9,3 +9,5 @@ ppt格式方面，由于需要额外排版，生成会复杂一些。目前腾�
 我在[files文件夹](https://github.com/Willian7004/Willian7004.github.io/tree/main/files/202507/AI生成文档功能分析)添加了两个生成PPT和两个生成html（包含分页和不分页）的案例，前者使用Kimi生成，后者使用Deepseek R1 0528生成，可以参考。
 
 另外，有的项目用于使用markdown编写幻灯片，Mart不支持mermaid，Slidev太重（复杂功能用起来不如office方便），个人认为支持分列和mermaid且比较轻量化的Moffee是比较合适的方案。如果使用LLM编写，由于列表不是标准markdown语法以及引入布局功能，即使在上下文添加了文档仍然容易出错。我用LLM制作了两个经过手动修改的文件并导出html，也添加到files文件夹。
+
+更新：最近测试的z.ai的experimental模型提供深入研究后以html形式制作的ppt，解决了套模板问题并且样式更为丰富，支持链接分享和导出文件，在files文件夹提供一个示例（有一页高度过大导致导出时被放到下一页，修改后未完全解决但可以删除多余的页）。
