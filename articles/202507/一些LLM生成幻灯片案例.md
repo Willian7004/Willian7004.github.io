@@ -8,3 +8,12 @@
 1. [体素引擎原理](https://chat.z.ai/space/u0vbz6mjczt1-ppt)
 2. [Docker原理以及与LXC/LXD的比较](https://chat.z.ai/space/p0abx6dtahr0-ppt)
 3. [命令行shell实现原理](https://chat.z.ai/space/x0gbx6cygw10-ppt)
+4. [Git实现原理](https://chat.z.ai/space/q0ebk63cerk1-ppt)
+5. [文本编辑器原理](https://chat.z.ai/space/j02bf6rm6t30-ppt)
+6. [浏览器原理](https://chat.z.ai/space/b0rbt6dmfn41-ppt)
+7. [数据库实现原理](https://chat.z.ai/space/y0gb46mejnd0-ppt)
+8. [搜索引擎实现原理](https://chat.z.ai/space/p0gb760qsca0-ppt)
+9. [3D渲染器原理与渲染方法分析](https://chat.z.ai/space/g0db36nkstv0-ppt)
+10. [物理引擎原理](https://chat.z.ai/space/b0dbp6z6n020-ppt)
+
+GLM Experimental算是ui效果最好的模型并且后续应该也会开源，但复杂界面编写容易出错并且可能无法修复。
