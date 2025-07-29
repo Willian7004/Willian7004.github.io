@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--
+写一个html程序，使用three.js和cannon.js。创建由随机颜色正方体搭建的长方体（每个正方体使用单独的随机颜色），在可折叠菜单中设置各边正方体数量和摄像机视野范围。按下鼠标或触屏时显示一个灰色球体的抛物线预览，放开时投出，模拟球体、正方体与地面之间的碰撞效果，在可折叠菜单中设置球体密度和边长相对于单个正方体的倍数、投出速度以及重力大小。创建天空球，使用pbr渲染，在可折叠菜单中设置太阳高度角和方向。
+
+注：本程序原本规划使用Kimi K2编写，编写失败后使用GLM4.5编写有比较好的表现。
+-->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -277,7 +282,6 @@
     <div class="info-panel">
         <div>按住鼠标左键或触摸屏幕预览轨迹</div>
         <div>松开投掷球体</div>
-        <div>鼠标右键拖动旋转视角</div>
     </div>
 
     <script src="../../libs/three.min.js"></script>
@@ -654,8 +658,8 @@
 
                     const spherical = new THREE.Spherical();
                     spherical.setFromVector3(camera.position);
-                    spherical.theta -= deltaMove.x * 0.01;
-                    spherical.phi += deltaMove.y * 0.01;
+                    spherical.theta -= deltaMove.x * 0;
+                    spherical.phi += deltaMove.y * 0;
                     spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
 
                     camera.position.setFromSpherical(spherical);
