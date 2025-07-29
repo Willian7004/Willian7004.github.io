@@ -17,3 +17,5 @@
 10. [物理引擎原理](https://chat.z.ai/space/b0dbp6z6n020-ppt)
 
 GLM Experimental算是ui效果最好的模型并且后续应该也会开源，但复杂界面编写容易出错并且可能无法修复。
+
+后面智谱发布了GLM4.5，应该是GLM Experimental的正式版本。
