@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<!--
+写一个html程序，使用three.js和cannon.js。创建由随机颜色圆柱体搭建的物体（每个圆柱体使用单独的随机颜色），摄像机正对该物体正面，在可折叠菜单中设置各边圆柱体数量和摄像机视野范围。点击鼠标或触屏时向相应方向投出一个灰色球体的，模拟球体、圆柱体与地面之间的碰撞效果，在可折叠菜单中设置球体密度和边长相对于单个圆柱体的倍数、投出速度以及重力大小。创建天空球，使用pbr渲染，在可折叠菜单中设置太阳高度角和方向。
+
+注：用于orbitcontrol与点击功能冲突，已在鼠标操作移除这一功能。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圆柱体塔物理模拟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .control-panel.collapsed {
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 12px 12px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapsed .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .control-group h4 {
+            color: #34495e;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .control-item {
+            margin-bottom: 12px;
+        }
+
+        .control-item label {
+            display: block;
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2980b9;
+        }
+
+        .value-display {
+            display: inline-block;
+            color: #3498db;
+            font-weight: 600;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                width: 280px;
+                right: 10px;
+                top: 10px;
+            }
+            
+            .info-panel {
+                bottom: 10px;
+                left: 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div class="loading">加载中...</div>
+    </div>
+
+    <div class="control-panel" id="controlPanel">
+        <div class="panel-header" onclick="togglePanel()">
+            <h3>控制面板</h3>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="panel-content">
+            <div class="control-group">
+                <h4>圆柱体塔设置</h4>
+                <div class="control-item">
+                    <label>每边圆柱体数量: <span class="value-display" id="cylindersPerSideValue">5</span></label>
+                    <input type="range" id="cylindersPerSide" min="3" max="10" value="5" step="1">
+                </div>
+                <div class="control-item">
+                    <label>摄像机视野范围(FOV): <span class="value-display" id="fovValue">60</span>°</label>
+                    <input type="range" id="fov" min="30" max="120" value="60" step="1">
+                </div>
+                <div class="button-group">
+                    <button onclick="rebuildTower()">重建塔</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h4>球体设置</h4>
+                <div class="control-item">
+                    <label>球体密度: <span class="value-display" id="ballDensityValue">3.0</span></label>
+                    <input type="range" id="ballDensity" min="1" max="8" value="3" step="0.5">
+                </div>
+                <div class="control-item">
+                    <label>球体大小倍数: <span class="value-display" id="ballSizeValue">2.0</span></label>
+                    <input type="range" id="ballSize" min="1.5" max="3" value="2" step="0.1">
+                </div>
+                <div class="control-item">
+                    <label>投出速度: <span class="value-display" id="throwSpeedValue">50</span></label>
+                    <input type="range" id="throwSpeed" min="30" max="70" value="50" step="5">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h4>物理环境</h4>
+                <div class="control-item">
+                    <label>重力大小: <span class="value-display" id="gravityValue">9.8</span></label>
+                    <input type="range" id="gravity" min="0" max="30" value="9.8" step="0.1">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h4>光照设置</h4>
+                <div class="control-item">
+                    <label>太阳高度角: <span class="value-display" id="sunHeightValue">45</span>°</label>
+                    <input type="range" id="sunHeight" min="0" max="90" value="45" step="1">
+                </div>
+                <div class="control-item">
+                    <label>太阳方向: <span class="value-display" id="sunDirectionValue">0</span>°</label>
+                    <input type="range" id="sunDirection" min="0" max="360" value="0" step="1">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="clearBalls()">清除所有球体</button>
+                <button onclick="resetCamera()">重置摄像机</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div>点击或触摸屏幕投掷球体</div>
+        <div>鼠标拖动旋转视角</div>
+        <div>滚轮缩放</div>
+    </div>
+
+    <script src="../../libs/three.min.js"></script>
+    <script src="../../libs/cannon.min.js"></script>
+    
+    <script>
+        // 全局变量
+        let scene, camera, renderer, controls;
+        let world;
+        let tower = [];
+        let balls = [];
+        let ground;
+        let skybox;
+        let directionalLight, ambientLight;
+        let cylinderRadius = 0.5;
+        let cylinderHeight = 1;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let isPointerDown = false;
+
+        // 初始化场景
+        function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(15, 10, 15);
+            camera.lookAt(0, 5, 0);
+
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            
+
+            // 创建物理世界
+            world = new CANNON.World();
+            world.gravity.set(0, -9.8, 0);
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+
+            // 创建地面
+            createGround();
+
+            // 创建天空盒
+            createSkybox();
+
+            // 创建光照
+            createLights();
+
+            // 创建圆柱体塔
+            buildTower();
+
+            // 隐藏加载提示
+            document.querySelector('.loading').style.display = 'none';
+
+            // 设置事件监听
+            setupEventListeners();
+
+            // 开始动画循环
+            animate();
+        }
+
+        // 创建地面
+        function createGround() {
+            // Three.js地面
+            const groundGeometry = new THREE.PlaneGeometry(50, 50);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x808080,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Cannon.js地面
+            const groundShape = new CANNON.Plane();
+            const groundBody = new CANNON.Body({ mass: 0 });
+            groundBody.addShape(groundShape);
+            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+            world.add(groundBody);
+        }
+
+        // 创建天空盒
+        function createSkybox() {
+            const skyGeometry = new THREE.SphereGeometry(200, 32, 32);
+            const skyMaterial = new THREE.MeshStandardMaterial({
+                color: 0x87CEEB,
+                side: THREE.BackSide,
+                roughness: 1,
+                metalness: 0
+            });
+            skybox = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(skybox);
+        }
+
+        // 创建光照
+        function createLights() {
+            // 环境光
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            // 方向光（太阳）
+            directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+        }
+
+        // 构建圆柱体塔
+        function buildTower() {
+            // 清除现有的塔
+            tower.forEach(item => {
+                scene.remove(item.mesh);
+                world.remove(item.body);
+            });
+            tower = [];
+
+            const cylindersPerSide = parseInt(document.getElementById('cylindersPerSide').value);
+            const spacing = cylinderRadius * 2.2;
+            const startX = -(cylindersPerSide - 1) * spacing / 2;
+            const startZ = -(cylindersPerSide - 1) * spacing / 2;
+
+            for (let layer = 0; layer < cylindersPerSide; layer++) {
+                for (let i = 0; i < cylindersPerSide; i++) {
+                    for (let j = 0; j < cylindersPerSide; j++) {
+                        // 创建Three.js圆柱体
+                        const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 16);
+                        const material = new THREE.MeshStandardMaterial({
+                            color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                            roughness: 0.5,
+                            metalness: 0.3
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(
+                            startX + i * spacing,
+                            cylinderHeight / 2 + layer * cylinderHeight,
+                            startZ + j * spacing
+                        );
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+                        scene.add(mesh);
+
+                        // 创建Cannon.js圆柱体
+                        const shape = new CANNON.Cylinder(cylinderRadius, cylinderRadius, cylinderHeight, 16);
+                        const body = new CANNON.Body({ mass: 1 });
+                        body.addShape(shape);
+                        body.position.copy(mesh.position);
+                        body.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
+                        world.add(body);
+
+                        tower.push({ mesh, body });
+                    }
+                }
+            }
+        }
+
+        // 投掷球体
+        function throwBall(x, y) {
+            const ballSize = parseFloat(document.getElementById('ballSize').value);
+            const ballDensity = parseFloat(document.getElementById('ballDensity').value);
+            const throwSpeed = parseFloat(document.getElementById('throwSpeed').value);
+
+            // 计算投掷方向
+            raycaster.setFromCamera(mouse, camera);
+            const direction = new THREE.Vector3();
+            raycaster.ray.direction.normalize();
+            direction.copy(raycaster.ray.direction);
+
+            // 创建Three.js球体
+            const geometry = new THREE.SphereGeometry(cylinderRadius * ballSize, 16, 16);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x666666,
+                roughness: 0.4,
+                metalness: 0.6
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.copy(camera.position);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            // 创建Cannon.js球体
+            const shape = new CANNON.Sphere(cylinderRadius * ballSize);
+            const body = new CANNON.Body({ 
+                mass: ballDensity * (4/3 * Math.PI * Math.pow(cylinderRadius * ballSize, 3))
+            });
+            body.addShape(shape);
+            body.position.copy(camera.position);
+            body.velocity.copy(direction.multiplyScalar(throwSpeed));
+            world.add(body);
+
+            balls.push({ mesh, body });
+
+            // 限制球体数量
+            if (balls.length > 50) {
+                const removed = balls.shift();
+                scene.remove(removed.mesh);
+                world.remove(removed.body);
+            }
+        }
+
+        // 清除所有球体
+        function clearBalls() {
+            balls.forEach(ball => {
+                scene.remove(ball.mesh);
+                world.remove(ball.body);
+            });
+            balls = [];
+        }
+
+        // 重置摄像机
+        function resetCamera() {
+            camera.position.set(15, 10, 15);
+            camera.lookAt(0, 5, 0);
+            controls.reset();
+        }
+
+        // 更新太阳位置
+        function updateSunPosition() {
+            const height = parseFloat(document.getElementById('sunHeight').value);
+            const direction = parseFloat(document.getElementById('sunDirection').value);
+            
+            const heightRad = height * Math.PI / 180;
+            const directionRad = direction * Math.PI / 180;
+            
+            const distance = 30;
+            directionalLight.position.set(
+                distance * Math.cos(heightRad) * Math.sin(directionRad),
+                distance * Math.sin(heightRad),
+                distance * Math.cos(heightRad) * Math.cos(directionRad)
+            );
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 窗口大小调整
+            window.addEventListener('resize', onWindowResize);
+
+            // 鼠标事件
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mouseup', onMouseUp);
+
+            // 触摸事件
+            renderer.domElement.addEventListener('touchstart', onTouchStart);
+            renderer.domElement.addEventListener('touchmove', onTouchMove);
+            renderer.domElement.addEventListener('touchend', onTouchEnd);
+
+            // 控制面板事件
+            document.getElementById('cylindersPerSide').addEventListener('input', function(e) {
+                document.getElementById('cylindersPerSideValue').textContent = e.target.value;
+            });
+
+            document.getElementById('fov').addEventListener('input', function(e) {
+                document.getElementById('fovValue').textContent = e.target.value;
+                camera.fov = parseFloat(e.target.value);
+                camera.updateProjectionMatrix();
+            });
+
+            document.getElementById('ballDensity').addEventListener('input', function(e) {
+                document.getElementById('ballDensityValue').textContent = e.target.value;
+            });
+
+            document.getElementById('ballSize').addEventListener('input', function(e) {
+                document.getElementById('ballSizeValue').textContent = e.target.value;
+            });
+
+            document.getElementById('throwSpeed').addEventListener('input', function(e) {
+                document.getElementById('throwSpeedValue').textContent = e.target.value;
+            });
+
+            document.getElementById('gravity').addEventListener('input', function(e) {
+                document.getElementById('gravityValue').textContent = e.target.value;
+                world.gravity.set(0, -parseFloat(e.target.value), 0);
+            });
+
+            document.getElementById('sunHeight').addEventListener('input', function(e) {
+                document.getElementById('sunHeightValue').textContent = e.target.value;
+                updateSunPosition();
+            });
+
+            document.getElementById('sunDirection').addEventListener('input', function(e) {
+                document.getElementById('sunDirectionValue').textContent = e.target.value;
+                updateSunPosition();
+            });
+        }
+
+        // 鼠标事件处理
+        function onMouseDown(event) {
+            if (event.button === 0) { // 左键
+                isPointerDown = true;
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onMouseUp(event) {
+            if (event.button === 0 && isPointerDown) {
+                throwBall(event.clientX, event.clientY);
+                isPointerDown = false;
+            }
+        }
+
+        // 触摸事件处理
+        function onTouchStart(event) {
+            if (event.touches.length === 1) {
+                isPointerDown = true;
+                const touch = event.touches[0];
+                mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+            }
+        }
+
+        function onTouchMove(event) {
+            if (event.touches.length === 1) {
+                const touch = event.touches[0];
+                mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+            }
+        }
+
+        function onTouchEnd(event) {
+            if (isPointerDown && event.touches.length === 0) {
+                throwBall(mouse.x, mouse.y);
+                isPointerDown = false;
+            }
+        }
+
+        // 窗口大小调整
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 切换控制面板
+        function togglePanel() {
+            const panel = document.getElementById('controlPanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // 重建塔
+        function rebuildTower() {
+            buildTower();
+        }
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 更新物理世界
+            world.step(1/60);
+
+            // 更新圆柱体位置
+            tower.forEach(item => {
+                item.mesh.position.copy(item.body.position);
+                item.mesh.quaternion.copy(item.body.quaternion);
+            });
+
+            // 更新球体位置
+            balls.forEach(ball => {
+                ball.mesh.position.copy(ball.body.position);
+                ball.mesh.quaternion.copy(ball.body.quaternion);
+            });
+
+            
+
+            // 渲染场景
+            renderer.render(scene, camera);
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
