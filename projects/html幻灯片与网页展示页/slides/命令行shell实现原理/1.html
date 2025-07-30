@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令行Shell的实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .prompt {
+            color: #50fa7b;
+        }
+        .command {
+            color: #f8f8f2;
+        }
+        .output {
+            color: #8be9fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col justify-center items-center p-12">
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-bold mb-4">命令行Shell的实现原理</h1>
+            <p class="text-2xl text-blue-200">计算机系统中的命令解释器</p>
+        </div>
+        
+        <div class="terminal p-6 w-3/4 mb-10">
+            <div class="flex items-center mb-2">
+                <span class="prompt">user@host:~$</span>
+                <span class="command ml-2">echo "Hello, Shell!"</span>
+            </div>
+            <div class="flex items-center">
+                <span class="output ml-6">Hello, Shell!</span>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-8 w-4/5">
+            <div class="bg-white/10 p-6 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 text-blue-200">基本概念</h2>
+                <ul class="text-xl space-y-3">
+                    <li><i class="fas fa-terminal mr-2"></i> 命令行解释器</li>
+                    <li><i class="fas fa-exchange-alt mr-2"></i> 用户与内核的接口</li>
+                    <li><i class="fas fa-code mr-2"></i> 也是一种编程语言</li>
+                </ul>
+            </div>
+            <div class="bg-white/10 p-6 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 text-blue-200">主要作用</h2>
+                <ul class="text-xl space-y-3">
+                    <li><i class="fas fa-cog mr-2"></i> 解析并执行用户命令</li>
+                    <li><i class="fas fa-file-alt mr-2"></i> 提供脚本执行环境</li>
+                    <li><i class="fas fa-tools mr-2"></i> 系统管理与配置</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

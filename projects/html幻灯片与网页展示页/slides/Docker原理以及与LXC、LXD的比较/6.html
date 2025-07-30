@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用场景和适用性比较</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #e6edf3;
+            font-family: 'SF Mono', 'Consolas', 'Liberation Mono', Menlo, monospace;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            overflow: hidden;
+            position: relative;
+        }
+        .title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f97316, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        .highlight {
+            color: #f97316;
+        }
+        .secondary-highlight {
+            color: #3b82f6;
+        }
+        .tertiary-highlight {
+            color: #10b981;
+        }
+        .scenario-card {
+            background-color: rgba(22, 27, 34, 0.7);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #30363d;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .docker-card {
+            border-color: #2496ed;
+        }
+        .docker-card:hover {
+            border-color: #2496ed;
+            box-shadow: 0 0 15px rgba(36, 150, 237, 0.3);
+        }
+        .lxc-card {
+            border-color: #3b82f6;
+        }
+        .lxc-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .lxd-card {
+            border-color: #8b5cf6;
+        }
+        .lxd-card:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+        .scenario-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .docker-icon {
+            color: #2496ed;
+        }
+        .lxc-icon {
+            color: #3b82f6;
+        }
+        .lxd-icon {
+            color: #8b5cf6;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 3px;
+            font-weight: 500;
+        }
+        .docker-tag {
+            background-color: rgba(36, 150, 237, 0.2);
+            border: 1px solid #2496ed;
+            color: #74c0fc;
+        }
+        .lxc-tag {
+            background-color: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
+        }
+        .lxd-tag {
+            background-color: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+            color: #c4b5fd;
+        }
+        .decision-tree {
+            background-color: rgba(22, 27, 34, 0.7);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #30363d;
+        }
+        .tree-node {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            position: relative;
+        }
+        .tree-node::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            width: 2px;
+            height: 1.5rem;
+            background-color: #30363d;
+        }
+        .tree-node:last-child::before {
+            display: none;
+        }
+        .tree-branch {
+            position: relative;
+        }
+        .tree-branch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #30363d;
+        }
+        .tree-branch:first-child::after {
+            width: 50%;
+            left: 50%;
+        }
+        .tree-branch:last-child::after {
+            width: 50%;
+        }
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="title">使用场景和适用性比较</h1>
+            <p class="text-xl text-gray-400">Use Cases & Applicability Comparison</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow grid grid-cols-3 gap-6">
+            <!-- Docker Scenarios -->
+            <div class="scenario-card docker-card">
+                <div class="scenario-icon docker-icon">
+                    <i class="fab fa-docker"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-3">Docker适用场景</h2>
+                <div class="mb-4">
+                    <span class="tag docker-tag">微服务架构</span>
+                    <span class="tag docker-tag">CI/CD流水线</span>
+                    <span class="tag docker-tag">快速部署</span>
+                    <span class="tag docker-tag">开发环境</span>
+                    <span class="tag docker-tag">云原生应用</span>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2">优势</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>标准化容器格式</li>
+                        <li>庞大的生态系统</li>
+                        <li>丰富的工具链</li>
+                        <li>强大的社区支持</li>
+                        <li>快速启动与销毁</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">最佳实践</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>单进程容器</li>
+                        <li>无状态应用</li>
+                        <li>微服务架构</li>
+                        <li>开发与生产环境一致性</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- LXC Scenarios -->
+            <div class="scenario-card lxc-card">
+                <div class="scenario-icon lxc-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-3">LXC适用场景</h2>
+                <div class="mb-4">
+                    <span class="tag lxc-tag">轻量级虚拟化</span>
+                    <span class="tag lxc-tag">传统应用迁移</span>
+                    <span class="tag lxc-tag">系统级容器</span>
+                    <span class="tag lxc-tag">资源受限环境</span>
+                    <span class="tag lxc-tag">开发测试环境</span>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2">优势</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>接近虚拟机的体验</li>
+                        <li>资源占用少</li>
+                        <li>与现有工具兼容</li>
+                        <li>更细粒度的系统控制</li>
+                        <li>无需额外守护进程</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">最佳实践</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>完整系统环境</li>
+                        <li>多进程应用</li>
+                        <li>需要持久化的服务</li>
+                        <li>资源受限的部署环境</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- LXD Scenarios -->
+            <div class="scenario-card lxd-card">
+                <div class="scenario-icon lxd-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-3">LXD适用场景</h2>
+                <div class="mb-4">
+                    <span class="tag lxd-tag">完整操作系统容器</span>
+                    <span class="tag lxd-tag">混合云部署</span>
+                    <span class="tag lxd-tag">容器迁移</span>
+                    <span class="tag lxd-tag">开发与生产环境</span>
+                    <span class="tag lxd-tag">虚拟机替代方案</span>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2">优势</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>虚拟机式管理体验</li>
+                        <li>REST API与远程管理</li>
+                        <li>内置镜像仓库与快照</li>
+                        <li>默认安全配置</li>
+                        <li>容器热迁移</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">最佳实践</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>长期运行的系统容器</li>
+                        <li>多应用部署</li>
+                        <li>容器迁移场景</li>
+                        <li>需要完整系统环境的场景</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Decision Tree and Chart -->
+        <div class="grid grid-cols-2 gap-6 mt-6">
+            <!-- Decision Tree -->
+            <div class="decision-tree">
+                <h2 class="text-xl font-bold mb-4"><i class="fas fa-sitemap text-yellow-500 mr-2"></i>如何选择合适的容器技术</h2>
+                <div class="tree-branch">
+                    <div class="tree-node bg-gray-800">
+                        <span class="font-bold text-yellow-400">应用需求是什么？</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="tree-node bg-blue-900 bg-opacity-40">
+                            <span class="font-bold text-blue-400">单进程/微服务</span>
+                            <p class="text-sm mt-1">→ 选择 <span class="font-bold text-blue-300">Docker</span></p>
+                        </div>
+                        <div class="tree-node bg-blue-900 bg-opacity-40">
+                            <span class="font-bold text-blue-400">多进程/完整系统</span>
+                            <p class="text-sm mt-1">→ 考虑 <span class="font-bold text-blue-300">LXC/LXD</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tree-branch mt-6">
+                    <div class="tree-node bg-gray-800">
+                        <span class="font-bold text-yellow-400">管理复杂度要求？</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="tree-node bg-blue-900 bg-opacity-40">
+                            <span class="font-bold text-blue-400">简单/开发者友好</span>
+                            <p class="text-sm mt-1">→ 选择 <span class="font-bold text-blue-300">Docker</span></p>
+                        </div>
+                        <div class="tree-node bg-blue-900 bg-opacity-40">
+                            <span class="font-bold text-blue-400">高级/企业级管理</span>
+                            <p class="text-sm mt-1">→ 选择 <span class="font-bold text-blue-300">LXD</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart -->
+            <div>
+                <h2 class="text-xl font-bold mb-4"><i class="fas fa-chart-bar text-green-500 mr-2"></i>技术适用性对比</h2>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-6 text-sm text-gray-500 flex justify-between items-center">
+            <div>Docker实现原理与LXC/LXD技术比较</div>
+            <div>6/6</div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            const comparisonChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['开发效率', '部署速度', '资源利用率', '隔离性', '安全性', '管理便捷性'],
+                    datasets: [
+                        {
+                            label: 'Docker',
+                            data: [95, 90, 85, 80, 75, 90],
+                            backgroundColor: 'rgba(36, 150, 237, 0.2)',
+                            borderColor: 'rgba(36, 150, 237, 0.8)',
+                            pointBackgroundColor: 'rgba(36, 150, 237, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(36, 150, 237, 1)'
+                        },
+                        {
+                            label: 'LXC',
+                            data: [70, 75, 90, 85, 80, 65],
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 0.8)',
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+                        },
+                        {
+                            label: 'LXD',
+                            data: [80, 85, 75, 90, 90, 85],
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderColor: 'rgba(139, 92, 246, 0.8)',
+                            pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(139, 92, 246, 1)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e6edf3',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                showLabelBackdrop: false,
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e6edf3',
+                                boxWidth: 15,
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

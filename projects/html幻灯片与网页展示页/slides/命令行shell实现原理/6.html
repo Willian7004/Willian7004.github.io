@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I/O重定向的实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .code {
+            color: #f8f8f2;
+        }
+        .comment {
+            color: #6272a4;
+        }
+        .keyword {
+            color: #ff79c6;
+        }
+        .function {
+            color: #50fa7b;
+        }
+        .string {
+            color: #f1fa8c;
+        }
+        .highlight-box {
+            background-color: rgba(80, 250, 123, 0.1);
+            border-left: 4px solid #50fa7b;
+        }
+        .redirection-arrow {
+            position: relative;
+            height: 2px;
+            background-color: #ff5555;
+            width: 40px;
+        }
+        .redirection-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #ff5555;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .fd-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <h1 class="text-4xl font-bold mb-8 text-center">I/O重定向的实现原理</h1>
+        
+        <div class="flex flex-grow">
+            <!-- 左侧：I/O重定向概念和文件描述符 -->
+            <div class="w-1/2 pr-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">I/O重定向概念</h2>
+                    <div class="bg-white/10 p-5 rounded-lg">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-exchange-alt text-3xl mr-4 text-green-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">改变数据流向</div>
+                                <div class="text-sm text-gray-300">重新定向标准输入/输出到文件或其他进程</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="bg-blue-900/50 p-3 rounded text-center">
+                                <div class="font-bold mb-1">输入重定向</div>
+                                <div class="text-sm">&lt; file</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded text-center">
+                                <div class="font-bold mb-1">输出重定向</div>
+                                <div class="text-sm">> file</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded text-center">
+                                <div class="font-bold mb-1">追加输出</div>
+                                <div class="text-sm">>> file</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">文件描述符表</h2>
+                    <div class="fd-box p-5">
+                        <div class="flex justify-center mb-4">
+                            <div class="text-center">
+                                <div class="text-xl font-bold mb-2">内核为每个进程维护的文件描述符表</div>
+                                <div class="text-sm text-gray-300">索引 → 打开的文件</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-blue-800/50 p-3 rounded text-center">
+                                <div class="text-2xl font-bold mb-1">0</div>
+                                <div class="text-sm">STDIN</div>
+                                <div class="text-xs text-gray-400">标准输入</div>
+                            </div>
+                            <div class="bg-blue-800/50 p-3 rounded text-center">
+                                <div class="text-2xl font-bold mb-1">1</div>
+                                <div class="text-sm">STDOUT</div>
+                                <div class="text-xs text-gray-400">标准输出</div>
+                            </div>
+                            <div class="bg-blue-800/50 p-3 rounded text-center">
+                                <div class="text-2xl font-bold mb-1">2</div>
+                                <div class="text-sm">STDERR</div>
+                                <div class="text-xs text-gray-400">标准错误</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center text-sm">
+                            <div>I/O重定向的本质：<span class="text-green-400">改变FD指向的文件，而非改变应用程序行为</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box p-6 flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">重定向实现步骤</h2>
+                    <ol class="space-y-3 text-lg">
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-7 h-7 flex items-center justify-center mr-3 mt-1 flex-shrink-0">1</div>
+                            <span>打开目标文件 (open()系统调用)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-7 h-7 flex items-center justify-center mr-3 mt-1 flex-shrink-0">2</div>
+                            <span>使用dup2()复制文件描述符</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-7 h-7 flex items-center justify-center mr-3 mt-1 flex-shrink-0">3</div>
+                            <span>执行命令，影响将被重定向</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-7 h-7 flex items-center justify-center mr-3 mt-1 flex-shrink-0">4</div>
+                            <span>关闭文件描述符</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- 右侧：dup2系统调用和代码示例 -->
+            <div class="w-1/2 pl-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">dup2系统调用</h2>
+                    <div class="terminal p-5">
+                        <pre class="text-sm overflow-auto">
+<span class="comment">// dup2函数原型</span>
+<span class="keyword">int</span> <span class="function">dup2</span>(<span class="keyword">int</span> oldfd, <span class="keyword">int</span> newfd);
+
+<span class="comment">// 功能</span>
+<span class="comment">// 创建oldfd的副本，使newfd指向同一文件</span>
+<span class="comment">// 两个文件描述符可以互换使用</span>
+
+<span class="comment">// 示例：将标准输出重定向到文件</span>
+<span class="keyword">int</span> fd = <span class="function">open</span>(<span class="string">"output.txt"</span>, O_WRONLY | O_CREAT, 0644);
+<span class="function">dup2</span>(fd, STDOUT_FILENO);</pre>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">代码示例</h2>
+                    <div class="terminal p-5">
+                        <pre class="text-sm overflow-auto">
+<span class="comment">// 输出重定向实现</span>
+<span class="keyword">int</span> <span class="function">redirect_output</span>(<span class="keyword">const char</span> *filename) {
+    <span class="keyword">int</span> fd = <span class="function">open</span>(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    <span class="keyword">if</span> (fd < 0) {
+        <span class="keyword">return</span> -1; <span class="comment">// 打开文件失败</span>
+    }
+    <span class="keyword">if</span> (<span class="function">dup2</span>(fd, STDOUT_FILENO) < 0) {
+        <span class="function">close</span>(fd);
+        <span class="keyword">return</span> -1; <span class="comment">// 重定向失败</span>
+    }
+    <span class="keyword">return</span> fd; <span class="comment">// 返回文件描述符</span>
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 p-6 rounded-lg flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">重定向示例</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <div class="text-xl font-bold mb-2 text-center">输出重定向</div>
+                            <div class="terminal p-3 text-sm">
+                                <div class="flex items-center mb-2">
+                                    <span class="code">ls -l</span>
+                                    <div class="redirection-arrow mx-2"></div>
+                                    <span class="code">file.txt</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mb-2">命令执行结果写入文件</div>
+                                <div class="bg-black/30 p-2 rounded">
+                                    <div class="code">total 24</div>
+                                    <div class="code">-rw-r--r-- 1 user user  0 Jun 15 10:30 file.txt</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold mb-2 text-center">输入重定向</div>
+                            <div class="terminal p-3 text-sm">
+                                <div class="flex items-center mb-2">
+                                    <span class="code">sort</span>
+                                    <div class="redirection-arrow mx-2 transform rotate-180"></div>
+                                    <span class="code">input.txt</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mb-2">从文件读取输入</div>
+                                <div class="bg-black/30 p-2 rounded">
+                                    <div class="code">banana</div>
+                                    <div class="code">apple</div>
+                                    <div class="code">pear</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

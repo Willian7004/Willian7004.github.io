@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体素引擎优化技术</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            font-family: 'Arial', sans-serif;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 248, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            color: #38bdf8;
+        }
+        .optimization-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .optimization-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.4);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+        }
+        .tech-icon {
+            transition: all 0.3s ease;
+        }
+        .optimization-card:hover .tech-icon {
+            transform: scale(1.1);
+        }
+        .performance-chart-container {
+            height: 160px;
+            position: relative;
+        }
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <div class="grid-pattern"></div>
+        
+        <div class="content flex flex-col h-full px-16 py-10">
+            <!-- 标题区域 -->
+            <div class="text-center mb-5">
+                <h1 class="text-5xl font-bold glow">
+                    <span class="highlight">体素引擎优化技术</span>
+                </h1>
+                <p class="text-xl text-blue-300 opacity-80 mt-2">Voxel Engine Optimization Techniques</p>
+            </div>
+            
+            <!-- 主要内容区域 -->
+            <div class="flex-grow grid grid-cols-3 gap-6">
+                <!-- LOD优化 -->
+                <div class="optimization-card p-5 flex flex-col">
+                    <div class="flex items-center mb-3">
+                        <div class="tech-icon bg-gradient-to-r from-orange-500 to-red-500 p-3 rounded-lg mr-3">
+                            <i class="fas fa-layer-group text-3xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">细节层次 <span class="text-lg font-normal text-orange-300">(LOD)</span></h2>
+                    </div>
+                    
+                    <div class="flex-grow">
+                        <ul class="space-y-2 text-base">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-orange-400 mt-1 mr-2"></i>
+                                <span>根据<span class="highlight">距离</span>调整体素大小</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-orange-400 mt-1 mr-2"></i>
+                                <span>远距离使用<span class="highlight">大尺寸体素</span></span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-orange-400 mt-1 mr-2"></i>
+                                <span>实现<span class="highlight">动态LOD切换</span>算法</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-3 bg-slate-800/60 p-3 rounded-lg">
+                            <div class="text-sm font-semibold text-orange-300 mb-1">性能提升</div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                            <div class="text-xs text-right mt-1 text-orange-200">可达75%渲染减少</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 flex justify-center">
+                        
+                    </div>
+                </div>
+                
+                <!-- 视锥剔除 -->
+                <div class="optimization-card p-5 flex flex-col">
+                    <div class="flex items-center mb-3">
+                        <div class="tech-icon bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-lg mr-3">
+                            <i class="fas fa-eye-slash text-3xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">视锥剔除 <span class="text-lg font-normal text-blue-300">(Frustum Culling)</span></h2>
+                    </div>
+                    
+                    <div class="flex-grow">
+                        <ul class="space-y-2 text-base">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-400 mt-1 mr-2"></i>
+                                <span>仅渲染<span class="highlight">视锥体内</span>的体素</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-400 mt-1 mr-2"></i>
+                                <span>使用<span class="highlight">包围盒层次结构</span>加速检测</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-400 mt-1 mr-2"></i>
+                                <span>结合<span class="highlight">八叉树</span>进行空间分区</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-3 bg-slate-800/60 p-3 rounded-lg">
+                            <div class="text-sm font-semibold text-blue-300 mb-1">性能提升</div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style="width: 60%"></div>
+                            </div>
+                            <div class="text-xs text-right mt-1 text-blue-200">视域外体素跳过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 flex justify-center">
+                        
+                    </div>
+                </div>
+                
+                <!-- 实例化渲染 -->
+                <div class="optimization-card p-5 flex flex-col">
+                    <div class="flex items-center mb-3">
+                        <div class="tech-icon bg-gradient-to-r from-green-500 to-teal-500 p-3 rounded-lg mr-3">
+                            <i class="fas fa-clone text-3xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">实例化渲染 <span class="text-lg font-normal text-green-300">(Instancing)</span></h2>
+                    </div>
+                    
+                    <div class="flex-grow">
+                        <ul class="space-y-2 text-base">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>批量渲染<span class="highlight">相同几何体</span>的体素</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>GPU层面<span class="highlight">矩阵变换</span>，减少CPU开销</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>支持<span class="highlight">动态材质属性</span>变化</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-3 bg-slate-800/60 p-3 rounded-lg">
+                            <div class="text-sm font-semibold text-green-300 mb-1">性能提升</div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                            <div class="text-xs text-right mt-1 text-green-200">相同体素渲染效率提升</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 flex justify-center">
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部性能比较图表 -->
+            <div class="mt-5">
+                <div class="bg-slate-800/40 rounded-lg p-4">
+                    <h3 class="text-xl font-semibold mb-2 text-center text-blue-300">优化技术性能对比</h3>
+                    <div class="performance-chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(255, 99, 132, 0.7)"></div>
+                            <span>无优化</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(54, 162, 235, 0.7)"></div>
+                            <span>视锥剔除</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(255, 159, 64, 0.7)"></div>
+                            <span>LOD</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(75, 192, 192, 0.7)"></div>
+                            <span>实例化渲染</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(153, 102, 255, 0.7)"></div>
+                            <span>综合优化</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 性能对比图表
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['无优化', '视锥剔除', 'LOD', '实例化渲染', '综合优化'],
+                datasets: [{
+                    label: '每秒渲染体素数 (千)',
+                    data: [50, 120, 180, 250, 350],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

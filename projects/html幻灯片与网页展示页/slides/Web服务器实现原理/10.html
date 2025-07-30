@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web服务器与后端应用的交互方式</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #0052cc;
+            color: white;
+            padding: 30px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 70px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .interaction-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto auto;
+            gap: 25px;
+            flex-grow: 1;
+        }
+        .interaction-card {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border-left: 4px solid #0052cc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #e3f2fd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .card-icon .material-icons {
+            font-size: 28px;
+            color: #0052cc;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0052cc;
+        }
+        .card-content {
+            flex-grow: 1;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        .feature-item .material-icons {
+            color: #4fc3f7;
+            margin-right: 10px;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .workflow-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .workflow-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 25px;
+            width: 20px;
+            height: 2px;
+            background-color: #0052cc;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background-color: #0052cc;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .step-text {
+            font-size: 16px;
+            line-height: 1.3;
+        }
+        .other-methods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .method {
+            flex: 1 0 calc(50% - 8px);
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #0052cc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .method-icon .material-icons {
+            font-size: 22px;
+            color: white;
+        }
+        .method-content {
+            flex-grow: 1;
+        }
+        .method-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0052cc;
+            margin-bottom: 5px;
+        }
+        .method-desc {
+            font-size: 16px;
+        }
+        .cache-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .cache-feature {
+            background-color: #e3f2fd;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #0052cc;
+            display: flex;
+            align-items: center;
+        }
+        .cache-feature .material-icons {
+            font-size: 18px;
+            margin-right: 8px;
+            color: #0052cc;
+        }
+        .highlight {
+            color: #0052cc;
+            font-weight: 500;
+        }
+        .footer {
+            padding: 20px 70px;
+            background-color: #f5f5f5;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">Web服务器与后端应用的交互方式</h1>
+        </div>
+        <div class="content">
+            <div class="interaction-grid">
+                <div class="interaction-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">settings_ethernet</i>
+                        </div>
+                        <h2 class="card-title">CGI</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">传统方式</span>：每个请求启动一个进程处理</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">工作原理</span>：Web服务器将环境变量和标准输入传递给CGI程序</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">缺点</span>：进程创建和销毁开销大，性能差</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">适用场景</span>：低并发、简单的动态内容生成</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="interaction-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">flash_on</i>
+                        </div>
+                        <h2 class="card-title">FastCGI</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">改进的CGI</span>：使用持久进程处理多个请求</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">C/S架构</span>：Web服务器和脚本解析服务器分离</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">优点</span>：性能高，资源利用率高，支持高并发</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">通信方式</span>：通过本地socket或TCP/IP socket</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="interaction-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">sync_alt</i>
+                        </div>
+                        <h2 class="card-title">Nginx与FastCGI的合作</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">PHP-FPM</span>：作为FastCGI进程管理器</span>
+                            </li>
+                        </ul>
+                        <div class="workflow">
+                            <div class="workflow-step">
+                                <div class="step-number">1</div>
+                                <div class="step-text">PHP-FPM初始化，启动主进程和CGI子进程</div>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="step-number">2</div>
+                                <div class="step-text">Nginx将PHP请求转发给PHP-FPM</div>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="step-number">3</div>
+                                <div class="step-text">PHP-FPM选择子进程处理请求</div>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="step-number">4</div>
+                                <div class="step-text">子进程处理完成后返回结果</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="interaction-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">extension</i>
+                        </div>
+                        <h2 class="card-title">其他交互方式与缓存机制</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="other-methods">
+                            <div class="method">
+                                <div class="method-icon">
+                                    <i class="material-icons">code</i>
+                                </div>
+                                <div class="method-content">
+                                    <div class="method-name">WSGI</div>
+                                    <div class="method-desc">Python Web服务器网关接口</div>
+                                </div>
+                            </div>
+                            <div class="method">
+                                <div class="method-icon">
+                                    <i class="material-icons">swap_horiz</i>
+                                </div>
+                                <div class="method-content">
+                                    <div class="method-name">AJP</div>
+                                    <div class="method-desc">Apache JServ协议</div>
+                                </div>
+                            </div>
+                            <div class="method">
+                                <div class="method-icon">
+                                    <i class="material-icons">public</i>
+                                </div>
+                                <div class="method-content">
+                                    <div class="method-name">HTTP代理</div>
+                                    <div class="method-desc">通过HTTP协议转发请求</div>
+                                </div>
+                            </div>
+                            <div class="method">
+                                <div class="method-icon">
+                                    <i class="material-icons">memory</i>
+                                </div>
+                                <div class="method-content">
+                                    <div class="method-name">Memcached</div>
+                                    <div class="method-desc">分布式内存对象缓存系统</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h3 style="font-size: 20px; margin-bottom: 10px; color: #0052cc;">缓存机制特点</h3>
+                            <div class="cache-features">
+                                <div class="cache-feature">
+                                    <i class="material-icons">speed</i>
+                                    <span>提高响应速度</span>
+                                </div>
+                                <div class="cache-feature">
+                                    <i class="material-icons">trending_down</i>
+                                    <span>减轻后端负载</span>
+                                </div>
+                                <div class="cache-feature">
+                                    <i class="material-icons">storage</i>
+                                    <span>键值对存储</span>
+                                </div>
+                                <div class="cache-feature">
+                                    <i class="material-icons">timer</i>
+                                    <span>数据过期机制</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Web服务器实现原理</div>
+            <div>第 <span class="highlight">10</span> 页</div>
+        </div>
+    </div>
+</body>
+</html>

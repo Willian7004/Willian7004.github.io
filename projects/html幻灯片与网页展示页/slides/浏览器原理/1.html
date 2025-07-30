@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .browser-window {
+            position: absolute;
+            width: 80%;
+            height: 60%;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+        .browser-header {
+            height: 40px;
+            background-color: #f1f1f1;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .browser-content {
+            height: calc(100% - 40px);
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .url-bar {
+            height: 30px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            margin: 20px;
+            width: 80%;
+        }
+        .circle-decoration {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            background-color: #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100">
+        <!-- Decorative circles -->
+        <div class="circle-decoration" style="width: 300px; height: 300px; top: -100px; left: -100px;"></div>
+        <div class="circle-decoration" style="width: 200px; height: 200px; bottom: -50px; right: -50px;"></div>
+        <div class="circle-decoration" style="width: 150px; height: 150px; top: 100px; right: 100px;"></div>
+        
+        <!-- Main content -->
+        <div class="text-center z-10">
+            <h1 class="text-6xl font-bold mb-6 text-blue-800 tracking-tight">浏览器实现原理</h1>
+            <p class="text-2xl text-blue-600 mb-12">从输入URL到页面渲染的全过程解析</p>
+            
+            <!-- Browser icon -->
+            <div class="flex justify-center mb-10">
+                <i class="fas fa-globe text-8xl text-blue-500"></i>
+            </div>
+            
+            <!-- Browser window illustration -->
+            <div class="browser-window">
+                <div class="browser-header">
+                    <div class="browser-dot bg-red-500"></div>
+                    <div class="browser-dot bg-yellow-500"></div>
+                    <div class="browser-dot bg-green-500"></div>
+                    <div class="flex-grow"></div>
+                    <i class="fas fa-search text-gray-500"></i>
+                </div>
+                <div class="browser-content">
+                    <div class="url-bar">
+                        <i class="fas fa-lock text-green-500 mr-2"></i>
+                        <span class="text-gray-400">https://www.example.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

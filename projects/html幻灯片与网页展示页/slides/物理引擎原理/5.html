@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 约束求解方法</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .method-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            display: inline-block;
+        }
+        .highlight {
+            color: #4da6ff;
+            font-weight: bold;
+        }
+        .feature-item {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .feature-item:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .glow {
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.5);
+        }
+        .constraint-type {
+            transition: all 0.3s ease;
+        }
+        .constraint-type:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-10 flex flex-col">
+        <h1 class="title text-center">约束求解方法</h1>
+        <p class="text-center text-xl text-blue-200 mb-6">物理引擎中解决碰撞和关节约束的核心算法</p>
+        
+        <div class="flex-grow grid grid-cols-2 gap-8">
+            <!-- Sequential Impulse Method -->
+            <div class="method-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-4 glow">
+                        <i class="fas fa-bolt text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-blue-300">基于冲量的Sequential Impulse</h3>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-lg mb-2">逐个求解约束，模拟<span class="highlight">瞬时冲量</span>作用</p>
+                    
+                    <div class="formula text-sm">
+                        J<sub>k</sub>M<sup>-1</sup>J<sub>k</sub><sup>T</sup>λ<sub>k</sub> = -J<sub>k</sub>v<sup>*</sup> - b<sub>k</sub>
+                    </div>
+                    
+                    <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg mt-3">
+                        <h4 class="font-semibold mb-2 text-blue-200">算法步骤</h4>
+                        <ol class="list-decimal pl-5 space-y-1 text-sm">
+                            <li>计算所有物体的新速度 v<sup>*</sup></li>
+                            <li>对每个约束k，求解λ<sub>k</sub></li>
+                            <li>应用冲量：v<sub>k+1</sub> = v<sub>k</sub><sup>*</sup> + M<sup>-1</sup>J<sub>k</sub><sup>T</sup>λ<sub>k</sub></li>
+                            <li>更新位置：x<sub>k+1</sub> = x<sub>k</sub> + v<sub>k+1</sub>Δt</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="constraint-type bg-blue-800 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-semibold mb-2 text-blue-200">接触约束</h4>
+                        <p class="text-xs">防止物体互相穿透，保持物体分离</p>
+                    </div>
+                    <div class="constraint-type bg-blue-800 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-semibold mb-2 text-blue-200">摩擦约束</h4>
+                        <p class="text-xs">限制切线方向相对运动</p>
+                    </div>
+                </div>
+                
+                <div class="mt-auto bg-gradient-to-r from-blue-900 to-blue-700 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">特点</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="feature-item text-blue-200">实现简单</div>
+                        <div class="feature-item text-blue-200">计算效率高</div>
+                        <div class="feature-item text-blue-200">适合游戏物理引擎</div>
+                        <div class="feature-item text-blue-200">稳定性较好</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Constraint-based Jacobian Method -->
+            <div class="method-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mr-4 glow">
+                        <i class="fas fa-puzzle-piece text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-purple-300">基于约束的雅可比矩阵法</h3>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-lg mb-2">使用<span class="highlight">拉格朗日乘数法</span>求解约束系统</p>
+                    
+                    <div class="formula text-sm">
+                        M<span class="highlight">•</span>q̈ + J<sup>T</sup>λ = F<sup>ext</sup>
+                    </div>
+                    
+                    <div class="bg-purple-900 bg-opacity-30 p-3 rounded-lg mt-3">
+                        <h4 class="font-semibold mb-2 text-purple-200">关键概念</h4>
+                        <ul class="list-none space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-purple-400 mr-2 mt-1"></i>
+                                <div>
+                                    <span class="font-semibold">雅可比矩阵 J</span>
+                                    <p class="text-xs mt-1">描述约束对状态变量的变化率</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-purple-400 mr-2 mt-1"></i>
+                                <div>
+                                    <span class="font-semibold">拉格朗日乘数 λ</span>
+                                    <p class="text-xs mt-1">表示约束力大小</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="constraint-type bg-purple-800 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-semibold mb-2 text-purple-200">等式约束</h4>
+                        <p class="text-xs">距离约束、旋转关节、滑轮等</p>
+                    </div>
+                    <div class="constraint-type bg-purple-800 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-semibold mb-2 text-purple-200">不等式约束</h4>
+                        <p class="text-xs">接触约束、角度限制等</p>
+                    </div>
+                </div>
+                
+                <div class="mt-auto bg-gradient-to-r from-purple-900 to-purple-700 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">特点</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="feature-item text-purple-200">理论完备</div>
+                        <div class="feature-item text-purple-200">求解精度高</div>
+                        <div class="feature-item text-purple-200">适用于复杂约束</div>
+                        <div class="feature-item text-purple-200">计算成本较高</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Position Based Dynamics -->
+            <div class="method-card p-6 col-span-2 flex">
+                <div class="w-full">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center mr-4">
+                            <i class="fas fa-map-marker-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-green-300">基于位置的动力学 (PBD)</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="bg-green-900 bg-opacity-30 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-3 text-green-200">核心思想</h4>
+                            <p class="text-sm">直接修正物体位置以满足约束，而非通过力或冲量</p>
+                            <div class="formula text-xs mt-3">
+                                Δx = α(C(x) - x<sub>0</sub>)
+                            </div>
+                            <p class="text-xs mt-1 italic">α为松弛因子，C为目标约束</p>
+                        </div>
+                        
+                        <div class="bg-green-900 bg-opacity-30 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-3 text-green-200">算法步骤</h4>
+                            <ol class="list-decimal pl-5 space-y-1 text-sm">
+                                <li>预测新位置</li>
+                                <li>应用外力影响</li>
+                                <li>求解约束</li>
+                                <li>修正位置</li>
+                                <li>更新速度</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-green-900 bg-opacity-30 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-3 text-green-200">优缺点</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <i class="fas fa-plus-circle text-green-400 mr-2 mt-1"></i>
+                                    <span>实现简单</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-plus-circle text-green-400 mr-2 mt-1"></i>
+                                    <span>稳定性好</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-minus-circle text-red-400 mr-2 mt-1"></i>
+                                    <span>能量不守恒</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-minus-circle text-red-400 mr-2 mt-1"></i>
+                                    <span>不适合精确物理模拟</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 bg-blue-900 bg-opacity-20 p-3 rounded-lg">
+                        <h4 class="font-semibold mb-2 text-center text-blue-200">约束求解方法比较</h4>
+                        <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                            <div class="bg-gradient-to-b from-blue-900 to-blue-800 p-2 rounded-lg">
+                                <span class="font-semibold text-blue-300">Sequential Impulse</span>
+                                <p class="text-xs mt-1">游戏引擎首选</p>
+                            </div>
+                            <div class="bg-gradient-to-b from-purple-900 to-purple-800 p-2 rounded-lg">
+                                <span class="font-semibold text-purple-300">雅可比矩阵法</span>
+                                <p class="text-xs mt-1">高精度模拟</p>
+                            </div>
+                            <div class="bg-gradient-to-b from-green-900 to-green-800 p-2 rounded-lg">
+                                <span class="font-semibold text-green-300">PBD方法</span>
+                                <p class="text-xs mt-1">软体模拟</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-blue-200 opacity-70">
+            <p>约束求解是物理引擎的核心，不同方法各有优劣，适用于不同场景</p>
+        </div>
+    </div>
+</body>
+</html>

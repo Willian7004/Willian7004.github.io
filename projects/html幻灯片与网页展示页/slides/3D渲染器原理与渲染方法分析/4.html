@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光线追踪原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a192f 0%, #203a63 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+        }
+        .ray-box {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        .ray-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(66, 153, 225, 0.8);
+        }
+        .ray-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.8), rgba(255, 140, 0, 0.8));
+            transform-origin: left center;
+            z-index: 1;
+        }
+        .ray-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(255, 215, 0, 0.9);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            z-index: 2;
+        }
+        .circuit-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%),
+                linear-gradient(0deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+        .feature-tag {
+            background: rgba(66, 153, 225, 0.2);
+            border: 1px solid rgba(66, 153, 225, 0.4);
+            transition: all 0.3s ease;
+        }
+        .feature-tag:hover {
+            background: rgba(66, 153, 225, 0.3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- 网格背景 -->
+        <div class="grid-pattern"></div>
+        <div class="circuit-lines"></div>
+        
+        <!-- 主要内容 -->
+        <div class="content flex flex-col h-full py-10 px-12">
+            <h1 class="text-5xl font-bold mb-6 glow tracking-wider text-center">光线追踪原理</h1>
+            
+            <div class="flex-grow flex">
+                <!-- 左侧：光线追踪原理和分类 -->
+                <div class="w-1/2 pr-6 flex flex-col">
+                    <!-- 基本原理 -->
+                    <div class="ray-box bg-blue-900 bg-opacity-40 rounded-lg p-4 mb-4">
+                        <h2 class="text-2xl font-semibold text-yellow-300 mb-2 flex items-center">
+                            <i class="fas fa-lightbulb mr-3 text-yellow-400"></i>基本原理
+                        </h2>
+                        <ul class="list-disc ml-8 text-lg text-blue-100">
+                            <li>基于<span class="text-yellow-200 font-semibold">光路可逆原理</span></li>
+                            <li>从<span class="text-yellow-200 font-semibold">观察者</span>发射光线追踪寻找光源</li>
+                            <li>模拟光线在场景中的传播行为</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 分类 -->
+                    <div class="ray-box bg-blue-800 bg-opacity-40 rounded-lg p-4 mb-4">
+                        <h2 class="text-2xl font-semibold text-green-300 mb-2 flex items-center">
+                            <i class="fas fa-sitemap mr-3 text-green-400"></i>分类
+                        </h2>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div class="feature-tag rounded-md p-2">
+                                <span class="text-xl text-blue-200">经典光线追踪</span>
+                                <span class="text-sm text-blue-300 ml-2">基础实现</span>
+                            </div>
+                            <div class="feature-tag rounded-md p-2">
+                                <span class="text-xl text-blue-200">递归式光线追踪</span>
+                                <span class="text-sm text-blue-300 ml-2">Whitted风格</span>
+                            </div>
+                            <div class="feature-tag rounded-md p-2">
+                                <span class="text-xl text-blue-200">路径追踪</span>
+                                <span class="text-sm text-blue-300 ml-2">光线追踪+蒙特卡洛</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 特点 -->
+                    <div class="ray-box bg-blue-700 bg-opacity-40 rounded-lg p-4">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-2 flex items-center">
+                            <i class="fas fa-star mr-3 text-purple-400"></i>特点
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-blue-600 bg-opacity-30 px-3 py-1 rounded-full text-blue-100">渲染质量高</span>
+                            <span class="bg-blue-600 bg-opacity-30 px-3 py-1 rounded-full text-blue-100">复杂光照效果</span>
+                            <span class="bg-red-600 bg-opacity-30 px-3 py-1 rounded-full text-blue-100">计算量大</span>
+                            <span class="bg-red-600 bg-opacity-30 px-3 py-1 rounded-full text-blue-100">实时性差</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：工作流程图 -->
+                <div class="w-1/2 pl-6">
+                    <div class="ray-box bg-blue-800 bg-opacity-30 rounded-lg p-5 h-full flex flex-col">
+                        <h2 class="text-2xl font-semibold text-cyan-300 mb-4 flex items-center">
+                            <i class="fas fa-project-diagram mr-3 text-cyan-400"></i>工作流程
+                        </h2>
+                        
+                        <div class="flex-grow relative">
+                            <!-- 光线追踪示意图 -->
+                            <div class="w-full h-80 relative bg-blue-900 bg-opacity-30 rounded-lg p-2">
+                                <!-- 眼睛/摄像机 -->
+                                <div class="absolute left-10 top-1/2 transform -translate-y-1/2 w-16 h-16 bg-blue-700 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-eye text-3xl text-blue-200"></i>
+                                </div>
+                                
+                                <!-- 光线1：直接光照 -->
+                                <div class="ray-line" style="left: 42px; top: 50%; width: 100px; transform: rotate(-20deg);"></div>
+                                <div class="ray-dot" style="left: 142px; top: calc(50% - 35px);"></div>
+                                
+                                <!-- 光线2：反射 -->
+                                <div class="ray-line" style="left: 142px; top: calc(50% - 35px); width: 120px; transform: rotate(30deg);"></div>
+                                <div class="ray-dot" style="left: 262px; top: calc(50% - 10px);"></div>
+                                
+                                <!-- 光线3：折射 -->
+                                <div class="ray-line" style="left: 142px; top: calc(50% - 35px); width: 100px; transform: rotate(-40deg);"></div>
+                                <div class="ray-dot" style="left: 242px; top: calc(50% - 90px);"></div>
+                                
+                                <!-- 光线4：二次反射 -->
+                                <div class="ray-line" style="left: 262px; top: calc(50% - 10px); width: 80px; transform: rotate(-10deg);"></div>
+                                <div class="ray-dot" style="left: 342px; top: calc(50% - 25px);"></div>
+                                
+                                <!-- 光源 -->
+                                <div class="absolute right-10 top-10 w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-lightbulb text-3xl text-yellow-200"></i>
+                                </div>
+                                
+                                <!-- 物体 -->
+                                <div class="absolute left-1/3 top-1/3 w-20 h-20 bg-blue-600 rounded-md transform rotate-45"></div>
+                                <div class="absolute right-1/4 top-1/2 w-16 h-16 bg-green-600 rounded-full"></div>
+                                <div class="absolute left-1/2 top-2/3 w-24 h-12 bg-red-600 rounded-md"></div>
+                            </div>
+                            
+                            <!-- 工作流程步骤 -->
+                            <div class="mt-4">
+                                <div class="flex flex-wrap justify-center gap-3">
+                                    <div class="bg-blue-700 bg-opacity-40 rounded-lg px-4 py-2 text-center">
+                                        <i class="fas fa-play-circle text-yellow-300 mr-2"></i>
+                                        <span class="text-blue-100">光线投射</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                                    <div class="bg-blue-700 bg-opacity-40 rounded-lg px-4 py-2 text-center">
+                                        <i class="fas fa-crosshairs text-yellow-300 mr-2"></i>
+                                        <span class="text-blue-100">光线与物体相交</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                                    <div class="bg-blue-700 bg-opacity-40 rounded-lg px-4 py-2 text-center">
+                                        <i class="fas fa-exchange-alt text-yellow-300 mr-2"></i>
+                                        <span class="text-blue-100">计算反射/折射</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                                    <div class="bg-blue-700 bg-opacity-40 rounded-lg px-4 py-2 text-center">
+                                        <i class="fas fa-redo text-yellow-300 mr-2"></i>
+                                        <span class="text-blue-100">递归追踪</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                                    <div class="bg-blue-700 bg-opacity-40 rounded-lg px-4 py-2 text-center">
+                                        <i class="fas fa-layer-group text-yellow-300 mr-2"></i>
+                                        <span class="text-blue-100">颜色累积</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 应用场景 -->
+            <div class="mt-4 bg-blue-900 bg-opacity-30 rounded-lg p-3">
+                <h2 class="text-xl font-semibold text-blue-300 mb-2 flex items-center">
+                    <i class="fas fa-film mr-2"></i>应用场景
+                </h2>
+                <div class="flex justify-around text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-video text-2xl text-blue-300 mb-1"></i>
+                        <span class="text-blue-100">电影特效</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-cubes text-2xl text-blue-300 mb-1"></i>
+                        <span class="text-blue-100">离线渲染</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-vr-cardboard text-2xl text-blue-300 mb-1"></i>
+                        <span class="text-blue-100">建筑可视化</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-gamepad text-2xl text-blue-300 mb-1"></i>
+                        <span class="text-blue-100">高端游戏</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部装饰 -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 z-10"></div>
+    </div>
+</body>
+</html>

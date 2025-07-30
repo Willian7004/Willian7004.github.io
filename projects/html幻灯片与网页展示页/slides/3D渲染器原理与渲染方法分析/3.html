@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D渲染器基本架构</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a192f 0%, #203a63 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+        }
+        .pipeline-stage {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        .pipeline-stage:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(66, 153, 225, 0.8);
+        }
+        .arrow {
+            position: relative;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            width: 30px;
+            height: 2px;
+            background: rgba(66, 153, 225, 0.8);
+            transform: translateY(-50%);
+        }
+        .arrow::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid rgba(66, 153, 225, 0.8);
+            border-right: 2px solid rgba(66, 153, 225, 0.8);
+            transform: translateY(-50%) rotate(45deg);
+            margin-right: -5px;
+        }
+        .circuit-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%),
+                linear-gradient(0deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- 网格背景 -->
+        <div class="grid-pattern"></div>
+        <div class="circuit-lines"></div>
+        
+        <!-- 主要内容 -->
+        <div class="content flex flex-col h-full py-10 px-12">
+            <h1 class="text-5xl font-bold mb-8 glow tracking-wider text-center">3D渲染器基本架构</h1>
+            
+            <div class="flex-grow flex flex-col">
+                <!-- 渲染管线概述 -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                        <i class="fas fa-project-diagram mr-3"></i>渲染管线概述
+                    </h2>
+                    <p class="text-xl text-blue-100 ml-8">从3D场景到2D图像的转换过程，是实时渲染的核心组件</p>
+                </div>
+                
+                <!-- 渲染管线流程图 -->
+                <div class="flex-grow flex items-center justify-center mb-8">
+                    <div class="w-full max-w-4xl">
+                        <!-- 应用阶段 -->
+                        <div class="pipeline-stage bg-blue-900 bg-opacity-50 rounded-lg p-4 mb-4 flex items-center arrow">
+                            <div class="w-16 h-16 rounded-full bg-blue-700 flex items-center justify-center mr-4">
+                                <i class="fas fa-microchip text-3xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-300">应用阶段</h3>
+                                <p class="text-lg text-blue-200">CPU主导 | 数据准备 | 逻辑控制 | Draw Call</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 几何阶段 -->
+                        <div class="pipeline-stage bg-blue-800 bg-opacity-50 rounded-lg p-4 mb-4 flex items-center arrow">
+                            <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mr-4">
+                                <i class="fas fa-cubes text-3xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-300">几何阶段</h3>
+                                <p class="text-lg text-blue-200">GPU主导 | 顶点处理 | 曲面细分 | 几何着色 | 投影变换</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 光栅化阶段 -->
+                        <div class="pipeline-stage bg-blue-700 bg-opacity-50 rounded-lg p-4 mb-4 flex items-center arrow">
+                            <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center mr-4">
+                                <i class="fas fa-th text-3xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-300">光栅化阶段</h3>
+                                <p class="text-lg text-blue-200">GPU主导 | 图元组装 | 三角形遍历 | 片元生成</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 像素处理阶段 -->
+                        <div class="pipeline-stage bg-blue-600 bg-opacity-50 rounded-lg p-4 flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-400 flex items-center justify-center mr-4">
+                                <i class="fas fa-paint-brush text-3xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-300">像素处理阶段</h3>
+                                <p class="text-lg text-blue-200">GPU主导 | 片元着色 | 深度测试 | 模板测试 | 颜色混合</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CPU与GPU协作 -->
+                <div class="bg-blue-900 bg-opacity-30 rounded-lg p-4">
+                    <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                        <i class="fas fa-exchange-alt mr-3"></i>CPU与GPU协作
+                    </h2>
+                    <div class="flex justify-between text-lg">
+                        <div class="flex-1 text-center p-2">
+                            <i class="fas fa-microchip text-3xl text-yellow-300 mb-2"></i>
+                            <p class="text-blue-200">CPU</p>
+                            <p class="text-sm text-blue-300">数据准备 | 逻辑控制 | 任务调度</p>
+                        </div>
+                        <div class="flex-1 text-center p-2">
+                            <i class="fas fa-arrow-right text-2xl text-blue-300"></i>
+                        </div>
+                        <div class="flex-1 text-center p-2">
+                            <i class="fas fa-memory text-3xl text-green-300 mb-2"></i>
+                            <p class="text-blue-200">GPU</p>
+                            <p class="text-sm text-blue-300">大规模并行计算 | 高速渲染 | 实时成像</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部装饰 -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 z-10"></div>
+    </div>
+</body>
+</html>

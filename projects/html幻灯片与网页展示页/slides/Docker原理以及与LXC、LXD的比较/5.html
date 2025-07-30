@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker、LXC和LXD的技术比较</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #e6edf3;
+            font-family: 'SF Mono', 'Consolas', 'Liberation Mono', Menlo, monospace;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            overflow: hidden;
+            position: relative;
+        }
+        .title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f43f5e, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        .comparison-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .comparison-table th {
+            background-color: rgba(30, 41, 59, 0.8);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #30363d;
+        }
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        .comparison-table tr:hover td {
+            background-color: rgba(30, 41, 59, 0.4);
+        }
+        .docker-color {
+            color: #2496ed;
+            border-left: 4px solid #2496ed;
+        }
+        .lxc-color {
+            color: #3b82f6;
+            border-left: 4px solid #3b82f6;
+        }
+        .lxd-color {
+            color: #8b5cf6;
+            border-left: 4px solid #8b5cf6;
+        }
+        .feature-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+        .docker-tag {
+            background-color: rgba(36, 150, 237, 0.2);
+            border: 1px solid #2496ed;
+        }
+        .lxc-tag {
+            background-color: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+        }
+        .lxd-tag {
+            background-color: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+        }
+        .radar-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .section-title i {
+            margin-right: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="title">Docker、LXC和LXD的技术比较</h1>
+            <p class="text-xl text-gray-400">Technical Comparison: Docker vs LXC vs LXD</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow grid grid-cols-3 gap-6">
+            <!-- Left Column - Comparison Table -->
+            <div class="col-span-2">
+                <div class="bg-gray-900 bg-opacity-50 rounded-lg p-4">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th class="w-1/4">特性</th>
+                                <th class="w-1/4">
+                                    <div class="flex items-center">
+                                        <i class="fab fa-docker mr-2 text-xl"></i>Docker
+                                    </div>
+                                </th>
+                                <th class="w-1/4">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-cube mr-2 text-xl"></i>LXC
+                                    </div>
+                                </th>
+                                <th class="w-1/4">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-server mr-2 text-xl"></i>LXD
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-semibold">容器类型</td>
+                                <td><span class="feature-tag docker-tag">应用容器</span> 单进程</td>
+                                <td><span class="feature-tag lxc-tag">系统容器</span> 多进程</td>
+                                <td><span class="feature-tag lxd-tag">系统容器</span> 多进程</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">架构</td>
+                                <td>客户端-服务器</td>
+                                <td>工具集+库</td>
+                                <td>LXC守护进程+REST API</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">运行时</td>
+                                <td>containerd + runc</td>
+                                <td>liblxc</td>
+                                <td>LXC + 守护进程</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">隔离级别</td>
+                                <td>进程级</td>
+                                <td>系统级</td>
+                                <td>系统级</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">默认安全</td>
+                                <td>需手动配置</td>
+                                <td>基础安全</td>
+                                <td>安全默认</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">镜像管理</td>
+                                <td>分层镜像</td>
+                                <td>基础模板</td>
+                                <td>镜像仓库+快照</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">用户体验</td>
+                                <td>开发者友好</td>
+                                <td>命令行操作</td>
+                                <td>虚拟机式体验</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">适用场景</td>
+                                <td>微服务、CI/CD</td>
+                                <td>轻量级VM替代</td>
+                                <td>完整OS环境</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Right Column - Charts and Key Differences -->
+            <div class="col-span-1">
+                <div class="section-title text-red-400">
+                    <i class="fas fa-chart-radar"></i>能力对比
+                </div>
+                <div class="radar-container mb-4">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                
+                <div class="section-title text-yellow-400 mt-4">
+                    <i class="fas fa-key"></i>关键差异
+                </div>
+                <div class="bg-gray-900 bg-opacity-50 rounded-lg p-4">
+                    <div class="mb-3">
+                        <div class="font-bold text-blue-400 mb-1">Docker</div>
+                        <ul class="list-disc list-inside text-sm">
+                            <li>专注于<span class="text-blue-300">短暂容器</span></li>
+                            <li>微服务架构设计</li>
+                            <li>强大的<span class="text-blue-300">生态系统</span></li>
+                            <li>标准化 OCI 镜像格式</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="font-bold text-green-400 mb-1">LXC</div>
+                        <ul class="list-disc list-inside text-sm">
+                            <li>提供<span class="text-green-300">低级工具</span></li>
+                            <li>更多系统级控制</li>
+                            <li>与<span class="text-green-300">传统工具</span>兼容</li>
+                            <li>灵活但配置复杂</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <div class="font-bold text-purple-400 mb-1">LXD</div>
+                        <ul class="list-disc list-inside text-sm">
+                            <li>提供<span class="text-purple-300">高级API</span></li>
+                            <li>类虚拟机管理体验</li>
+                            <li>默认<span class="text-purple-300">安全配置</span></li>
+                            <li>支持容器迁移</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-6 text-sm text-gray-500 flex justify-between items-center">
+            <div>Docker实现原理与LXC/LXD技术比较</div>
+            <div>5/6</div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            const radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['隔离性', '性能', '安全性', '易用性', '可移植性', '资源效率'],
+                    datasets: [
+                        {
+                            label: 'Docker',
+                            data: [80, 95, 75, 90, 95, 85],
+                            backgroundColor: 'rgba(36, 150, 237, 0.2)',
+                            borderColor: 'rgba(36, 150, 237, 0.8)',
+                            pointBackgroundColor: 'rgba(36, 150, 237, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(36, 150, 237, 1)'
+                        },
+                        {
+                            label: 'LXC',
+                            data: [70, 80, 65, 60, 75, 90],
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 0.8)',
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+                        },
+                        {
+                            label: 'LXD',
+                            data: [85, 85, 90, 85, 80, 75],
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderColor: 'rgba(139, 92, 246, 0.8)',
+                            pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(139, 92, 246, 1)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e6edf3',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: 'rgba(255, 255, 255, 0.5)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e6edf3',
+                                boxWidth: 15,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

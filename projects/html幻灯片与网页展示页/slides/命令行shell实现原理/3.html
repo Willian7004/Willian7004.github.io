@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令提示符生成</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .prompt {
+            color: #50fa7b;
+        }
+        .code {
+            color: #f8f8f2;
+        }
+        .comment {
+            color: #6272a4;
+        }
+        .env-var {
+            color: #ff79c6;
+        }
+        .highlight-box {
+            background-color: rgba(80, 250, 123, 0.1);
+            border-left: 4px solid #50fa7b;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <h1 class="text-4xl font-bold mb-8 text-center">命令提示符生成</h1>
+        
+        <div class="flex flex-grow">
+            <!-- 左侧：命令提示符生成原理 -->
+            <div class="w-1/2 pr-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">命令提示符组成</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-white/10 p-4 rounded-lg flex flex-col items-center">
+                            <i class="fas fa-user text-3xl mb-2 text-green-400"></i>
+                            <div class="text-xl font-bold">用户名</div>
+                            <div class="text-sm text-gray-300">当前登录用户</div>
+                        </div>
+                        <div class="bg-white/10 p-4 rounded-lg flex flex-col items-center">
+                            <i class="fas fa-server text-3xl mb-2 text-green-400"></i>
+                            <div class="text-xl font-bold">主机名</div>
+                            <div class="text-sm text-gray-300">系统标识</div>
+                        </div>
+                        <div class="bg-white/10 p-4 rounded-lg flex flex-col items-center">
+                            <i class="fas fa-folder-open text-3xl mb-2 text-green-400"></i>
+                            <div class="text-xl font-bold">当前目录</div>
+                            <div class="text-sm text-gray-300">工作路径</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box p-6 flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">实现流程</h2>
+                    <ol class="space-y-4 text-xl">
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">1</div>
+                            <span>获取环境变量 <span class="env-var">USER</span>、<span class="env-var">HOSTNAME</span>、<span class="env-var">PWD</span></span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">2</div>
+                            <span>格式化字符串，生成提示符模板</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">3</div>
+                            <span>强制刷新输出缓冲区，确保立即显示</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- 右侧：代码示例和终端显示 -->
+            <div class="w-1/2 pl-6 flex flex-col">
+                <div class="terminal p-5 mb-6">
+                    <div class="text-xl font-bold text-blue-300 mb-3">代码示例</div>
+                    <pre class="text-sm overflow-auto">
+<span class="comment"># 获取环境变量</span>
+<span class="code">const char *GetUserName() {</span>
+    <span class="code">return getenv("USER");</span>
+<span class="code">}</span>
+
+<span class="comment"># 生成命令提示符</span>
+<span class="code">void MakeCommandLine(char cmd_prompt[], int size) {</span>
+    <span class="code">snprintf(cmd_prompt, size, "[%s@%s %s]# ",</span>
+    <span class="code">        GetUserName(), GetHostName(), GetPwd());</span>
+<span class="code">}</span></pre>
+                </div>
+                
+                <div class="terminal p-5 flex-grow">
+                    <div class="text-xl font-bold text-blue-300 mb-3">终端显示</div>
+                    <div class="mb-4">
+                        <div class="flex items-center mb-2">
+                            <span class="prompt">user@host:~$</span>
+                            <span class="code ml-2">whoami</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="code ml-6">user</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center mb-2">
+                            <span class="prompt">user@host:~/docs$</span>
+                            <span class="code ml-2">pwd</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="code ml-6">/home/user/docs</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <span class="prompt">user@host:/var/log$</span>
+                            <span class="code ml-2">ls</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="code ml-6">auth.log  boot.log  dpkg.log</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

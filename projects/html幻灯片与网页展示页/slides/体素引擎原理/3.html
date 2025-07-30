@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体素数据结构</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            font-family: 'Arial', sans-serif;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            color: #38bdf8;
+        }
+        .data-structure-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .data-structure-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.4);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+        }
+        .octree-animation {
+            animation: pulse 3s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <div class="grid-pattern"></div>
+        
+        <div class="content flex flex-col h-full px-16 py-10">
+            <!-- 标题区域 -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold glow">
+                    <span class="highlight">体素数据结构</span>
+                </h1>
+                <p class="text-xl text-blue-300 opacity-80 mt-2">Efficient Voxel Data Structures</p>
+            </div>
+            
+            <!-- 主要内容区域 -->
+            <div class="flex-grow flex gap-8">
+                <!-- 左侧：基础数据结构 -->
+                <div class="data-structure-card flex-1 p-6 flex flex-col">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-database text-4xl text-purple-400 mr-4"></i>
+                        <h2 class="text-3xl font-bold">基础存储方式</h2>
+                    </div>
+                    
+                    <div class="flex-grow">
+                        <ul class="space-y-3 text-lg">
+                            <li class="flex items-start">
+                                <i class="fas fa-cube text-purple-400 mt-1.5 mr-2"></i>
+                                <span><span class="highlight">3D数组</span>：简单直接但内存消耗大</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-compress-alt text-purple-400 mt-1.5 mr-2"></i>
+                                <span><span class="highlight">哈希表</span>：仅存储非空体素，节省空间</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-th text-purple-400 mt-1.5 mr-2"></i>
+                                <span><span class="highlight">体素块</span>：将体素组织为更大的块</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-6 bg-slate-800/60 p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-2 text-purple-300">存储优化</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-purple-900/60 px-3 py-1 rounded-full text-sm">颜色索引</span>
+                                <span class="bg-purple-900/60 px-3 py-1 rounded-full text-sm">行程编码</span>
+                                <span class="bg-purple-900/60 px-3 py-1 rounded-full text-sm">差分压缩</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-center">
+                        <img src="../../libs/195-300x160.jpg" alt="体素3D数组结构" class="rounded-lg shadow-lg">
+                    </div>
+                </div>
+                
+                <!-- 右侧：八叉树结构 -->
+                <div class="data-structure-card flex-1 p-6 flex flex-col">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-sitemap text-4xl text-blue-400 mr-4"></i>
+                        <h2 class="text-3xl font-bold">八叉树 <span class="text-2xl font-normal text-blue-300">(Octree)</span></h2>
+                    </div>
+                    
+                    <div class="flex-grow">
+                        <ul class="space-y-3 text-lg">
+                            <li class="flex items-start">
+                                <i class="fas fa-project-diagram text-blue-400 mt-1.5 mr-2"></i>
+                                <span>将3D空间<span class="highlight">递归划分为8个子立方体</span></span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-leaf text-blue-400 mt-1.5 mr-2"></i>
+                                <span>仅<span class="highlight">细分包含体素的区域</span>，跳过空区域</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-search text-blue-400 mt-1.5 mr-2"></i>
+                                <span>支持<span class="highlight">快速空间查询</span>和<span class="highlight">视锥剔除</span></span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-6 bg-slate-800/60 p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-2 text-blue-300">八叉树优势</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-blue-900/60 px-3 py-1 rounded-full text-sm">内存效率高</span>
+                                <span class="bg-blue-900/60 px-3 py-1 rounded-full text-sm">LOD支持</span>
+                                <span class="bg-blue-900/60 px-3 py-1 rounded-full text-sm">快速碰撞检测</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-center">
+                        <div class="octree-animation">
+                            <img src="../../libs/139-300x160.jpg" alt="八叉树结构" class="rounded-lg shadow-lg">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部比较区域 -->
+            <div class="mt-8">
+                <div class="bg-slate-800/40 rounded-lg p-4">
+                    <h3 class="text-xl font-semibold mb-3 text-center text-blue-300">数据结构比较</h3>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-purple-400 font-bold mb-1">3D数组</div>
+                            <div class="text-sm">适合小型密集场景</div>
+                            <div class="text-xs mt-2 text-purple-300">O(1)访问</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-blue-400 font-bold mb-1">八叉树</div>
+                            <div class="text-sm">适合大型稀疏场景</div>
+                            <div class="text-xs mt-2 text-blue-300">O(log n)查询</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-green-400 font-bold mb-1">体素块</div>
+                            <div class="text-sm">适合地形类场景</div>
+                            <div class="text-xs mt-2 text-green-300">O(块大小)访问</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-yellow-400 font-bold mb-1">混合结构</div>
+                            <div class="text-sm">平衡性能与内存</div>
+                            <div class="text-xs mt-2 text-yellow-300">自适应选择</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

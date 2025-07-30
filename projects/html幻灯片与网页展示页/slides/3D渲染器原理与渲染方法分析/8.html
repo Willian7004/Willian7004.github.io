@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>总结与比较</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a192f 0%, #203a63 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+        }
+        .summary-box {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        .summary-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(66, 153, 225, 0.8);
+        }
+        .tech-badge {
+            transition: all 0.3s ease;
+        }
+        .tech-badge:hover {
+            transform: scale(1.05);
+        }
+        .circuit-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%),
+                linear-gradient(0deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+        .radar-chart-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .method-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .rayt-icon {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        }
+        .rast-icon {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        .rayc-icon {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .pbr-icon {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- 网格背景 -->
+        <div class="grid-pattern"></div>
+        <div class="circuit-lines"></div>
+        
+        <!-- 主要内容 -->
+        <div class="content flex flex-col h-full py-10 px-12">
+            <h1 class="text-5xl font-bold mb-6 glow tracking-wider text-center">总结与比较</h1>
+            
+            <div class="flex-grow flex">
+                <!-- 左侧：雷达图和优缺点 -->
+                <div class="w-1/2 pr-4 flex flex-col space-y-4">
+                    <!-- 雷达图 -->
+                    <div class="summary-box bg-blue-900 bg-opacity-40 rounded-lg p-4">
+                        <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                            <i class="fas fa-chart-radar mr-3 text-blue-400"></i>性能对比
+                        </h2>
+                        <div class="radar-chart-container" style="height: 300px;">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 优缺点分析 -->
+                    <div class="summary-box bg-blue-800 bg-opacity-40 rounded-lg p-4 flex-grow">
+                        <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                            <i class="fas fa-balance-scale mr-3 text-blue-400"></i>优缺点分析
+                        </h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 p-3 rounded-lg border border-yellow-700/30">
+                                <div class="flex items-center mb-2">
+                                    <div class="method-icon rayt-icon mr-2">
+                                        <i class="fas fa-lightbulb text-white"></i>
+                                    </div>
+                                    <span class="text-lg font-semibold text-yellow-300">光线追踪</span>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="text-green-300 mb-1">✓ 真实感强</div>
+                                    <div class="text-green-300 mb-1">✓ 全局光照</div>
+                                    <div class="text-red-300">✗ 计算量大</div>
+                                    <div class="text-red-300">✗ 实时性差</div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-900/30 to-green-800/20 p-3 rounded-lg border border-green-700/30">
+                                <div class="flex items-center mb-2">
+                                    <div class="method-icon rast-icon mr-2">
+                                        <i class="fas fa-th text-white"></i>
+                                    </div>
+                                    <span class="text-lg font-semibold text-green-300">光栅化</span>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="text-green-300 mb-1">✓ 速度快</div>
+                                    <div class="text-green-300 mb-1">✓ 硬件加速</div>
+                                    <div class="text-red-300">✗ 效果有限</div>
+                                    <div class="text-red-300">✗ 全局光照缺失</div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-red-900/30 to-red-800/20 p-3 rounded-lg border border-red-700/30">
+                                <div class="flex items-center mb-2">
+                                    <div class="method-icon rayc-icon mr-2">
+                                        <i class="fas fa-bezier-curve text-white"></i>
+                                    </div>
+                                    <span class="text-lg font-semibold text-red-300">光线投射</span>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="text-green-300 mb-1">✓ 体数据可视化</div>
+                                    <div class="text-green-300 mb-1">✓ 半透明效果</div>
+                                    <div class="text-red-300">✗ 不适合表面渲染</div>
+                                    <div class="text-red-300">✗ 应用场景有限</div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-900/30 to-purple-800/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-2">
+                                    <div class="method-icon pbr-icon mr-2">
+                                        <i class="fas fa-atom text-white"></i>
+                                    </div>
+                                    <span class="text-lg font-semibold text-purple-300">PBR渲染</span>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="text-green-300 mb-1">✓ 物理准确性</div>
+                                    <div class="text-green-300 mb-1">✓ 材质解耦</div>
+                                    <div class="text-red-300">✗ 实现复杂</div>
+                                    <div class="text-red-300">✗ 需要大量资源</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：适用场景和发展趋势 -->
+                <div class="w-1/2 pl-4 flex flex-col space-y-4">
+                    <!-- 适用场景 -->
+                    <div class="summary-box bg-blue-900 bg-opacity-40 rounded-lg p-4">
+                        <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                            <i class="fas fa-map-marked-alt mr-3 text-blue-400"></i>适用场景
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="tech-badge bg-gradient-to-r from-yellow-900/30 to-yellow-800/10 p-3 rounded-lg flex items-center">
+                                <i class="fas fa-film text-2xl text-yellow-300 mr-3"></i>
+                                <div>
+                                    <div class="font-semibold text-yellow-200">电影特效</div>
+                                    <div class="text-xs text-yellow-100">离线渲染</div>
+                                </div>
+                            </div>
+                            <div class="tech-badge bg-gradient-to-r from-green-900/30 to-green-800/10 p-3 rounded-lg flex items-center">
+                                <i class="fas fa-gamepad text-2xl text-green-300 mr-3"></i>
+                                <div>
+                                    <div class="font-semibold text-green-200">游戏引擎</div>
+                                    <div class="text-xs text-green-100">实时渲染</div>
+                                </div>
+                            </div>
+                            <div class="tech-badge bg-gradient-to-r from-red-900/30 to-red-800/10 p-3 rounded-lg flex items-center">
+                                <i class="fas fa-x-ray text-2xl text-red-300 mr-3"></i>
+                                <div>
+                                    <div class="font-semibold text-red-200">医学成像</div>
+                                    <div class="text-xs text-red-100">体数据可视化</div>
+                                </div>
+                            </div>
+                            <div class="tech-badge bg-gradient-to-r from-purple-900/30 to-purple-800/10 p-3 rounded-lg flex items-center">
+                                <i class="fas fa-building text-2xl text-purple-300 mr-3"></i>
+                                <div>
+                                    <div class="font-semibold text-purple-200">建筑可视化</div>
+                                    <div class="text-xs text-purple-100">真实材质表现</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 发展趋势 -->
+                    <div class="summary-box bg-blue-800 bg-opacity-40 rounded-lg p-4 flex-grow">
+                        <h2 class="text-2xl font-semibold text-blue-300 mb-3 flex items-center">
+                            <i class="fas fa-chart-line mr-3 text-blue-400"></i>发展趋势
+                        </h2>
+                        <div class="flex flex-col space-y-3">
+                            <div class="tech-badge bg-blue-900/30 p-3 rounded-lg flex items-center">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center mr-4">
+                                    <i class="fas fa-code-branch text-2xl text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-semibold text-blue-200">混合渲染技术</div>
+                                    <div class="text-sm text-blue-100">结合光栅化速度与光线追踪质量</div>
+                                </div>
+                            </div>
+                            
+                            <div class="tech-badge bg-blue-900/30 p-3 rounded-lg flex items-center">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center mr-4">
+                                    <i class="fas fa-bolt text-2xl text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-semibold text-blue-200">实时光线追踪</div>
+                                    <div class="text-sm text-blue-100">专用硬件加速，游戏应用</div>
+                                </div>
+                            </div>
+                            
+                            <div class="tech-badge bg-blue-900/30 p-3 rounded-lg flex items-center">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center mr-4">
+                                    <i class="fas fa-brain text-2xl text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-semibold text-blue-200">AI辅助渲染</div>
+                                    <div class="text-sm text-blue-100">深度学习提升渲染效率与质量</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 结论 -->
+            <div class="mt-4 bg-gradient-to-r from-blue-900/50 to-blue-800/30 rounded-lg p-4">
+                <h2 class="text-2xl font-semibold text-blue-300 mb-2 flex items-center">
+                    <i class="fas fa-flag-checkered mr-3 text-blue-400"></i>结论
+                </h2>
+                <div class="flex justify-between items-center">
+                    <div class="text-lg text-blue-100 max-w-3xl">
+                        选择合适的渲染方法取决于<span class="text-yellow-200 font-semibold">应用场景</span>、<span class="text-green-200 font-semibold">性能需求</span>和<span class="text-purple-200 font-semibold">视觉效果</span>的平衡。未来渲染技术将朝着更高效、更真实的方向发展。
+                    </div>
+                    <div class="flex space-x-3">
+                        <div class="tech-badge bg-yellow-900/30 p-2 rounded-full">
+                            <i class="fas fa-lightbulb text-yellow-300"></i>
+                        </div>
+                        <div class="tech-badge bg-green-900/30 p-2 rounded-full">
+                            <i class="fas fa-th text-green-300"></i>
+                        </div>
+                        <div class="tech-badge bg-red-900/30 p-2 rounded-full">
+                            <i class="fas fa-bezier-curve text-red-300"></i>
+                        </div>
+                        <div class="tech-badge bg-purple-900/30 p-2 rounded-full">
+                            <i class="fas fa-atom text-purple-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部装饰 -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 z-10"></div>
+    </div>
+    
+    <script>
+        // 雷达图
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['渲染质量', '计算速度', '实时性能', '实现复杂度', '适用范围'],
+                datasets: [
+                    {
+                        label: '光线追踪',
+                        data: [95, 30, 20, 70, 60],
+                        backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                        borderColor: 'rgba(255, 215, 0, 0.8)',
+                        pointBackgroundColor: 'rgba(255, 215, 0, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 215, 0, 1)'
+                    },
+                    {
+                        label: '光栅化',
+                        data: [50, 90, 95, 40, 80],
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderColor: 'rgba(46, 204, 113, 0.8)',
+                        pointBackgroundColor: 'rgba(46, 204, 113, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(46, 204, 113, 1)'
+                    },
+                    {
+                        label: '光线投射',
+                        data: [40, 60, 70, 50, 30],
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                        borderColor: 'rgba(231, 76, 60, 0.8)',
+                        pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(231, 76, 60, 1)'
+                    },
+                    {
+                        label: 'PBR渲染',
+                        data: [85, 65, 55, 75, 70],
+                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                        borderColor: 'rgba(155, 89, 182, 0.8)',
+                        pointBackgroundColor: 'rgba(155, 89, 182, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(155, 89, 182, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                elements: {
+                    line: {
+                        borderWidth: 2
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        pointLabels: {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            font: {
+                                size: 12
+                            }
+                        },
+                        ticks: {
+                            backdropColor: 'transparent',
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+{
+  "pages": [
+    {
+      "name": "Web服务器对比分析.html",
+      "path": "pages/Web服务器对比分析.html",
+      "creation_time": 1753862981.8102317
+    },
+    {
+      "name": "GEO原理以及与SEO的对比.html",
+      "path": "pages/GEO原理以及与SEO的对比.html",
+      "creation_time": 1753861821.040728
+    }
+  ],
+  "slides": [
+    {
+      "name": "BitTorrent客户端原理",
+      "path": "slides/BitTorrent客户端原理",
+      "creation_time": 1753860930.196792,
+      "max_page": 5
+    },
+    {
+      "name": "Web服务器实现原理",
+      "path": "slides/Web服务器实现原理",
+      "creation_time": 1753860627.587246,
+      "max_page": 10
+    },
+    {
+      "name": "操作系统原理",
+      "path": "slides/操作系统原理",
+      "creation_time": 1753858872.6679356,
+      "max_page": 5
+    },
+    {
+      "name": "编译器和解释器原理",
+      "path": "slides/编译器和解释器原理",
+      "creation_time": 1753857506.876776,
+      "max_page": 7
+    },
+    {
+      "name": "物理引擎原理",
+      "path": "slides/物理引擎原理",
+      "creation_time": 1753856575.1767423,
+      "max_page": 6
+    },
+    {
+      "name": "3D渲染器原理与渲染方法分析",
+      "path": "slides/3D渲染器原理与渲染方法分析",
+      "creation_time": 1753856332.990225,
+      "max_page": 8
+    },
+    {
+      "name": "搜索引擎实现原理",
+      "path": "slides/搜索引擎实现原理",
+      "creation_time": 1753856215.2165089,
+      "max_page": 7
+    },
+    {
+      "name": "数据库实现原理",
+      "path": "slides/数据库实现原理",
+      "creation_time": 1753856006.1445765,
+      "max_page": 9
+    },
+    {
+      "name": "浏览器原理",
+      "path": "slides/浏览器原理",
+      "creation_time": 1753855864.1741018,
+      "max_page": 8
+    },
+    {
+      "name": "文本编辑器原理",
+      "path": "slides/文本编辑器原理",
+      "creation_time": 1753855706.1321943,
+      "max_page": 6
+    },
+    {
+      "name": "Git实现原理",
+      "path": "slides/Git实现原理",
+      "creation_time": 1753855473.2108047,
+      "max_page": 6
+    },
+    {
+      "name": "命令行shell实现原理",
+      "path": "slides/命令行shell实现原理",
+      "creation_time": 1753855109.1615055,
+      "max_page": 10
+    },
+    {
+      "name": "Docker原理以及与LXC、LXD的比较",
+      "path": "slides/Docker原理以及与LXC、LXD的比较",
+      "creation_time": 1753854934.5894735,
+      "max_page": 6
+    },
+    {
+      "name": "体素引擎原理",
+      "path": "slides/体素引擎原理",
+      "creation_time": 1753854720.7868671,
+      "max_page": 5
+    }
+  ]
+}

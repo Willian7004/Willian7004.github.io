@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器性能优化策略</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .strategy-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        .reflow-card {
+            border-top: 5px solid #4285f4;
+        }
+        .js-card {
+            border-top: 5px solid #34a853;
+        }
+        .css-card {
+            border-top: 5px solid #fbbc05;
+        }
+        .cache-card {
+            border-top: 5px solid #ea4335;
+        }
+        .tip-badge {
+            background-color: #e8f0fe;
+            color: #4285f4;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 3px;
+        }
+        .strategy-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .code-block {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 4px solid #4285f4;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-blue-800 mb-2">浏览器性能优化策略</h1>
+            <p class="text-xl text-blue-600">提升网页性能的关键技术</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow grid grid-cols-2 gap-8">
+            <!-- DOM Reflow & Repaint Optimization -->
+            <div class="strategy-card reflow-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="strategy-icon bg-blue-600">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-blue-700 ml-4">减少回流与重绘</h2>
+                </div>
+                
+                <div class="flex-grow">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-blue-700 mb-2 flex items-center">
+                                <i class="fas fa-arrow-down text-blue-500 mr-2"></i>
+                                回流优化
+                            </h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-blue-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">transform</span>替代top/left</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-blue-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">visibility</span>替换display:none</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-blue-500 mt-1 mr-2"></i>
+                                    <span>批量<span class="font-semibold">DOM操作</span>，减少交互次数</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-green-700 mb-2 flex items-center">
+                                <i class="fas fa-paint-brush text-green-500 mr-2"></i>
+                                重绘优化
+                            </h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>避免频繁修改<span class="font-semibold">复杂样式</span></span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">opacity</span>替代visibility</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>减少<span class="font-semibold">box-shadow</span>等复杂属性</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="code-block">
+                        <pre>// 不好的做法 - 触发多次回流
+for (let i = 0; i < 100; i++) {
+  element.style.width = (element.offsetWidth + 1) + 'px';
+}
+
+// 好的做法 - 批量操作
+let width = element.offsetWidth;
+for (let i = 0; i < 100; i++) {
+  width++;
+}
+element.style.width = width + 'px';</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- JavaScript Optimization -->
+            <div class="strategy-card js-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="strategy-icon bg-green-600">
+                        <i class="fab fa-js"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-green-700 ml-4">JavaScript执行优化</h2>
+                </div>
+                
+                <div class="flex-grow">
+                    <div class="bg-green-50 p-4 rounded-lg mb-4">
+                        <h3 class="font-bold text-green-700 mb-2">脚本加载策略</h3>
+                        <div class="flex flex-wrap">
+                            <div class="w-1/2 mb-3">
+                                <div class="flex items-center">
+                                    <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded mr-2 text-sm font-bold">async</div>
+                                    <span class="text-gray-700">异步下载，立即执行</span>
+                                </div>
+                            </div>
+                            <div class="w-1/2 mb-3">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 text-sm font-bold">defer</div>
+                                    <span class="text-gray-700">延迟执行，文档解析后</span>
+                                </div>
+                            </div>
+                            <div class="w-1/2">
+                                <div class="flex items-center">
+                                    <div class="bg-red-100 text-red-800 px-2 py-1 rounded mr-2 text-sm font-bold">普通script</div>
+                                    <span class="text-gray-700">阻塞HTML解析</span>
+                                </div>
+                            </div>
+                            <div class="w-1/2">
+                                <div class="flex items-center">
+                                    <div class="bg-purple-100 text-purple-800 px-2 py-1 rounded mr-2 text-sm font-bold">动态加载</div>
+                                    <span class="text-gray-700">按需加载脚本</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-green-700 mb-2">执行优化</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>使用<span class="font-semibold">防抖/节流</span>控制高频事件</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>避免<span class="font-semibold">长任务</span>阻塞主线程</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>使用<span class="font-semibold">requestAnimationFrame</span>实现动画</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>使用<span class="font-semibold">Web Worker</span>处理复杂计算</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CSS Optimization -->
+            <div class="strategy-card css-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="strategy-icon bg-yellow-600">
+                        <i class="fas fa-paint-roller"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-yellow-700 ml-4">CSS优化策略</h2>
+                </div>
+                
+                <div class="flex-grow">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-yellow-700 mb-2">选择器优化</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>避免<span class="font-semibold">复杂选择器</span></span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">类选择器</span>替代标签选择器</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>避免<span class="font-semibold">过度层叠</span>选择器</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-yellow-700 mb-2">样式优化</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">CSS变量</span>减少重复代码</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>避免<span class="font-semibold">@import</span>，使用link标签</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-yellow-500 mt-1 mr-2"></i>
+                                    <span>压缩<span class="font-semibold">CSS文件</span>减少体积</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-yellow-700 mb-2">布局优化</h3>
+                        <div class="flex flex-wrap">
+                            <span class="tip-badge"><i class="fas fa-compress-arrows-alt mr-1"></i> 使用flexbox/grid</span>
+                            <span class="tip-badge"><i class="fas fa-crop-alt mr-1"></i> 避免table布局</span>
+                            <span class="tip-badge"><i class="fas fa-layer-group mr-1"></i> 使用CSS containment</span>
+                            <span class="tip-badge"><i class="fas fa-compress mr-1"></i> 减少布局层级</span>
+                            <span class="tip-badge"><i class="fas fa-vector-square mr-1"></i> 使用will-change属性</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cache Optimization -->
+            <div class="strategy-card cache-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="strategy-icon bg-red-600">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-red-700 ml-4">浏览器缓存优化</h2>
+                </div>
+                
+                <div class="flex-grow">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-red-700 mb-2">HTTP缓存策略</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>设置合理的<span class="font-semibold">Cache-Control</span>头</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">ETag</span>验证资源变更</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>实现<span class="font-semibold">内容哈希</span>文件名</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-red-700 mb-2">存储优化</h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>使用<span class="font-semibold">Service Worker</span>缓存资源</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>合理使用<span class="font-semibold">localStorage</span>和IndexedDB</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                    <span>实现<span class="font-semibold">离线优先</span>策略</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-red-700 mb-2">资源加载优化</h3>
+                        <div class="flex flex-wrap">
+                            <span class="tip-badge"><i class="fas fa-compress mr-1"></i> 压缩资源文件</span>
+                            <span class="tip-badge"><i class="fas fa-image mr-1"></i> 优化图片格式/大小</span>
+                            <span class="tip-badge"><i class="fas fa-font mr-1"></i> 字体文件按需加载</span>
+                            <span class="tip-badge"><i class="fas fa-code-branch mr-1"></i> 代码分割与懒加载</span>
+                            <span class="tip-badge"><i class="fas fa-sitemap mr-1"></i> 预加载关键资源</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Tips -->
+        <div class="mt-6 bg-white rounded-lg p-4 shadow-md">
+            <h3 class="text-lg font-bold text-blue-700 mb-2 flex items-center">
+                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                性能监控与测量
+            </h3>
+            <div class="flex justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-tachometer-alt text-blue-500 mr-2"></i>
+                    <span class="text-gray-700">使用<span class="font-semibold">Performance</span>工具分析性能瓶颈</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                    <span class="text-gray-700">关注<span class="font-semibold">FPS</span>、<span class="font-semibold">FCP</span>、<span class="font-semibold">LCP</span>等核心指标</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-mobile-alt text-purple-500 mr-2"></i>
+                    <span class="text-gray-700">使用<span class="font-semibold">Lighthouse</span>进行综合性能评估</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

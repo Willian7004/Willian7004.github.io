@@ -10,4 +10,5 @@ GLM4.5使用混合推理形式，并且能够根据问题合理选择是否推�
 
 GLM4.5相比Qwen系列，由于对实际应用进行了优化，Air版本算是有靠谱的次旗舰模型，不过部署至少需要双mi50 32g，门槛不高但一般用户很少有这些硬件。
 
-目前在IDE中，可以通过智谱推出的CodeGeekX使用GLM4.5，另外提供了Claude4 Sonnet和Claude3.7 Sonnet，但由于应用框架对diff edit优化不好，可用度不高。
+目前在IDE中，可以通过智谱推出的CodeGeekX使用GLM4.5，另外提供了Claude4 Sonnet和Claude3.7 Sonnet，可能对编辑长文件做了优化，每次读取的内容比较短。
+

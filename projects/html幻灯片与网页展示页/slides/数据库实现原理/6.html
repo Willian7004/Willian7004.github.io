@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分布式数据库</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .cap-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+        .cap-circle:hover {
+            transform: scale(1.05);
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        .consistency-model {
+            position: relative;
+            height: 140px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .consistency-node {
+            position: absolute;
+            width: 100px;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .consistency-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .consistency-arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #666;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        .consistency-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #666;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .cap-connector {
+            position: absolute;
+            height: 2px;
+            background-color: #666;
+            z-index: 1;
+        }
+        .cap-connector::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #666;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .highlight-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4285f4, #34a853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-8 bg-white">
+        <header class="mb-5">
+            <h1 class="text-4xl font-bold text-blue-600 mb-1">分布式数据库</h1>
+            <p class="text-xl text-gray-600">Distributed Database Systems</p>
+        </header>
+
+        <div class="flex-grow grid grid-cols-2 gap-6">
+            <!-- CAP理论 -->
+            <div class="bg-gradient-to-br from-blue-50 to-white p-5 rounded-xl shadow-sm">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white mr-3">
+                        <i class="fas fa-balance-scale text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-blue-700">CAP理论</h2>
+                </div>
+                
+                <div class="relative h-48 flex justify-center items-center mb-3">
+                    <!-- 中心圆圈 -->
+                    <div class="cap-circle" style="background-color: #4285f4;">
+                        <i class="fas fa-database text-2xl mb-1"></i>
+                        <div>分布式系统</div>
+                    </div>
+                    
+                    <!-- CAP三个特性圆圈 -->
+                    <div class="cap-circle" style="position: absolute; left: 40px; top: 20px; background-color: #ea4335;">
+                        <i class="fas fa-check-circle text-xl mb-1"></i>
+                        <div>一致性</div>
+                    </div>
+                    
+                    <div class="cap-circle" style="position: absolute; right: 40px; top: 20px; background-color: #34a853;">
+                        <i class="fas fa-check-circle text-xl mb-1"></i>
+                        <div>可用性</div>
+                    </div>
+                    
+                    <div class="cap-circle" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background-color: #fbbc05;">
+                        <i class="fas fa-check-circle text-xl mb-1"></i>
+                        <div>分区容错性</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center">
+                        <div class="feature-icon bg-red-100 text-red-600">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold">CP系统</div>
+                            <p class="text-xs text-gray-600">一致性 + 分区容错</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center">
+                        <div class="feature-icon bg-green-100 text-green-600">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold">AP系统</div>
+                            <p class="text-xs text-gray-600">可用性 + 分区容错</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分布式数据库设计原理 -->
+            <div class="bg-gradient-to-br from-green-50 to-white p-5 rounded-xl shadow-sm">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white mr-3">
+                        <i class="fas fa-sitemap text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-green-700">分布式设计原理</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="feature-card bg-white p-3 rounded-lg shadow-sm">
+                        <div class="flex items-center mb-2">
+                            <div class="feature-icon bg-blue-100 text-blue-600">
+                                <i class="fas fa-puzzle-piece"></i>
+                            </div>
+                            <div class="text-lg font-bold text-blue-600">数据分片</div>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">水平分片</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">垂直分片</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">混合分片</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card bg-white p-3 rounded-lg shadow-sm">
+                        <div class="flex items-center mb-2">
+                            <div class="feature-icon bg-purple-100 text-purple-600">
+                                <i class="fas fa-copy"></i>
+                            </div>
+                            <div class="text-lg font-bold text-purple-600">数据复制</div>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded">主从复制</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded">多主复制</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded">环形复制</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card bg-white p-3 rounded-lg shadow-sm">
+                        <div class="flex items-center mb-2">
+                            <div class="feature-icon bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-random"></i>
+                            </div>
+                            <div class="text-lg font-bold text-yellow-600">一致性协议</div>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded">Paxos</span>
+                            <span class="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded">Raft</span>
+                            <span class="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded">Gossip</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card bg-white p-3 rounded-lg shadow-sm">
+                        <div class="flex items-center mb-2">
+                            <div class="feature-icon bg-red-100 text-red-600">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="text-lg font-bold text-red-600">BASE理论</div>
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="bg-red-50 text-red-700 text-xs px-2 py-1 rounded">基本可用</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-2 py-1 rounded">软状态</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-2 py-1 rounded">最终一致</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 一致性模型 -->
+            <div class="bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl shadow-sm col-span-2">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white mr-3">
+                        <i class="fas fa-tasks text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-purple-700">一致性模型与分布式事务</h2>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-5">
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-bold text-blue-700 mb-3">一致性模型</h3>
+                        <div class="consistency-model">
+                            <div class="consistency-node" style="left: 10%; top: 20px; background-color: #4285f4; color: white;">
+                                强一致性
+                            </div>
+                            
+                            <div class="consistency-arrow" style="left: 25%; width: 15%; top: 50%;"></div>
+                            
+                            <div class="consistency-node" style="left: 45%; top: 20px; background-color: #34a853; color: white;">
+                                最终一致性
+                            </div>
+                            
+                            <div class="consistency-arrow" style="left: 60%; width: 15%; top: 50%;"></div>
+                            
+                            <div class="consistency-node" style="left: 80%; top: 20px; background-color: #fbbc05; color: white;">
+                                因果一致性
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <div class="highlight-text">一致性递减</div>
+                            <div class="text-sm text-gray-500">性能递增</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-bold text-green-700 mb-3">分布式事务</h3>
+                        <div style="height: 180px;">
+                            <canvas id="transactionChart"></canvas>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <div class="text-sm font-bold text-gray-700">2PC vs 3PC</div>
+                            <div class="text-xs text-gray-500">分布式共识算法</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-bold text-yellow-700 mb-3">应用场景</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-blue-50 p-2 rounded text-center">
+                                <div class="font-bold text-sm">金融交易</div>
+                                <div class="text-xs text-gray-600">强一致性</div>
+                            </div>
+                            <div class="bg-green-50 p-2 rounded text-center">
+                                <div class="font-bold text-sm">社交媒体</div>
+                                <div class="text-xs text-gray-600">最终一致性</div>
+                            </div>
+                            <div class="bg-yellow-50 p-2 rounded text-center">
+                                <div class="font-bold text-sm">高并发系统</div>
+                                <div class="text-xs text-gray-600">BASE理论</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="font-bold text-sm">数据分析</div>
+                                <div class="text-xs text-gray-600">可调一致性</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-auto pt-4 text-center text-gray-500 text-sm">
+            <p>数据库实现原理 | 第6页</p>
+        </footer>
+    </div>
+
+    <script>
+        // 事务类型图表
+        const ctx = document.getElementById('transactionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['2PC', '3PC', 'Paxos', 'Raft'],
+                datasets: [{
+                    data: [30, 20, 25, 25],
+                    backgroundColor: [
+                        '#4285f4',
+                        '#34a853',
+                        '#fbbc05',
+                        '#ea4335'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    </script>
+</body>
+</html>

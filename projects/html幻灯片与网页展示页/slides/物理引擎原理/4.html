@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 碰撞检测算法</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .phase-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .algorithm-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .step-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .step-item:before {
+            content: "";
+            position: absolute;
+            left: 0.5rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.5;
+        }
+        .step-item:after {
+            content: "";
+            position: absolute;
+            left: 0.95rem;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: currentColor;
+            opacity: 0.3;
+        }
+        .step-item:last-child:after {
+            display: none;
+        }
+        .glow {
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.5);
+        }
+        .highlight-text {
+            color: #4da6ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-10 flex flex-col">
+        <h1 class="title text-center">碰撞检测算法</h1>
+        <p class="text-center text-xl text-blue-200 mb-6">物理引擎中快速准确地检测物体碰撞的核心技术</p>
+        
+        <div class="flex-grow grid grid-cols-2 gap-8">
+            <!-- Broad Phase -->
+            <div class="phase-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mr-4 glow">
+                        <i class="fas fa-filter text-2xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-blue-300">Broad Phase</h3>
+                </div>
+                
+                <p class="text-lg mb-4">快速筛选<span class="highlight-text">可能碰撞</span>的对象对</p>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-bold mb-2 text-blue-200">包围体技术</h4>
+                        <ul class="list-none space-y-1 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-cube text-blue-400 mr-2 mt-1"></i>
+                                <span>AABB (轴对齐包围盒)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-cube text-blue-400 mr-2 mt-1"></i>
+                                <span>OBB (有向包围盒)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-circle text-blue-400 mr-2 mt-1"></i>
+                                <span>球体包围</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-bold mb-2 text-blue-200">空间划分算法</h4>
+                        <ul class="list-none space-y-1 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-th text-blue-400 mr-2 mt-1"></i>
+                                <span>网格划分</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-project-diagram text-blue-400 mr-2 mt-1"></i>
+                                <span>四叉树/八叉树</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-sitemap text-blue-400 mr-2 mt-1"></i>
+                                <span>BVH层次包围体</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-800 bg-opacity-20 p-4 rounded-lg mb-4">
+                    <h4 class="font-bold mb-2">SAP算法 (Sweep and Prune)</h4>
+                    <div class="flex items-center justify-between text-sm mb-2">
+                        <span>投影</span>
+                        <i class="fas fa-arrow-right text-blue-400"></i>
+                        <span>排序</span>
+                        <i class="fas fa-arrow-right text-blue-400"></i>
+                        <span>配对</span>
+                    </div>
+                    <p class="text-sm">对包围盒顶点在各轴上投影并排序，找出重叠区间</p>
+                </div>
+                
+                <div class="mt-auto bg-gradient-to-r from-blue-900 to-blue-700 p-3 rounded-lg">
+                    <h4 class="font-bold mb-1">性能优化</h4>
+                    <p class="text-sm">减少进入Narrow Phase的对象对数量，提高整体效率</p>
+                </div>
+            </div>
+            
+            <!-- Narrow Phase -->
+            <div class="phase-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-14 h-14 rounded-full bg-green-600 flex items-center justify-center mr-4 glow">
+                        <i class="fas fa-search-plus text-2xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-green-300">Narrow Phase</h3>
+                </div>
+                
+                <p class="text-lg mb-4">精确检测碰撞并计算<span class="highlight-text">碰撞细节</span></p>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-bold mb-2 text-green-200">碰撞信息</h4>
+                        <ul class="list-none space-y-1 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-dot-circle text-green-400 mr-2 mt-1"></i>
+                                <span>碰撞点位置</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-arrows-alt text-green-400 mr-2 mt-1"></i>
+                                <span>碰撞法线</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-compress-arrows-alt text-green-400 mr-2 mt-1"></i>
+                                <span>穿透深度</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg">
+                        <h4 class="font-bold mb-2 text-green-200">精确算法</h4>
+                        <ul class="list-none space-y-1 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mr-2 mt-1"></i>
+                                <span>标准几何体公式</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mr-2 mt-1"></i>
+                                <span>复合碰撞体分解</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mr-2 mt-1"></i>
+                                <span>通用算法 (GJK+EPA)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-green-800 bg-opacity-20 p-4 rounded-lg mb-4">
+                    <h4 class="font-bold mb-2">输出结果</h4>
+                    <p class="text-sm">生成碰撞接触点信息，用于约束求解阶段</p>
+                </div>
+                
+                <div class="mt-auto bg-gradient-to-r from-green-900 to-green-700 p-3 rounded-lg">
+                    <h4 class="font-bold mb-1">关键挑战</h4>
+                    <p class="text-sm">平衡精度与性能，处理复杂形状和高速运动物体</p>
+                </div>
+            </div>
+            
+            <!-- GJK Algorithm -->
+            <div class="algorithm-card p-5 col-span-2 flex">
+                <div class="w-1/2 pr-4 border-r border-blue-800">
+                    <div class="flex items-center mb-3">
+                        <div class="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-project-diagram text-xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-purple-300">GJK算法</h3>
+                    </div>
+                    
+                    <p class="text-sm mb-3">用于检测两个凸体是否相交的快速算法</p>
+                    
+                    <div class="space-y-3">
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">初始化</span>：创建空单纯形
+                        </div>
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">方向选择</span>：确定搜索方向
+                        </div>
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">支撑点</span>：找到CSO的支撑点
+                        </div>
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">单纯形更新</span>：构建单纯形
+                        </div>
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">最近点</span>：计算单纯形中距离原点最近的点
+                        </div>
+                        <div class="step-item text-sm text-purple-200">
+                            <span class="font-semibold">终止条件</span>：单纯形包含原点则相交
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-1/2 pl-4">
+                    <div class="flex items-center mb-3">
+                        <div class="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-expand-arrows-alt text-xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-red-300">EPA算法</h3>
+                    </div>
+                    
+                    <p class="text-sm mb-3">在GJK基础上计算碰撞的<span class="highlight-text">穿透深度和方向</span></p>
+                    
+                    <div class="space-y-3">
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">初始单纯形</span>：使用GJK结果作为起点
+                        </div>
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">最近边</span>：找到距离原点最近的边
+                        </div>
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">扩展方向</span>：沿边法线方向扩展
+                        </div>
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">新支撑点</span>：寻找新的支撑点
+                        </div>
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">更新单纯形</span>：将新点插入多边形
+                        </div>
+                        <div class="step-item text-sm text-red-200">
+                            <span class="font-semibold">终止条件</span>：无法继续扩展时返回穿透向量
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-blue-200 opacity-70">
+            <p>碰撞检测是物理引擎性能的关键瓶颈，算法选择和优化至关重要</p>
+        </div>
+    </div>
+</body>
+</html>

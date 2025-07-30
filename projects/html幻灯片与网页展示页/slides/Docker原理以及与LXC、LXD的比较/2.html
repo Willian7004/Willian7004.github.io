@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker的实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #e6edf3;
+            font-family: 'SF Mono', 'Consolas', 'Liberation Mono', Menlo, monospace;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            overflow: hidden;
+            position: relative;
+        }
+        .title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #238636, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        .highlight {
+            color: #58a6ff;
+        }
+        .code-block {
+            background-color: #161b22;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-left: 4px solid #58a6ff;
+        }
+        .architecture-box {
+            background-color: rgba(22, 27, 34, 0.7);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid #30363d;
+        }
+        .kernel-box {
+            background-color: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid #1e3a8a;
+        }
+        .arrow {
+            color: #8b949e;
+            font-size: 1.5rem;
+        }
+        .process-box {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-radius: 8px;
+            padding: 0.75rem;
+            border: 1px solid #30363d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="title">Docker的实现原理</h1>
+            <p class="text-xl text-gray-400">Docker Implementation Principles</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow flex flex-col">
+            <!-- Docker Architecture -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-3"><i class="fas fa-layer-group text-green-500 mr-2"></i>Docker架构</h2>
+                <div class="architecture-box">
+                    <div class="flex justify-between items-center">
+                        <div class="w-1/4 p-3 text-center">
+                            <div class="text-lg font-bold text-green-400">Docker客户端</div>
+                            <p class="text-sm">CLI & API</p>
+                        </div>
+                        <div class="arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+                        <div class="w-1/4 p-3 text-center">
+                            <div class="text-lg font-bold text-green-400">Docker守护进程</div>
+                            <p class="text-sm">dockerd</p>
+                        </div>
+                        <div class="arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+                        <div class="w-1/4 p-3 text-center">
+                            <div class="text-lg font-bold text-green-400">容器运行时</div>
+                            <p class="text-sm">containerd + runc</p>
+                        </div>
+                        <div class="arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+                        <div class="w-1/4 p-3 text-center">
+                            <div class="text-lg font-bold text-green-400">容器</div>
+                            <p class="text-sm">隔离环境</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kernel Features -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-3"><i class="fas fa-microchip text-blue-500 mr-2"></i>Linux内核特性</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="kernel-box">
+                        <h3 class="text-xl font-bold text-blue-400 mb-2">Namespaces <i class="fas fa-project-diagram text-sm"></i></h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">PID:</span> 进程ID隔离
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">NET:</span> 网络栈隔离
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">MNT:</span> 文件系统视图
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">IPC:</span> 进程间通信隔离
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">UTS:</span> 主机名/域名隔离
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">USER:</span> 用户ID映射
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="kernel-box">
+                        <h3 class="text-xl font-bold text-blue-400 mb-2">Cgroups <i class="fas fa-tachometer-alt text-sm"></i></h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">CPU:</span> 限制CPU使用
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">Memory:</span> 内存限制
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">DiskIO:</span> 磁盘I/O限制
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">Network:</span> 网络带宽限制
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">Devices:</span> 设备访问控制
+                            </div>
+                            <div class="process-box">
+                                <span class="font-bold text-yellow-300">pids:</span> 进程数量限制
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container Creation Process -->
+            <div>
+                <h2 class="text-2xl font-bold mb-3"><i class="fas fa-code-branch text-purple-500 mr-2"></i>容器创建流程</h2>
+                <div class="code-block">
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li><span class="highlight">镜像拉取</span> - 从注册中心获取容器镜像</li>
+                        <li><span class="highlight">容器创建</span> - 分配文件系统、网络接口等</li>
+                        <li><span class="highlight">命名空间创建</span> - 使用clone()系统调用创建隔离环境</li>
+                        <li><span class="highlight">控制组设置</span> - 限制资源使用</li>
+                        <li><span class="highlight">文件系统挂载</span> - 设置overlay文件系统</li>
+                        <li><span class="highlight">容器启动</span> - 执行应用程序</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-6 text-sm text-gray-500 flex justify-between items-center">
+            <div>Docker实现原理与LXC/LXD技术比较</div>
+            <div>2/6</div>
+        </div>
+    </div>
+</body>
+</html>

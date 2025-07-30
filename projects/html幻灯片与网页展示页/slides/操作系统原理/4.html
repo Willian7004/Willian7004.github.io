@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作系统的发展历程</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background: linear-gradient(to right, #f5f9ff, #e6f0ff);
+            color: #003366;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            padding: 40px 70px 20px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+            color: #003366;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: #1976D2;
+        }
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 70px 50px;
+        }
+        .intro {
+            font-size: 22px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            color: #003366;
+        }
+        .evolution-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 20px;
+        }
+        .stage {
+            display: flex;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 51, 102, 0.08);
+            overflow: hidden;
+            height: 130px;
+        }
+        .stage-number {
+            width: 80px;
+            background-color: #1976D2;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .stage-content {
+            flex-grow: 1;
+            display: flex;
+            padding: 15px;
+        }
+        .stage-icon {
+            width: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .stage-icon .material-icons {
+            font-size: 48px;
+            color: #1976D2;
+        }
+        .stage-info {
+            flex-grow: 1;
+        }
+        .stage-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+        .stage-description {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .highlight {
+            color: #1976D2;
+            font-weight: 500;
+        }
+        .key-features {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .feature-tag {
+            background-color: #E3F2FD;
+            color: #0D47A1;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">操作系统的发展历程</h1>
+        </div>
+        <div class="content">
+            <p class="intro">操作系统经历了从简单到复杂的演变过程，主要分为以下四个阶段：</p>
+            
+            <div class="evolution-container">
+                <div class="stage">
+                    <div class="stage-number">1</div>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <i class="material-icons">settings</i>
+                        </div>
+                        <div class="stage-info">
+                            <h2 class="stage-title">串行处理</h2>
+                            <p class="stage-description">使用者<span class="highlight">直接与硬件打交道</span>，通过输入设备载入程序，出现错误则指示灯亮起，正确则输出结果。</p>
+                            <div class="key-features">
+                                <div class="feature-tag">人工操作</div>
+                                <div class="feature-tag">机器代码</div>
+                                <div class="feature-tag">效率低</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">2</div>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <i class="material-icons">queue</i>
+                        </div>
+                        <div class="stage-info">
+                            <h2 class="stage-title">简单批处理系统</h2>
+                            <p class="stage-description">引入<span class="highlight">监控程序</span>，使用作业控制语言(JCL)向监控程序发出指令，批量处理作业，减少人工干预。</p>
+                            <div class="key-features">
+                                <div class="feature-tag">监控程序</div>
+                                <div class="feature-tag">作业控制语言</div>
+                                <div class="feature-tag">批处理</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">3</div>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <i class="material-icons">view_comfy</i>
+                        </div>
+                        <div class="stage-info">
+                            <h2 class="stage-title">多道批处理系统</h2>
+                            <p class="stage-description">支持<span class="highlight">I/O中断和直接存储器访问(DMA)</span>，允许多个作业同时进入内存，提高CPU利用率。</p>
+                            <div class="key-features">
+                                <div class="feature-tag">多道程序</div>
+                                <div class="feature-tag">内存管理</div>
+                                <div class="feature-tag">中断处理</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">4</div>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <i class="material-icons">schedule</i>
+                        </div>
+                        <div class="stage-info">
+                            <h2 class="stage-title">分时系统</h2>
+                            <p class="stage-description">引入<span class="highlight">时间片</span>概念，多个用户通过终端同时使用计算机，系统轮流为每个用户分配CPU时间。</p>
+                            <div class="key-features">
+                                <div class="feature-tag">时间片轮转</div>
+                                <div class="feature-tag">交互性</div>
+                                <div class="feature-tag">多用户</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

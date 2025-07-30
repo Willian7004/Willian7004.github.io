@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作系统原理</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            height: 720px;
+            position: relative;
+            background: linear-gradient(rgba(0, 51, 102, 0.85), rgba(0, 51, 102, 0.85)), 
+                        url('../../libs/117-1280x720.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .content {
+            text-align: center;
+            max-width: 80%;
+        }
+        .title {
+            font-size: 64px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 50px;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+        .icon-container {
+            margin-top: 20px;
+        }
+        .material-icons {
+            font-size: 48px;
+            color: #64B5F6;
+            margin: 0 10px;
+        }
+        .keywords {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+        .keyword {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="content">
+            <h1 class="title">操作系统原理</h1>
+            <p class="subtitle">计算机系统的核心软件，管理硬件与软件资源，为用户提供便捷的交互环境</p>
+            
+            <div class="icon-container">
+                <i class="material-icons">computer</i>
+                <i class="material-icons">memory</i>
+                <i class="material-icons">storage</i>
+                <i class="material-icons">developer_board</i>
+            </div>
+            
+            <div class="keywords">
+                <div class="keyword">进程管理</div>
+                <div class="keyword">内存管理</div>
+                <div class="keyword">文件系统</div>
+                <div class="keyword">设备管理</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
