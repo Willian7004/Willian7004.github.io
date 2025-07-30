@@ -15,7 +15,11 @@
 8. [搜索引擎实现原理](https://chat.z.ai/space/p0gb760qsca0-ppt)
 9. [3D渲染器原理与渲染方法分析](https://chat.z.ai/space/g0db36nkstv0-ppt)
 10. [物理引擎原理](https://chat.z.ai/space/b0dbp6z6n020-ppt)
+11. [编译器和解释器原理](https://chat.z.ai/space/x09d56ak91p0-ppt)
+12. [操作系统原理](https://chat.z.ai/space/d0gdc6ty7z71-ppt)
+13. [Web服务器实现原理](https://chat.z.ai/space/s0cdc660cnp0-ppt)
+14. [BitTorrent客户端原理](https://chat.z.ai/space/b0wdb6qgvs20-ppt)
 
 GLM Experimental算是ui效果最好的模型并且后续应该也会开源，但复杂界面编写容易出错并且可能无法修复。
 
-后面智谱发布了GLM4.5，应该是GLM Experimental的正式版本。
+后面智谱发布了GLM4.5，应该是GLM Experimental的正式版本，后期部分也改用GLM4.5编写。
