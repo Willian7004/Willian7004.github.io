@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云南少数民族分支情况介绍</title>
+    <link href="../libs/bootstrap.min.css" rel="stylesheet">
+    <link href="../libs/fontawesome/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --accent-color: #f39c12;
+            --text-color: #333;
+            --bg-light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../libs/290-1920x600.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 100px 0;
+            margin-bottom: 50px;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 0 20px 50px;
+            overflow: hidden;
+        }
+
+        .stats-section {
+            background: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .stat-item {
+            margin-bottom: 30px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .ethnic-group {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .ethnic-group:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .ethnic-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .ethnic-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .ethnic-header .population {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .ethnic-content {
+            padding: 25px;
+            display: none;
+        }
+
+        .ethnic-content.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .branch-info {
+            background: var(--bg-light);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .branch-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .info-item i {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .filter-section {
+            background: var(--bg-light);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        .filter-btn {
+            margin: 5px;
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-section p {
+                font-size: 1rem;
+                padding: 0 20px;
+            }
+            
+            .main-container {
+                margin: 0 10px 30px;
+            }
+            
+            .ethnic-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-section {
+                padding: 60px 0;
+            }
+            
+            .stats-section {
+                padding: 30px 0;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <h1><i class="fas fa-mountain"></i> 云南少数民族分支情况</h1>
+            <p>云南是中国少数民族种类最多、特有少数民族最多、跨境民族最多的省份，25个少数民族在这片红土地上创造了绚丽多彩的民族文化</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-container">
+            <div class="stats-section">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-3 col-6">
+                            <div class="stat-item">
+                                <div class="stat-number">25</div>
+                                <div>少数民族数量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-item">
+                                <div class="stat-number">15</div>
+                                <div>云南特有民族</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-item">
+                                <div class="stat-number">1500+</div>
+                                <div>万少数民族人口</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-item">
+                                <div class="stat-number">16</div>
+                                <div>地州市分布</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4><i class="fas fa-filter"></i> 快速筛选</h4>
+                <div>
+                    <button class="filter-btn active" onclick="filterGroups('all')">全部民族</button>
+                    <button class="filter-btn" onclick="filterGroups('branches')">有分支民族</button>
+                    <button class="filter-btn" onclick="filterGroups('unique')">云南特有</button>
+                    <button class="filter-btn" onclick="filterGroups('large')">人口超百万</button>
+                </div>
+            </div>
+
+            <div class="container py-4">
+                <div class="row" id="ethnicGroups">
+                    <!-- 彝族 -->
+                    <div class="col-lg-6 col-12" data-category="branches large">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-fire"></i> 彝族</h3>
+                                <div class="population">人口：约502万 | 分布：楚雄州、红河州等</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>花腰彝、撒尼人、阿细人、阿哲人、诺苏人、聂苏人等多个支系</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：彝语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：火把节</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-palette"></i>
+                                        <div>文化：火文化</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-book"></i>
+                                        <div>文字：有传统文字</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 白族 -->
+                    <div class="col-lg-6 col-12" data-category="large unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-mountain"></i> 白族</h3>
+                                <div class="population">人口：约156万 | 分布：大理州</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>民家人、勒墨人、那马人等支系，内部方言差异明显</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：白族语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：三月街</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-coffee"></i>
+                                        <div>特色：三道茶</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-torii-gate"></i>
+                                        <div>信仰：本主信仰</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 哈尼族 -->
+                    <div class="col-lg-6 col-12" data-category="branches unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-seedling"></i> 哈尼族</h3>
+                                <div class="population">人口：约163万 | 分布：红河州、西双版纳州等</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>哈尼、僾尼、碧约、卡多、豪尼、白宏、布都、布孔、西摩洛等众多支系</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：哈尼语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-mountain"></i>
+                                        <div>特色：哈尼梯田</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-home"></i>
+                                        <div>建筑：蘑菇房</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：十月年</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 傣族 -->
+                    <div class="col-lg-6 col-12" data-category="branches unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-water"></i> 傣族</h3>
+                                <div class="population">人口：约130万 | 分布：西双版纳州、德宏州</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>水傣、旱傣、花腰傣三大支系，各支系在服饰、习俗上有明显差异</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：傣族语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：泼水节</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-dharmachakra"></i>
+                                        <div>信仰：小乘佛教</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-home"></i>
+                                        <div>建筑：傣家竹楼</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 壮族 -->
+                    <div class="col-lg-6 col-12" data-category="large">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-drum"></i> 壮族</h3>
+                                <div class="population">人口：约121万 | 分布：文山州</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>侬人、沙人、土僚等支系，各支系在语言和习俗上有所差异</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：壮语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：三月三</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-music"></i>
+                                        <div>特色：山歌文化</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-drum"></i>
+                                        <div>象征：铜鼓</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 苗族 -->
+                    <div class="col-lg-6 col-12" data-category="branches large">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-gem"></i> 苗族</h3>
+                                <div class="population">人口：约120万 | 分布：文山州、楚雄州等</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>白苗、青苗、花苗、汉苗等支系，因居住分散，有的支系相互间无法通话</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：苗语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：苗年</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-ring"></i>
+                                        <div>特色：银饰</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-tshirt"></i>
+                                        <div>工艺：刺绣</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 景颇族 -->
+                    <div class="col-lg-6 col-12" data-category="branches unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-sun"></i> 景颇族</h3>
+                                <div class="population">人口：约13万 | 分布：德宏州、怒江州</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>景颇、载瓦、勒期、朗峨及布拉5个支系，除语言外差异不大</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：景颇语、载瓦语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：目瑙纵歌</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-sun"></i>
+                                        <div>崇拜：太阳神</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-users"></i>
+                                        <div>称号：雄狮民族</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 拉祜族 -->
+                    <div class="col-lg-6 col-12" data-category="branches unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-leaf"></i> 拉祜族</h3>
+                                <div class="population">人口：约40万 | 分布：临沧市、普洱市等</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>拉祜纳、拉祜西、苦聪人等几个支系，各支系在服饰和生活习惯上有差异</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：拉祜语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：葫芦节</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-leaf"></i>
+                                        <div>崇拜：葫芦</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-tree"></i>
+                                        <div>文化：游猎文化</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 瑶族 -->
+                    <div class="col-lg-6 col-12" data-category="branches">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-crown"></i> 瑶族</h3>
+                                <div class="population">人口：约19万 | 分布：文山州、红河州等</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>蓝靛瑶、红头瑶、沙瑶、板瑶、排瑶、过山瑶等众多支系，服饰缤纷多彩</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：瑶语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <div>节日：盘王节</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-pills"></i>
+                                        <div>特色：瑶族医药</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-yin-yang"></i>
+                                        <div>信仰：瑶传道教</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 纳西族 -->
+                    <div class="col-lg-6 col-12" data-category="unique">
+                        <div class="ethnic-group">
+                            <div class="ethnic-header" onclick="toggleContent(this)">
+                                <h3><i class="fas fa-scroll"></i> 纳西族</h3>
+                                <div class="population">人口：约30万 | 分布：丽江市</div>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="ethnic-content">
+                                <div class="branch-info">
+                                    <div class="branch-title">主要分支：</div>
+                                    <p>纳西、纳日、纳罕等支系，以丽江纳西族最为著名</p>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fas fa-language"></i>
+                                        <div>语言：纳西语</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-music"></i>
+                                        <div>特色：纳西古乐</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-book"></i>
+                                        <div>文化：东巴文化</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-star"></i>
+                                        <div>信仰：东巴教</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../libs/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleContent(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            
+            // 关闭其他打开的内容
+            document.querySelectorAll('.ethnic-content.show').forEach(item => {
+                if (item !== content) {
+                    item.classList.remove('show');
+                    item.previousElementSibling.querySelector('.toggle-icon').classList.remove('rotated');
+                }
+            });
+            
+            // 切换当前内容
+            content.classList.toggle('show');
+            icon.classList.toggle('rotated');
+        }
+
+        function filterGroups(category) {
+            const groups = document.querySelectorAll('#ethnicGroups > div');
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            // 更新按钮状态
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 显示/隐藏民族组
+            groups.forEach(group => {
+                if (category === 'all') {
+                    group.style.display = 'block';
+                } else if (category === 'branches' && group.dataset.category.includes('branches')) {
+                    group.style.display = 'block';
+                } else if (category === 'unique' && group.dataset.category.includes('unique')) {
+                    group.style.display = 'block';
+                } else if (category === 'large' && group.dataset.category.includes('large')) {
+                    group.style.display = 'block';
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        }
+
+        // 页面加载时的动画效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const groups = document.querySelectorAll('.ethnic-group');
+            groups.forEach((group, index) => {
+                setTimeout(() => {
+                    group.style.opacity = '0';
+                    group.style.transform = 'translateY(20px)';
+                    group.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        group.style.opacity = '1';
+                        group.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux发行版分支图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .view-btn.active {
+            background: #764ba2;
+        }
+
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tree-view {
+            display: block;
+        }
+
+        .table-view {
+            display: none;
+        }
+
+        .distro-tree {
+            font-family: monospace;
+            overflow-x: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .distro-node {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .distro-node:hover {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+
+        .distro-node.main {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+            font-weight: bold;
+        }
+
+        .distro-node.major {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+            font-weight: bold;
+        }
+
+        .distro-node.minor {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+
+        .distro-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .distro-card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .distro-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .distro-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .distro-card .origin {
+            background: #e3f2fd;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .distro-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .distro-table th,
+        .distro-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .distro-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .distro-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .level-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .level-1 { background: #ff9800; }
+        .level-2 { background: #9c27b0; }
+        .level-3 { background: #4caf50; }
+        .level-4 { background: #2196f3; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .view-toggle {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .view-btn {
+                width: 200px;
+            }
+
+            .distro-tree {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .distro-table {
+                font-size: 14px;
+            }
+
+            .distro-table th,
+            .distro-table td {
+                padding: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .distro-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Linux发行版分支图</h1>
+            <p>探索Linux发行版的家族关系和特点</p>
+        </div>
+
+        <div class="controls">
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="showTreeView()">树状视图</button>
+                <button class="view-btn" onclick="showTableView()">表格视图</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="tree-view" id="treeView">
+                <h2>Linux发行版分支树</h2>
+                <div class="distro-tree">
+                    <div class="distro-node main" onclick="showInfo('debian')">
+                        📦 Debian (1993)
+                        <div style="margin-left: 30px;">
+                            <div class="distro-node major" onclick="showInfo('ubuntu')">
+                                🐧 Ubuntu (2004)
+                                <div style="margin-left: 30px;">
+                                    <div class="distro-node minor" onclick="showInfo('linuxmint')">🌿 Linux Mint (2006)</div>
+                                    <div class="distro-node minor" onclick="showInfo('elementary')">🎨 elementary OS (2011)</div>
+                                    <div class="distro-node minor" onclick="showInfo('popos')">💻 Pop!_OS (2017)</div>
+                                    <div class="distro-node minor" onclick="showInfo('zorin')">🪟 Zorin OS (2009)</div>
+                                    <div class="distro-node minor" onclick="showInfo('kubuntu')">🖥️ Kubuntu (2005)</div>
+                                    <div class="distro-node minor" onclick="showInfo('xubuntu')">🖼️ Xubuntu (2006)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="distro-node main" onclick="showInfo('redhat')">
+                        🎩 Red Hat (1994)
+                        <div style="margin-left: 30px;">
+                            <div class="distro-node major" onclick="showInfo('rhel')">
+                                🔴 RHEL (2002)
+                                <div style="margin-left: 30px;">
+                                    <div class="distro-node minor" onclick="showInfo('centos')">🐉 CentOS (2004)</div>
+                                    <div class="distro-node minor" onclick="showInfo('scientific')">🔬 Scientific Linux (2004)</div>
+                                    <div class="distro-node minor" onclick="showInfo('oracle')">🟠 Oracle Linux (2006)</div>
+                                </div>
+                            </div>
+                            <div class="distro-node major" onclick="showInfo('fedora')">
+                                🔵 Fedora (2003)
+                                <div style="margin-left: 30px;">
+                                    <div class="distro-node minor" onclick="showInfo('centosstream')">🌊 CentOS Stream (2019)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="distro-node main" onclick="showInfo('slackware')">
+                        🏔️ Slackware (1993)
+                        <div style="margin-left: 30px;">
+                            <div class="distro-node major" onclick="showInfo('suse')">
+                                🦎 SUSE (1994)
+                                <div style="margin-left: 30px;">
+                                    <div class="distro-node minor" onclick="showInfo('opensuse')">🦎 openSUSE (2005)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="distro-node main" onclick="showInfo('arch')">
+                        🏗️ Arch Linux (2002)
+                        <div style="margin-left: 30px;">
+                            <div class="distro-node major" onclick="showInfo('manjaro')">🍃 Manjaro (2011)</div>
+                            <div class="distro-node major" onclick="showInfo('endeavouros')">🚀 EndeavourOS (2019)</div>
+                            <div class="distro-node major" onclick="showInfo('garuda')">🦅 Garuda Linux (2019)</div>
+                        </div>
+                    </div>
+
+                    <div class="distro-node main" onclick="showInfo('gentoo')">
+                        🔧 Gentoo (2002)
+                        <div style="margin-left: 30px;">
+                            <div class="distro-node major" onclick="showInfo('calculate')">🧮 Calculate Linux (2007)</div>
+                            <div class="distro-node major" onclick="showInfo('sabayon')">🍷 Sabayon (2007)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="distro-info" id="distroInfo">
+                    <h3>点击上方发行版查看详细信息</h3>
+                    <p>选择一个Linux发行版来了解其特点、用途和历史背景。</p>
+                </div>
+            </div>
+
+            <div class="table-view" id="tableView">
+                <h2>Linux发行版详细对比</h2>
+                <table class="distro-table">
+                    <thead>
+                        <tr>
+                            <th>发行版</th>
+                            <th>级别</th>
+                            <th>上游</th>
+                            <th>包管理</th>
+                            <th>特点</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="level-indicator level-1">1</span>Debian</td>
+                            <td>原始发行版</td>
+                            <td>无</td>
+                            <td>apt, dpkg</td>
+                            <td>稳定、安全、社区驱动</td>
+                            <td>服务器、桌面</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Ubuntu</td>
+                            <td>主要分支</td>
+                            <td>Debian</td>
+                            <td>apt, dpkg</td>
+                            <td>用户友好、定期更新</td>
+                            <td>桌面、云服务器</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Linux Mint</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>传统桌面体验、多媒体支持</td>
+                            <td>桌面用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>elementary OS</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>精美的设计、macOS风格界面</td>
+                            <td>设计师、macOS用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Pop!_OS</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>游戏优化、创作者友好、NVIDIA支持</td>
+                            <td>游戏玩家、创作者</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Zorin OS</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>Windows风格、易迁移、专业版</td>
+                            <td>Windows用户、商业用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Kubuntu</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>KDE桌面、官方变体、高度可定制</td>
+                            <td>KDE爱好者、桌面用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Xubuntu</td>
+                            <td>次要分支</td>
+                            <td>Ubuntu</td>
+                            <td>apt, dpkg</td>
+                            <td>Xfce桌面、轻量级、高效稳定</td>
+                            <td>旧硬件、轻量级需求</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-1">1</span>Red Hat</td>
+                            <td>原始发行版</td>
+                            <td>无</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>商业支持、企业级</td>
+                            <td>企业服务器</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>RHEL</td>
+                            <td>主要分支</td>
+                            <td>Red Hat</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>长期支持、稳定可靠</td>
+                            <td>企业服务器</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>CentOS</td>
+                            <td>次要分支</td>
+                            <td>RHEL</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>RHEL免费替代品</td>
+                            <td>服务器</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Scientific Linux</td>
+                            <td>次要分支</td>
+                            <td>RHEL</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>科学计算、学术机构维护、稳定性</td>
+                            <td>科学研究、学术机构</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>Oracle Linux</td>
+                            <td>次要分支</td>
+                            <td>RHEL</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>Oracle支持、企业级、Oracle优化</td>
+                            <td>Oracle数据库、企业应用</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Fedora</td>
+                            <td>主要分支</td>
+                            <td>Red Hat</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>最新技术、社区驱动</td>
+                            <td>开发者、桌面</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>CentOS Stream</td>
+                            <td>次要分支</td>
+                            <td>Fedora</td>
+                            <td>rpm, yum/dnf</td>
+                            <td>RHEL上游、开发者预览、滚动更新</td>
+                            <td>开发者、测试环境</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-1">1</span>Slackware</td>
+                            <td>原始发行版</td>
+                            <td>无</td>
+                            <td>pkgtools</td>
+                            <td>历史悠久、Unix传统、简洁稳定</td>
+                            <td>Unix爱好者、系统管理员</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>SUSE</td>
+                            <td>主要分支</td>
+                            <td>Slackware</td>
+                            <td>rpm, zypper</td>
+                            <td>商业发行版、企业支持、YaST配置工具</td>
+                            <td>企业服务器、商业应用</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-3">3</span>openSUSE</td>
+                            <td>次要分支</td>
+                            <td>SUSE</td>
+                            <td>rpm, zypper</td>
+                            <td>社区驱动、YaST工具、两个版本</td>
+                            <td>开发者、桌面用户、服务器</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-1">1</span>Arch Linux</td>
+                            <td>原始发行版</td>
+                            <td>无</td>
+                            <td>pacman</td>
+                            <td>滚动更新、简洁</td>
+                            <td>开发者、高级用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Manjaro</td>
+                            <td>主要分支</td>
+                            <td>Arch Linux</td>
+                            <td>pacman</td>
+                            <td>用户友好的Arch</td>
+                            <td>桌面用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>EndeavourOS</td>
+                            <td>主要分支</td>
+                            <td>Arch Linux</td>
+                            <td>pacman</td>
+                            <td>图形安装、开箱即用、社区友好</td>
+                            <td>Arch新手、桌面用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Garuda Linux</td>
+                            <td>主要分支</td>
+                            <td>Arch Linux</td>
+                            <td>pacman</td>
+                            <td>游戏优化、性能导向、美观界面</td>
+                            <td>游戏玩家、性能需求用户</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-1">1</span>Gentoo</td>
+                            <td>原始发行版</td>
+                            <td>无</td>
+                            <td>emerge</td>
+                            <td>源码编译、高度定制</td>
+                            <td>高级用户、开发者</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Calculate Linux</td>
+                            <td>主要分支</td>
+                            <td>Gentoo</td>
+                            <td>emerge</td>
+                            <td>企业导向、易于管理、预配置</td>
+                            <td>企业环境、系统管理员</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-indicator level-2">2</span>Sabayon</td>
+                            <td>主要分支</td>
+                            <td>Gentoo</td>
+                            <td>entropy, emerge</td>
+                            <td>二进制包、易于使用、多媒体支持</td>
+                            <td>桌面用户、Gentoo新手</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const distroInfo = {
+            debian: {
+                name: 'Debian',
+                year: '1993',
+                description: 'Debian是最古老的Linux发行版之一，以其稳定性和安全性而闻名。它完全由社区驱动，遵循自由软件理念。',
+                features: ['极其稳定', '安全性高', '包管理系统完善', '支持多种架构', '社区驱动'],
+                packageManager: 'apt, dpkg',
+                useCase: '服务器、桌面系统、嵌入式设备'
+            },
+            ubuntu: {
+                name: 'Ubuntu',
+                year: '2004',
+                description: '基于Debian的发行版，由Canonical公司支持。以用户友好和定期发布周期著称，是最流行的桌面Linux发行版之一。',
+                features: ['用户友好', '定期更新', '庞大的软件库', '优秀的硬件支持', '活跃的社区'],
+                packageManager: 'apt, dpkg',
+                useCase: '桌面用户、云服务器、开发者'
+            },
+            linuxmint: {
+                name: 'Linux Mint',
+                year: '2006',
+                description: '基于Ubuntu的发行版，专注于提供传统的桌面体验。包含多媒体编解码器，开箱即用。',
+                features: ['传统桌面体验', '多媒体支持', '易于使用', '基于Ubuntu', '包含专有驱动'],
+                packageManager: 'apt, dpkg',
+                useCase: '从Windows迁移的用户、桌面用户'
+            },
+            elementary: {
+                name: 'elementary OS',
+                year: '2011',
+                description: '基于Ubuntu的发行版，以其精美的设计和macOS风格的用户界面而闻名。',
+                features: ['精美的设计', 'macOS风格界面', '注重用户体验', '基于Ubuntu', '应用商店'],
+                packageManager: 'apt, dpkg',
+                useCase: '设计师、macOS用户、注重美学的用户'
+            },
+            popos: {
+                name: 'Pop!_OS',
+                year: '2017',
+                description: '由System76开发的基于Ubuntu的发行版，专为游戏和创作者优化。',
+                features: ['游戏优化', '创作者友好', '基于Ubuntu', '硬件优化', 'NVIDIA支持'],
+                packageManager: 'apt, dpkg',
+                useCase: '游戏玩家、创作者、开发者'
+            },
+            redhat: {
+                name: 'Red Hat',
+                year: '1994',
+                description: '最早的商业Linux发行版之一，开创了Linux商业化的先河。',
+                features: ['商业支持', '企业级', '历史悠久', '稳定可靠', '专业服务'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '企业服务器、商业应用'
+            },
+            rhel: {
+                name: 'RHEL',
+                year: '2002',
+                description: 'Red Hat Enterprise Linux，提供长期支持和商业服务的企业级发行版。',
+                features: ['长期支持', '商业支持', '企业级稳定', '安全认证', '合规性'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '企业服务器、金融、政府机构'
+            },
+            fedora: {
+                name: 'Fedora',
+                year: '2003',
+                description: '由Red Hat赞助的社区发行版，是RHEL的上游测试平台，包含最新技术。',
+                features: ['最新技术', '社区驱动', 'RHEL上游', '滚动更新理念', '开发者友好'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '开发者、技术爱好者、测试新功能'
+            },
+            centos: {
+                name: 'CentOS',
+                year: '2004',
+                description: '基于RHEL源代码重建的免费发行版，提供与RHEL几乎相同的体验。',
+                features: ['RHEL兼容', '免费使用', '稳定可靠', '长期支持', '企业级'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '服务器、企业环境、预算有限的用户'
+            },
+            arch: {
+                name: 'Arch Linux',
+                year: '2002',
+                description: '轻量级、灵活的Linux发行版，采用滚动更新模式，让用户保持最新。',
+                features: ['滚动更新', '简洁设计', '高度可定制', '文档完善', 'DIY精神'],
+                packageManager: 'pacman',
+                useCase: '开发者、高级用户、喜欢定制的用户'
+            },
+            manjaro: {
+                name: 'Manjaro',
+                year: '2011',
+                description: '基于Arch Linux的用户友好发行版，提供了开箱即用的体验。',
+                features: ['用户友好', '基于Arch', '开箱即用', '图形化工具', '滚动更新'],
+                packageManager: 'pacman',
+                useCase: '桌面用户、Arch新手、普通用户'
+            },
+            gentoo: {
+                name: 'Gentoo',
+                year: '2002',
+                description: '高度可定制的发行版，所有软件都从源码编译，提供极致的优化和控制。',
+                features: ['源码编译', '高度优化', '完全控制', '可定制性强', '学习价值高'],
+                packageManager: 'emerge',
+                useCase: '高级用户、开发者、性能优化需求'
+            },
+            slackware: {
+                name: 'Slackware',
+                year: '1993',
+                description: '最古老的活跃Linux发行版之一，保持Unix传统，简洁而稳定。',
+                features: ['历史悠久', 'Unix传统', '简洁稳定', '手动配置', '学习价值'],
+                packageManager: 'pkgtools',
+                useCase: 'Unix爱好者、系统管理员、学习Linux原理'
+            },
+            suse: {
+                name: 'SUSE',
+                year: '1994',
+                description: '起源于德国的商业Linux发行版，在企业市场有重要地位。',
+                features: ['商业发行版', '企业支持', 'YaST配置工具', '欧洲市场强', '稳定可靠'],
+                packageManager: 'rpm, zypper',
+                useCase: '企业服务器、欧洲市场、商业应用'
+            },
+            opensuse: {
+                name: 'openSUSE',
+                year: '2005',
+                description: 'SUSE的社区版本，提供Leap（稳定）和Tumbleweed（滚动更新）两个版本。',
+                features: ['社区驱动', 'YaST工具', '两个版本', '稳定或滚动', '企业级功能'],
+                packageManager: 'rpm, zypper',
+                useCase: '开发者、桌面用户、服务器'
+            },
+            zorin: {
+                name: 'Zorin OS',
+                year: '2009',
+                description: '基于Ubuntu的发行版，专注于为Windows用户提供熟悉的体验。',
+                features: ['Windows风格', '易迁移', '基于Ubuntu', '专业版', '安全性'],
+                packageManager: 'apt, dpkg',
+                useCase: 'Windows用户、商业用户、新手'
+            },
+            kubuntu: {
+                name: 'Kubuntu',
+                year: '2005',
+                description: '使用KDE桌面环境的Ubuntu官方变体，提供完整的KDE体验。',
+                features: ['KDE桌面', '官方变体', '基于Ubuntu', '高度可定制', '美观界面'],
+                packageManager: 'apt, dpkg',
+                useCase: 'KDE爱好者、桌面用户、开发者'
+            },
+            xubuntu: {
+                name: 'Xubuntu',
+                year: '2006',
+                description: '使用Xfce桌面环境的Ubuntu官方变体，轻量级且高效。',
+                features: ['Xfce桌面', '轻量级', '高效稳定', '官方变体', '适合旧硬件'],
+                packageManager: 'apt, dpkg',
+                useCase: '旧硬件、轻量级需求、服务器桌面'
+            },
+            endeavouros: {
+                name: 'EndeavourOS',
+                year: '2019',
+                description: '基于Arch Linux的发行版，提供图形化安装程序和开箱即用的体验。',
+                features: ['基于Arch', '图形安装', '开箱即用', '社区友好', '滚动更新'],
+                packageManager: 'pacman',
+                useCase: 'Arch新手、桌面用户、开发者'
+            },
+            garuda: {
+                name: 'Garuda Linux',
+                year: '2019',
+                description: '基于Arch Linux的发行版，专注于性能和游戏体验。',
+                features: ['游戏优化', '性能导向', '基于Arch', '美观界面', 'BTRFS文件系统'],
+                packageManager: 'pacman',
+                useCase: '游戏玩家、性能需求用户、Arch爱好者'
+            },
+            calculate: {
+                name: 'Calculate Linux',
+                year: '2007',
+                description: '基于Gentoo的发行版，专注于企业环境，提供易于管理的解决方案。',
+                features: ['基于Gentoo', '企业导向', '易于管理', '预配置', '稳定性'],
+                packageManager: 'emerge',
+                useCase: '企业环境、系统管理员、Gentoo用户'
+            },
+            sabayon: {
+                name: 'Sabayon',
+                year: '2007',
+                description: '基于Gentoo的发行版，提供二进制包以简化安装和维护。',
+                features: ['基于Gentoo', '二进制包', '易于使用', '滚动更新', '多媒体支持'],
+                packageManager: 'entropy, emerge',
+                useCase: '桌面用户、Gentoo新手、多媒体用户'
+            },
+            scientific: {
+                name: 'Scientific Linux',
+                year: '2004',
+                description: '由Fermilab和CERN维护的RHEL克隆，专注于科学计算。',
+                features: ['科学计算', 'RHEL兼容', '学术机构维护', '稳定性', '特殊软件'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '科学研究、学术机构、实验室'
+            },
+            oracle: {
+                name: 'Oracle Linux',
+                year: '2006',
+                description: '由Oracle公司维护的RHEL兼容发行版，提供商业支持。',
+                features: ['Oracle支持', 'RHEL兼容', '商业支持', '企业级', 'Oracle优化'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: 'Oracle数据库、企业应用、商业环境'
+            },
+            centosstream: {
+                name: 'CentOS Stream',
+                year: '2019',
+                description: 'RHEL的上游开发分支，提供即将发布的RHEL功能的预览。',
+                features: ['RHEL上游', '开发者预览', '滚动更新', '社区参与', '企业级功能'],
+                packageManager: 'rpm, yum/dnf',
+                useCase: '开发者、测试环境、企业预部署'
+            }
+        };
+
+        function showInfo(distroKey) {
+            const distro = distroInfo[distroKey];
+            if (!distro) return;
+
+            // 查找被点击的发行版节点
+            const clickedNode = document.querySelector(`.distro-node[onclick="showInfo('${distroKey}')"]`);
+
+            // 创建信息卡片
+            const infoCard = document.createElement('div');
+            infoCard.className = 'distro-card';
+            infoCard.innerHTML = `
+                <h3>${distro.name} (${distro.year})</h3>
+                <div class="origin">包管理器: ${distro.packageManager}</div>
+                <p><strong>描述:</strong> ${distro.description}</p>
+                <p><strong>主要特点:</strong></p>
+                <ul>
+                    ${distro.features.map(feature => `<li>${feature}</li>`).join('')}
+                </ul>
+                <p><strong>适用场景:</strong> ${distro.useCase}</p>
+            `;
+
+            // 移除之前可能存在的所有信息卡片
+            document.querySelectorAll('.distro-card').forEach(card => card.remove());
+
+            // 将信息卡片插入到被点击节点的后面
+            clickedNode.parentNode.insertBefore(infoCard, clickedNode.nextSibling);
+
+            // 清空页面底部原来的信息显示区域
+            const infoDiv = document.getElementById('distroInfo');
+            infoDiv.innerHTML = `
+                <h3>点击上方发行版查看详细信息</h3>
+                <p>选择一个Linux发行版来了解其特点、用途和历史背景。</p>
+            `;
+        }
+
+        function showTreeView() {
+            document.getElementById('treeView').style.display = 'block';
+            document.getElementById('tableView').style.display = 'none';
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.view-btn')[0].classList.add('active');
+        }
+
+        function showTableView() {
+            document.getElementById('treeView').style.display = 'none';
+            document.getElementById('tableView').style.display = 'block';
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.view-btn')[1].classList.add('active');
+        }
+    </script>
+</body>
+</html>
