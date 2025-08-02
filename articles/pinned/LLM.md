@@ -59,7 +59,9 @@
 5. KTransformer注重异构计算，长上下文和并发速度相比CPU部署有一定优势。
 
 移动端：
-不少应用来源与其它推理框架，目前使用MNN Chat，对Omni模型的支持比较有优势。
+1. MNN Chat推理速度较快，对Omni模型的支持比较有优势但支持的模型数量较少。
+2. Pocketpal基于llama.cpp对移动端优化的llama.rn，支持的模型多一些。
+3. Chatterui也基于llama.rn，速度比Pocketpal快一些但有时候会出现兼容性问题。
 
 ##### 本地部署情况
 
@@ -68,13 +70,9 @@
 1. Deepseek R1 0528 Qwen3 8b用于通用任务。
 2. Mimo VL 7b RL用于多模态任务。
 3. Dolphin3.0 Llama3 8b用于无审查任务。
-4. Qwen3 30b a3b 2507用于CPU推理（thinking版本由于速度问题暂不部署）。
+4. Qwen3 30b a3b 2507/Qwen3 Coder 30b a3b用于CPU推理（thinking版本由于速度问题暂不部署）。
 
-手机配置为骁龙8gen1+8g内存，使用MNN Chat。移动端部署情况如下：
-
-1. Qwen3 4b用于通用任务。
-2. Qwen2.5 vl 3b用于多模态任务。
-3. Qwen2.5 Omni 3b用于有语音输入的任务，TTS速度较慢。
+手机配置为骁龙8gen1+8g内存，目前只进行测试性部署。
 
 （考虑到内存带宽瓶颈，16g设备用Ring Lite比较合适，待Llama.cpp支持后也可以用Kimi VL）
 
