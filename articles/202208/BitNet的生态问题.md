@@ -1,0 +1,9 @@
+## BitNet的生态问题
+
+BitNet项目仓库在10个月前就已创建，但目前生态表现一般。
+
+BitNet是创建和推理1.58bit模型的项目，能够在对性能影响较小的情况下创建节省内存且cpu推理速度优势较大的LLM。目前官方只有多语言支持不完善的小参数量模型，其它模型虽然可以通过量化后微调创建1.58bit模型，但只有Falcon3 1.58bit和BitCPM4是官方的1.58bit模型，另外有Llama3 8b和Qwen3 8b以下版本等少数第三方创建1.58bit版本的模型。
+
+BitNet在推理生态上也有问题，虽然官方有BitNet.cpp并创建了GPU推理内核，但仍然需要手动编译。Electorn BitNet作为唯一一个有预编译和GUI支持的项目，只支持官方模型和小部分第三方模型。Llama.cpp也支持1.58bit模型但没有推理加速，但桌面端Ollama和LM Studio以及移动端的Chatter等基于Llama.cpp项目未包含BitNet支持，目前已知能支持的只有PocketPal。
+
+由于Unsloth Dynamic2.0对MoE的1.58bit量化仍有一定性能损失，BitNet是节省显存的最佳方法，而且CPU推理上的优势更大。因此还是希望BitNet生态能进一步发展。
