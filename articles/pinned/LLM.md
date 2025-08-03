@@ -69,7 +69,7 @@
 
 1. Deepseek R1 0528 Qwen3 8b用于通用任务。
 2. Mimo VL 7b RL用于多模态任务。
-3. Dolphin3.0 Llama3 8b用于无审查任务。
+3. Gemma3 12b abliterated v2用于无审查任务。
 4. Qwen3 30b a3b 2507/Qwen3 Coder 30b a3b用于CPU推理（thinking版本由于速度问题暂不部署）。
 
 手机配置为骁龙8gen1+8g内存，目前只进行测试性部署。
