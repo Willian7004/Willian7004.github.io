@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能渐变背景生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 2s ease-in-out;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            min-width: 350px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .menu h3 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-section h4 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-item {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            margin: 6px 0;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-item.nature { background: linear-gradient(45deg, #56ab2f, #a8e6cf); }
+        .menu-item.sunset { background: linear-gradient(45deg, #ff7e5f, #feb47b); }
+        .menu-item.ocean { background: linear-gradient(45deg, #2196f3, #21cbf3); }
+        .menu-item.forest { background: linear-gradient(45deg, #134e5e, #71b280); }
+        .menu-item.garden { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+        .menu-item.night { background: linear-gradient(45deg, #0f0c29, #302b63); }
+        .menu-item.spring { background: linear-gradient(45deg, #a8ff78, #78ffd6); }
+        .menu-item.autumn { background: linear-gradient(45deg, #d299c2, #fef9d7); }
+        .menu-item.winter { background: linear-gradient(45deg, #e6ddd4, #d5def5); }
+        .menu-item.rainbow { background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); }
+
+        .close-menu {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .gradient-preview {
+            width: 100%;
+            height: 30px;
+            border-radius: 5px;
+            margin: 3px 0;
+            border: 1px solid #ddd;
+        }
+
+        .color-scheme-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu" id="menu">
+        <button class="close-menu" onclick="closeMenu()">&times;</button>
+        <h3>配色方案选择</h3>
+        
+        <div class="menu-section">
+            <h4>🌿 自然风格</h4>
+            <button class="menu-item nature" onclick="setMode('nature')">🌲 森林绿意</button>
+            <div class="color-scheme-info">深绿、浅绿、棕色系</div>
+            
+            <button class="menu-item sunset" onclick="setMode('sunset')">🌅 日落余晖</button>
+            <div class="color-scheme-info">橙红、金黄、紫色系</div>
+            
+            <button class="menu-item ocean" onclick="setMode('ocean')">🌊 海洋深蓝</button>
+            <div class="color-scheme-info">深蓝、天蓝、青色系</div>
+        </div>
+
+        <div class="menu-section">
+            <h4>🎨 艺术风格</h4>
+            <button class="menu-item garden" onclick="setMode('garden')">🌸 花园芬芳</button>
+            <div class="color-scheme-info">粉色、紫色、绿色系</div>
+            
+            <button class="menu-item night" onclick="setMode('night')">🌙 夜空星辰</button>
+            <div class="color-scheme-info">深蓝、紫色、黑色系</div>
+            
+            <button class="menu-item rainbow" onclick="setMode('rainbow')">🌈 彩虹绚烂</button>
+            <div class="color-scheme-info">七彩光谱颜色</div>
+        </div>
+
+        <div class="menu-section">
+            <h4>🍃 季节风格</h4>
+            <button class="menu-item spring" onclick="setMode('spring')">🌱 春天生机</button>
+            <div class="color-scheme-info">嫩绿、粉色、黄色系</div>
+            
+            <button class="menu-item autumn" onclick="setMode('autumn')">🍂 秋天丰收</button>
+            <div class="color-scheme-info">橙色、红色、棕色系</div>
+            
+            <button class="menu-item winter" onclick="setMode('winter')">❄️ 冬天纯净</button>
+            <div class="color-scheme-info">白色、浅蓝、灰色系</div>
+        </div>
+
+        <div class="menu-section">
+            <h4>🎯 色彩理论</h4>
+            <button class="menu-item" onclick="setMode('monochromatic')">🎨 单色系</button>
+            <div class="color-scheme-info">同一色相不同明度</div>
+            
+            <button class="menu-item" onclick="setMode('complementary')">⚡ 互补色</button>
+            <div class="color-scheme-info">对比强烈的互补色</div>
+            
+            <button class="menu-item" onclick="setMode('analogous')">🔄 类似色</button>
+            <div class="color-scheme-info">相邻色相和谐搭配</div>
+            
+            <button class="menu-item" onclick="setMode('triadic')">🔺 三角色</button>
+            <div class="color-scheme-info">等距色相平衡搭配</div>
+            
+            <button class="menu-item" onclick="setMode('tetradic')">🔲 四角色</button>
+            <div class="color-scheme-info">矩形色相丰富搭配</div>
+        </div>
+
+        <div class="menu-section">
+            <h4>🎲 随机模式</h4>
+            <button class="menu-item" onclick="setMode('random')">🎲 随机所有方案</button>
+            <div class="color-scheme-info">随机选择配色和渐变类型</div>
+        </div>
+    </div>
+
+    <script>
+        let clickCount = 0;
+        let currentMode = 'random';
+        let autoChangeInterval;
+        let lastClickTime = 0;
+        const clickTimeout = 500; // 0.5秒内点击才算连续
+
+        // 配色方案定义
+        const colorSchemes = {
+            nature: {
+                colors: [
+                    ['#2d5016', '#3e7b17', '#5fb409'],
+                    ['#1a5f3f', '#4a7c59', '#8fbc8f'],
+                    ['#3e2723', '#6d4c41', '#a1887f'],
+                    ['#1b5e20', '#388e3c', '#66bb6a']
+                ]
+            },
+            sunset: {
+                colors: [
+                    ['#ff6b35', '#f7931e', '#ffcd3c'],
+                    ['#ff4757', '#ff6348', '#ffa502'],
+                    ['#ee5a24', '#f368e0', '#ff9ff3'],
+                    ['#ff3838', '#ff9500', '#ffdd00']
+                ]
+            },
+            ocean: {
+                colors: [
+                    ['#006994', '#0099cc', '#66ccff'],
+                    ['#1e3c72', '#2a5298', '#7e8ba3'],
+                    ['#005f73', '#0a9396', '#94d2bd'],
+                    ['#0077be', '#00a8cc', '#5eb3d6']
+                ]
+            },
+            forest: {
+                colors: [
+                    ['#134e5e', '#71b280', '#a8e6cf'],
+                    ['#2d5016', '#5fb409', '#8fbc8f'],
+                    ['#1a5f3f', '#4a7c59', '#8fbc8f'],
+                    ['#0d2818', '#2d5a3d', '#5a8f7a']
+                ]
+            },
+            garden: {
+                colors: [
+                    ['#ff9a9e', '#fecfef', '#fecfef'],
+                    ['#ff6b9d', '#c44569', '#f8b500'],
+                    ['#ff9ff3', '#f368e0', '#ff3838'],
+                    ['#ff9a9e', '#fad0c4', '#fbc2eb']
+                ]
+            },
+            night: {
+                colors: [
+                    ['#0f0c29', '#302b63', '#24243e'],
+                    ['#000428', '#004e92', '#009ffd'],
+                    ['#141e30', '#243b55', '#2c5364'],
+                    ['#232526', '#414345', '#000000']
+                ]
+            },
+            spring: {
+                colors: [
+                    ['#a8ff78', '#78ffd6', '#98fb98'],
+                    ['#ff9a9e', '#fad0c4', '#ffecd2'],
+                    ['#84fab0', '#8fd3f4', '#d4fc79'],
+                    ['#a8e6cf', '#dcedc1', '#ffd3a5']
+                ]
+            },
+            autumn: {
+                colors: [
+                    ['#d299c2', '#fef9d7', '#eddea4'],
+                    ['#ff7e5f', '#feb47b', '#ffd89b'],
+                    ['#e96443', '#904e95', '#c471ed'],
+                    ['#f2994a', '#f2c94c', '#f2994a']
+                ]
+            },
+            winter: {
+                colors: [
+                    ['#e6ddd4', '#d5def5', '#b8c6db'],
+                    ['#ffffff', '#e3f2fd', '#bbdefb'],
+                    ['#f0f4f8', '#d9e2ec', '#b8c6db'],
+                    ['#ffffff', '#f1f3f4', '#dadce0']
+                ]
+            },
+            rainbow: {
+                colors: [
+                    ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'],
+                    ['#ff0000', '#ff4500', '#ffa500', '#ffff00', '#00ff00', '#0000ff', '#8a2be2'],
+                    ['#dc143c', '#ff6347', '#ffa500', '#adff2f', '#00ced1', '#0000cd', '#9370db']
+                ]
+            }
+        };
+
+        // 色彩理论方案
+        function getColorFromTheory(type) {
+            const baseHue = Math.random() * 360;
+            
+            switch(type) {
+                case 'monochromatic':
+                    const hue = baseHue;
+                    return [
+                        `hsl(${hue}, 70%, 40%)`,
+                        `hsl(${hue}, 60%, 60%)`,
+                        `hsl(${hue}, 50%, 80%)`
+                    ];
+                
+                case 'complementary':
+                    return [
+                        `hsl(${baseHue}, 70%, 50%)`,
+                        `hsl(${baseHue}, 50%, 70%)`,
+                        `hsl(${(baseHue + 180) % 360}, 70%, 50%)`
+                    ];
+                
+                case 'analogous':
+                    return [
+                        `hsl(${baseHue}, 70%, 50%)`,
+                        `hsl(${(baseHue + 30) % 360}, 70%, 50%)`,
+                        `hsl(${(baseHue + 60) % 360}, 70%, 50%)`
+                    ];
+                
+                case 'triadic':
+                    return [
+                        `hsl(${baseHue}, 70%, 50%)`,
+                        `hsl(${(baseHue + 120) % 360}, 70%, 50%)`,
+                        `hsl(${(baseHue + 240) % 360}, 70%, 50%)`
+                    ];
+                
+                case 'tetradic':
+                    return [
+                        `hsl(${baseHue}, 70%, 50%)`,
+                        `hsl(${(baseHue + 90) % 360}, 70%, 50%)`,
+                        `hsl(${(baseHue + 180) % 360}, 70%, 50%)`,
+                        `hsl(${(baseHue + 270) % 360}, 70%, 50%)`
+                    ];
+                
+                default:
+                    return [getRandomColor(), getRandomColor(), getRandomColor()];
+            }
+        }
+
+        // 生成随机颜色
+        function getRandomColor() {
+            const colors = [
+                `hsl(${Math.random() * 360}, ${50 + Math.random() * 50}%, ${40 + Math.random() * 40}%)`,
+                `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`,
+                `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // 获取配色方案颜色
+        function getSchemeColors(scheme) {
+            if (colorSchemes[scheme]) {
+                const colorSet = colorSchemes[scheme].colors;
+                return colorSet[Math.floor(Math.random() * colorSet.length)];
+            } else if (['monochromatic', 'complementary', 'analogous', 'triadic', 'tetradic'].includes(scheme)) {
+                return getColorFromTheory(scheme);
+            } else {
+                return [getRandomColor(), getRandomColor(), getRandomColor()];
+            }
+        }
+
+        // 生成渐变方案
+        function generateGradient(type = 'random') {
+            const colors = getSchemeColors(type);
+            const gradientTypes = ['linear', 'radial', 'conic', 'diagonal'];
+            const gradientType = gradientTypes[Math.floor(Math.random() * gradientTypes.length)];
+            
+            let gradient;
+            
+            switch(gradientType) {
+                case 'linear':
+                    const angle = Math.random() * 360;
+                    gradient = `linear-gradient(${angle}deg, ${colors.join(', ')})`;
+                    break;
+                case 'radial':
+                    const centerX = Math.random() * 100;
+                    const centerY = Math.random() * 100;
+                    gradient = `radial-gradient(circle at ${centerX}% ${centerY}%, ${colors.join(', ')})`;
+                    break;
+                case 'conic':
+                    const startAngle = Math.random() * 360;
+                    const conicCenterX = Math.random() * 100;
+                    const conicCenterY = Math.random() * 100;
+                    gradient = `conic-gradient(from ${startAngle}deg at ${conicCenterX}% ${conicCenterY}%, ${colors.join(', ')}, ${colors[0]})`;
+                    break;
+                case 'diagonal':
+                    gradient = `linear-gradient(45deg, ${colors.join(', ')})`;
+                    break;
+                default:
+                    gradient = `linear-gradient(${Math.random() * 360}deg, ${colors.join(', ')})`;
+            }
+            
+            return gradient;
+        }
+
+        // 应用渐变背景
+        function applyGradient() {
+            const gradient = generateGradient(currentMode);
+            document.body.style.background = gradient;
+        }
+
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            applyGradient();
+            closeMenu();
+            resetClickCount();
+        }
+
+        // 打开菜单
+        function openMenu() {
+            document.getElementById('menu').style.display = 'block';
+        }
+
+        // 关闭菜单
+        function closeMenu() {
+            document.getElementById('menu').style.display = 'none';
+        }
+
+        // 重置点击计数
+        function resetClickCount() {
+            clickCount = 0;
+        }
+
+        // 处理点击事件
+        function handleClick(event) {
+            const currentTime = Date.now();
+            
+            // 如果距离上次点击超过0.5秒，重置计数
+            if (currentTime - lastClickTime > clickTimeout) {
+                clickCount = 0;
+            }
+            
+            lastClickTime = currentTime;
+            clickCount++;
+
+            if (clickCount === 2) {
+                // 两次点击：手动切换背景
+                applyGradient();
+                setTimeout(resetClickCount, 500);
+            } else if (clickCount === 3) {
+                // 三次点击：打开菜单
+                openMenu();
+                setTimeout(resetClickCount, 500);
+            }
+        }
+
+        // 启动自动切换
+        function startAutoChange() {
+            autoChangeInterval = setInterval(() => {
+                applyGradient();
+            }, 15000); // 15秒
+        }
+
+        // 停止自动切换
+        function stopAutoChange() {
+            if (autoChangeInterval) {
+                clearInterval(autoChangeInterval);
+            }
+        }
+
+        // 初始化
+        function init() {
+            // 应用初始渐变
+            applyGradient();
+            
+            // 启动自动切换
+            startAutoChange();
+            
+            // 绑定点击事件
+            document.addEventListener('click', handleClick);
+            
+            // 防止菜单点击触发背景点击
+            document.getElementById('menu').addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ': // 空格键切换背景
+                    e.preventDefault();
+                    applyGradient();
+                    break;
+                case 'Escape': // ESC键关闭菜单
+                    closeMenu();
+                    break;
+                case 'm': // M键打开菜单
+                case 'M':
+                    openMenu();
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

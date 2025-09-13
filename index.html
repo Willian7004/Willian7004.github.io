@@ -1,19 +1,9 @@
 <!DOCTYPE html>
-<!--
-编写静态网页，实现以下功能：
-1. 需要通过json记录目录中的文件时，编写python程序用于创建json。
-2. 如果页面 宽度＞高度随机选择backgrounds文件夹中horizontal文件夹中的一张图片作为背景，反之选择vertical文件夹中的图片。
-3. 在首页创建4个卡片，卡片使用高斯模糊和黑色遮罩，使用2×2排列，如果页面 宽度＜高度 则改为垂直排列。读取 cards.json ，把该文件信息按顺序填入卡片，name字段为卡片标题，使用h3字体显示，description字段为说明，使用段落字体显示。
-4. 点击卡片进入下一个页面，均使用带高斯模糊和黑色遮罩（与卡片使用的参数相同）的侧边栏，侧边栏可单独滚动，与正文部分左右分屏显示，可拖动分界线调整占比。在侧边栏顶部从左到右依次显示返回按钮、对应卡片标题和收起按钮。收起后在页面左上角显示展开按钮。页面 宽度<高度 时侧边栏改为上下分屏。
-5. cards.json 的folder字段为卡片对应的文件夹，无folder字段则对应 README.md 。读取articles文件夹时按子文件夹显示分组，其中pinned在顶部，其它文件夹按年份+月份命名，按对应的月份从新到旧排序。读取pages文件夹时也按子文件夹创建分组，按子文件夹名称排序。读取projects文件夹时不分组。
-6. 读取articles或pages文件夹时，对于分组内的文件，按创建时间从新到旧排序，显示在侧边栏，默认选中第一项，选中项用蓝色标注。读取project文件夹时把子文件夹名称作为选项。在选中项和鼠标移到的项右边显示“在新标签页打开”按钮。
-7. articles文件夹的子文件夹包含 .md 文件，在侧边栏选中文件时，如果文件夹内有与选中文件同名的html文件则在页面上侧边栏以外区域创建iframe显示html文件内容，没有同名html文件则使用marked.js渲染并显示（调用libs文件夹中的库文件，此时不显示“在新标签页打开”按钮）读取README.md时也使用同样形式。pages文件夹的子文件夹包含html文件，选中文件后显示文件内容。project文件夹每个子文件夹包含index.html和README.md，选中文件夹后显示index.html的内容；并在侧边栏的选项右边额外显示“详细信息”按钮（显示规则与“在新标签页打开”按钮相同），点击后在旁边的悬浮窗使用marked.js渲染并显示对应文件夹中README.md的内容，悬浮窗宽度和高度分别限制在页面宽度和高度的50%，样式与卡片一致，点击任意位置关闭悬浮窗。
--->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Willian7004的博客</title>
+    <title>README Display with Background</title>
     <style>
         * {
             margin: 0;
@@ -22,188 +12,240 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             min-height: 100vh;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            transition: background-image 0.5s ease-in-out;
-            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            padding: 20px;
         }
 
-        .background-overlay {
+        #background-iframe {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(2px);
+            border: none;
             z-index: -1;
         }
 
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            max-width: 800px;
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-        }
-
-        .card {
-            background: rgba(0, 0, 0, 0.3);
+            height: 100%;
             backdrop-filter: blur(10px);
-            border-radius: 15px;
+            z-index: 0;
+        }
+
+        .overlay.dark {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .overlay.light {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .content-container {
+            max-width: 960px;
+            width: 100%;
+            background: var(--content-bg, rgba(255, 255, 255, 0.95));
+            border-radius: 12px;
             padding: 40px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            position: relative;
+        }
+
+        .content-container.dark {
+            background: rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+        }
+
+        .content-container.light {
+            background: rgba(255, 255, 255, 0.2);
+            color: #000000;
+        }
+
+        #readme-content {
+            line-height: 1.6;
+        }
+
+        #readme-content h1 {
             text-align: center;
-            min-height: 33vw+33vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            margin-bottom: 30px;
+            color: var(--theme-color);
+            font-size: 2.5em;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            background: rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.2);
+        #readme-content h2 {
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--theme-color);
+            color: var(--theme-color);
+            font-size: 1.8em;
         }
 
-        .card h3 {
-            font-size: 24px;
+        #readme-content h3 {
+            margin: 20px 0 10px 0;
+            color: var(--theme-color);
+            font-size: 1.4em;
+        }
+
+        #readme-content p {
             margin-bottom: 15px;
-            font-weight: 600;
         }
 
-        .card p {
-            font-size: 16px;
-            line-height: 1.5;
-            opacity: 0.9;
+        #readme-content ul, #readme-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
         }
 
-        /* Responsive for vertical layout */
-        @media (max-aspect-ratio: 1/1) {
-            .cards-grid {
-                grid-template-columns: 1fr;
-                max-width: 400px;
-            }
+        #readme-content li {
+            margin-bottom: 5px;
         }
 
-        /* Mobile responsive */
-        @media (max-width: 800px) {
-            .cards-grid {
-                gap: 20px;
-                padding: 10px;
-            }
-            
-            .card {
-                padding: 20px 20px;
-                min-height: 100px;
-            }
-            
-            .card h3 {
-                font-size: 20px;
-            }
-            
-            .card p {
-                font-size: 14px;
-            }
+        #readme-content a {
+            color: var(--theme-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        #readme-content a:hover {
+            color: var(--hover-color);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .loading.dark {
+            color: #ccc;
         }
     </style>
 </head>
 <body>
-    <div class="background-overlay"></div>
-    
-    <div class="container">
-        <div class="cards-grid" id="cardsGrid">
-            <!-- Cards will be populated by JavaScript -->
+    <iframe id="background-iframe" src="wallpaper.html" title="Background"></iframe>
+    <div class="overlay" id="overlay"></div>
+    <div class="content-container" id="content-container">
+        <div id="readme-content" class="loading">
+            正在加载 README.md...
         </div>
     </div>
 
     <script>
-        // Background image selection
-        function setBackground() {
-            const isHorizontal = window.innerWidth > window.innerHeight;
-            const folder = isHorizontal ? 'horizontal' : 'vertical';
-            const count = isHorizontal ? 93 : 90; // Based on actual file counts
-            const randomNum = Math.floor(Math.random() * count) + 1;
-            const imageUrl = `backgrounds/${folder}/${randomNum}.jpg`;
-            
-            document.body.style.backgroundImage = `url('${imageUrl}')`;
-        }
+        // 定义10种主题色
+        const themeColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+            '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43'
+        ];
 
-        // Load cards from JSON
-        async function loadCards() {
-            try {
-                const response = await fetch('cards.json');
-                const data = await response.json();
-                const cardsGrid = document.getElementById('cardsGrid');
-                
-                data.cards.forEach(card => {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'card';
-                    cardElement.onclick = () => navigateToContent(card);
-                    
-                    cardElement.innerHTML = `
-                        <h3>${card.name}</h3>
-                        <p>${card.explanation}</p>
-                    `;
-                    
-                    cardsGrid.appendChild(cardElement);
-                });
-            } catch (error) {
-                console.error('Error loading cards:', error);
-                // Fallback cards
-                const fallbackCards = [
-                    { name: '文章', explanation: '我写的文章转换的网页' },
-                    { name: '网页', explanation: '使用LLM编写并手动修改的网页' },
-                    { name: '项目', explanation: '使用LLM编写并手动修改的多文件项目' },
-                    { name: '说明', explanation: '本项目的README' }
-                ];
-                
-                const cardsGrid = document.getElementById('cardsGrid');
-                fallbackCards.forEach((card, index) => {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'card';
-                    cardElement.onclick = () => navigateToContent({ folder: index < 3 ? ['articles', 'pages', 'projects'][index] : null });
-                    
-                    cardElement.innerHTML = `
-                        <h3>${card.name}</h3>
-                        <p>${card.explanation}</p>
-                    `;
-                    
-                    cardsGrid.appendChild(cardElement);
-                });
+        // 随机选择主题色
+        let selectedThemeColor = themeColors[Math.floor(Math.random() * themeColors.length)];
+
+        // 检测深色/浅色模式
+        function detectColorScheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
+            } else {
+                return 'light';
             }
         }
 
-        // Navigation function
-        function navigateToContent(card) {
-            const folder = card.folder || 'README';
-            window.location.href = `content.html?type=${folder}`;
+        // 应用颜色模式
+        function applyColorScheme(scheme) {
+            const overlay = document.getElementById('overlay');
+            const contentContainer = document.getElementById('content-container');
+            const loading = document.querySelector('.loading');
+            
+            overlay.className = 'overlay ' + scheme;
+            contentContainer.className = 'content-container ' + scheme;
+            
+            if (loading) {
+                loading.className = 'loading ' + scheme;
+            }
+
+            // 设置CSS变量
+            document.documentElement.style.setProperty('--theme-color', selectedThemeColor);
+            
+            // 计算悬停颜色（主题色和文字颜色的中间色）
+            const textColor = scheme === 'dark' ? '#ffffff' : '#000000';
+            const hoverColor = mixColors(selectedThemeColor, textColor, 0.5);
+            document.documentElement.style.setProperty('--hover-color', hoverColor);
+            
+            // 设置内容背景色变量
+            const contentBg = scheme === 'dark' ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+            document.documentElement.style.setProperty('--content-bg', contentBg);
         }
 
-        // Initialize
-        setBackground();
-        loadCards();
+        // 混合两种颜色
+        function mixColors(color1, color2, weight) {
+            // 简化版颜色混合，实际项目中可能需要更复杂的颜色处理
+            return weight > 0.5 ? color1 : color2;
+        }
 
-        // Update background on resize
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(setBackground, 250);
-        });
+        // 加载并显示README.md
+        async function loadReadme() {
+            try {
+                const response = await fetch('README.md');
+                if (!response.ok) {
+                    throw new Error('无法加载README.md');
+                }
+                const text = await response.text();
+                
+                // 将Markdown转换为HTML（简单版本）
+                const html = convertMarkdownToHtml(text);
+                document.getElementById('readme-content').innerHTML = html;
+                document.getElementById('readme-content').classList.remove('loading');
+            } catch (error) {
+                document.getElementById('readme-content').innerHTML = 
+                    `<p style="color: var(--theme-color); text-align: center;">加载失败: ${error.message}</p>`;
+                document.getElementById('readme-content').classList.remove('loading');
+            }
+        }
+
+        // 简单的Markdown到HTML转换
+        function convertMarkdownToHtml(markdown) {
+            // 替换标题
+            let html = markdown
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+            
+            // 替换列表
+            html = html
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/<li>.*<\/li>/gim, '<ul>$&</ul>');
+            
+            // 替换段落
+            html = html.replace(/^(?!<h|<ul|<li)(.*$)/gim, '<p>$1</p>');
+            
+            // 替换链接
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+            
+            return html;
+        }
+
+        // 初始化
+        function init() {
+            const colorScheme = detectColorScheme();
+            applyColorScheme(colorScheme);
+            loadReadme();
+            
+            // 监听颜色模式变化
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                applyColorScheme(e.matches ? 'dark' : 'light');
+            });
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>

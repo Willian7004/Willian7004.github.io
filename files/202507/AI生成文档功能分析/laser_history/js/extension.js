@@ -1,1 +1,0 @@
-/* This file should be kept empty and be defined only in themes*/
