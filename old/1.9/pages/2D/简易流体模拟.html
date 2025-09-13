@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!--
+使用html写一个2d流体模拟，点击界面在相应位置加水。通过可折叠菜单调整加水速度和液体粘度。
+
+注：本程序在网页版修改实现液体堆叠，后续进行了手动调参。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D流体模拟</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            cursor: crosshair;
+            background: linear-gradient(to bottom, #001122, #003366);
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            min-width: 280px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 0;
+            margin-bottom: 10px;
+        }
+        
+        .controls-header:hover {
+            color: #4fc3f7;
+        }
+        
+        .controls-content {
+            max-height: 350px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .controls-content.collapsed {
+            max-height: 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: #333;
+            outline: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            float: right;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+        
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+        
+        .arrow.rotated {
+            transform: rotate(180deg);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <div class="controls-header" onclick="toggleControls()">
+            <h3>流体控制面板</h3>
+            <span class="arrow" id="arrow">▼</span>
+        </div>
+        <div class="controls-content" id="controlsContent">
+            <div class="control-group">
+                <label>加水速度 <span class="value-display" id="flowValue">8</span></label>
+                <input type="range" id="flowRate" min="1" max="30" value="8">
+            </div>
+            <div class="control-group">
+                <label>水滴大小 <span class="value-display" id="sizeValue">18</span></label>
+                <input type="range" id="dropSize" min="10" max="35" value="18">
+            </div>
+
+            <div class="control-group">
+                <label>液体粘度 <span class="value-display" id="viscosityValue">0.02</span></label>
+                <input type="range" id="viscosity" min="0.001" max="0.1" step="0.001" value="0.02">
+            </div>
+            <div class="control-group">
+                <label>重力强度 <span class="value-display" id="gravityValue">0.15</span></label>
+                <input type="range" id="gravity" min="0.05" max="0.5" step="0.01" value="0.15">
+            </div>
+        </div>
+    </div>
+
+    <div class="info">
+        点击添加水滴 | 长按持续出水 | 滚轮缩放视图
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 流体参数
+        let flowRate = 8;
+        let dropSize = 18;
+        let viscosity = 0.02;
+        let gravity = 0.15;
+
+        // 鼠标状态
+        let isMouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+
+    // 粒子类 - 简化版（无随机扰动）
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0; // 取消水平方向的随机扰动
+                this.vy = 2; // 固定垂直速度
+                this.life = 1.0;
+                this.size = dropSize; // 固定大小
+                this.originalSize = this.size;
+                this.color = `hsl(220, 80%, 70%)`; // 固定颜色
+                this.density = 1.0; // 固定密度
+            }
+
+            update(particles) {
+                // 堆叠检测 - 与其他粒子的相互作用
+                for (let other of particles) {
+                    if (other === this) continue;
+                    
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = (this.size + other.size) * 0.9;
+                    
+                    if (distance < minDistance && distance > 0) {
+                        const force = (minDistance - distance) * 0.05;
+                        const fx = (dx / distance) * force;
+                        const fy = (dy / distance) * force;
+                        
+                        this.vx -= fx * 0.5;
+                        this.vy -= fy * 0.5;
+                        other.vx += fx * 0.5;
+                        other.vy += fy * 0.5;
+                    }
+                }
+
+                // 添加重力
+                this.vy += gravity * this.density;
+                
+                // 粘度阻力
+                this.vx *= (1 - viscosity);
+                this.vy *= (1 - viscosity);
+                
+                // 更新位置
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // 边界检测 - 更真实的反弹
+                if (this.y > canvas.height - this.size) {
+                    this.y = canvas.height - this.size;
+                    this.vy *= -0.5;
+                    this.vx *= 0.85;
+                    
+                    // 地面堆叠效果
+                    if (Math.abs(this.vy) < 0.5) {
+                        this.vy *= 0.1;
+                        this.size = Math.max(this.originalSize * 0.7, this.size * 0.99);
+                    }
+                }
+                
+                if (this.x < this.size) {
+                    this.x = this.size;
+                    this.vx *= -0.6;
+                } else if (this.x > canvas.width - this.size) {
+                    this.x = canvas.width - this.size;
+                    this.vx *= -0.6;
+                }
+                
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 水滴高光效果
+                const gradient = ctx.createRadialGradient(
+                    this.x - this.size * 0.3, 
+                    this.y - this.size * 0.3, 
+                    0,
+                    this.x, 
+                    this.y, 
+                    this.size
+                );
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+                gradient.addColorStop(0.3, this.color);
+                gradient.addColorStop(1, `hsl(200, 70%, ${30 + Math.random() * 20}%)`);
+                
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 添加高光
+                ctx.globalAlpha = this.life * 0.6;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x - this.size * 0.3, this.y - this.size * 0.3, this.size * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // 粒子数组
+        let particles = [];
+
+        // 添加粒子函数
+        function addParticles(x, y) {
+            for (let i = 0; i < flowRate; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * dropSize;
+                const offsetX = Math.cos(angle) * distance;
+                const offsetY = Math.sin(angle) * distance;
+                particles.push(new Particle(x + offsetX, y + offsetY));
+            }
+        }
+
+        // 鼠标事件处理
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            addParticles(mouseX, mouseY);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isMouseDown = false;
+        });
+
+        // 触摸事件支持
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+            addParticles(mouseX, mouseY);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseDown = false;
+        });
+
+        // 长按持续添加粒子
+        setInterval(() => {
+            if (isMouseDown) {
+                addParticles(mouseX, mouseY);
+            }
+        }, 50);
+
+        // 动画循环
+        function animate() {
+            // 清除画布（取消拖尾效果）
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 排序粒子以实现正确的深度效果
+            particles.sort((a, b) => a.y + a.size - (b.y + b.size));
+            
+            // 更新和绘制粒子
+            particles = particles.filter(particle => {
+                particle.update(particles);
+                particle.draw();
+                return particle.life > 0;
+            });
+            
+            // 限制粒子数量
+            const maxParticles = 10000;
+            if (particles.length > maxParticles) {
+                particles = particles.slice(-maxParticles);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // 控制面板功能
+        function toggleControls() {
+            const content = document.getElementById('controlsContent');
+            const arrow = document.getElementById('arrow');
+            content.classList.toggle('collapsed');
+            arrow.classList.toggle('rotated');
+        }
+
+        // 更新控制值
+        document.getElementById('flowRate').addEventListener('input', (e) => {
+            flowRate = parseInt(e.target.value);
+            document.getElementById('flowValue').textContent = flowRate;
+        });
+
+        document.getElementById('dropSize').addEventListener('input', (e) => {
+            dropSize = parseInt(e.target.value);
+            document.getElementById('sizeValue').textContent = dropSize;
+        });
+
+        document.getElementById('viscosity').addEventListener('input', (e) => {
+            viscosity = parseFloat(e.target.value);
+            document.getElementById('viscosityValue').textContent = viscosity;
+        });
+
+        document.getElementById('gravity').addEventListener('input', (e) => {
+            gravity = parseFloat(e.target.value);
+            document.getElementById('gravityValue').textContent = gravity;
+        });
+
+        // 启动动画
+        animate();
+    </script>
+</body>
+</html>

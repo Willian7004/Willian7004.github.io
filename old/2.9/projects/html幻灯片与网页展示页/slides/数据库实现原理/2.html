@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储引擎和存储结构</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .tree-node {
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            position: absolute;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .tree-connector {
+            position: absolute;
+            background-color: #666;
+            z-index: 0;
+        }
+        .tree-connector.vertical {
+            width: 2px;
+        }
+        .tree-connector.horizontal {
+            height: 2px;
+        }
+        .hash-table {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            height: 200px;
+            position: relative;
+        }
+        .hash-bucket {
+            width: 80px;
+            height: 180px;
+            border: 2px solid #4285f4;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #e8f0fe;
+        }
+        .hash-item {
+            width: 60px;
+            height: 30px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 4px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .buffer-pool {
+            height: 100px;
+            border: 2px solid #34a853;
+            border-radius: 8px;
+            display: flex;
+            background-color: #e6f4ea;
+            overflow: hidden;
+        }
+        .buffer-page {
+            flex: 1;
+            border-right: 1px dashed #34a853;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .buffer-page:last-child {
+            border-right: none;
+        }
+        .dirty-bit {
+            width: 20px;
+            height: 20px;
+            background-color: #ea4335;
+            border-radius: 50%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-8 bg-white">
+        <header class="mb-6">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2">存储引擎和存储结构</h1>
+            <p class="text-xl text-gray-600">Storage Engines and Structures</p>
+        </header>
+
+        <div class="grid grid-cols-2 gap-8 flex-grow">
+            <!-- B+树索引 -->
+            <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-bold text-blue-700 mb-4">
+                    <i class="fas fa-sitemap mr-2"></i>B+树索引
+                </h2>
+                <div class="relative h-64" id="bplus-tree-container">
+                    <!-- B+树结构示意图 -->
+                    <div class="tree-node" style="top: 0; left: 50%; transform: translateX(-50%); background-color: #4285f4; color: white;">Root</div>
+                    <div class="tree-connector vertical" style="top: 30px; left: 50%; height: 20px;"></div>
+                    
+                    <div class="tree-node" style="top: 50px; left: 25%; background-color: #4285f4; color: white;">25</div>
+                    <div class="tree-node" style="top: 50px; left: 50%; background-color: #4285f4; color: white;">50</div>
+                    <div class="tree-node" style="top: 50px; left: 75%; background-color: #4285f4; color: white;">75</div>
+                    
+                    <div class="tree-connector vertical" style="top: 80px; left: 25%; height: 20px;"></div>
+                    <div class="tree-connector vertical" style="top: 80px; left: 50%; height: 20px;"></div>
+                    <div class="tree-connector vertical" style="top: 80px; left: 75%; height: 20px;"></div>
+                    
+                    <div class="tree-node" style="top: 100px; left: 12.5%; background-color: #34a853; color: white;">10-20</div>
+                    <div class="tree-node" style="top: 100px; left: 37.5%; background-color: #34a853; color: white;">30-40</div>
+                    <div class="tree-node" style="top: 100px; left: 62.5%; background-color: #34a853; color: white;">60-70</div>
+                    <div class="tree-node" style="top: 100px; left: 87.5%; background-color: #34a853; color: white;">80-90</div>
+                    
+                    <div class="tree-connector vertical" style="top: 130px; left: 12.5%; height: 20px;"></div>
+                    <div class="tree-connector vertical" style="top: 130px; left: 37.5%; height: 20px;"></div>
+                    <div class="tree-connector vertical" style="top: 130px; left: 62.5%; height: 20px;"></div>
+                    <div class="tree-connector vertical" style="top: 130px; left: 87.5%; height: 20px;"></div>
+                    
+                    <div class="tree-node" style="top: 150px; left: 12.5%; background-color: #fbbc05; color: white; width: 80px;">数据页</div>
+                    <div class="tree-node" style="top: 150px; left: 37.5%; background-color: #fbbc05; color: white; width: 80px;">数据页</div>
+                    <div class="tree-node" style="top: 150px; left: 62.5%; background-color: #fbbc05; color: white; width: 80px;">数据页</div>
+                    <div class="tree-node" style="top: 150px; left: 87.5%; background-color: #fbbc05; color: white; width: 80px;">数据页</div>
+                    
+                    <!-- 叶子节点连接线 -->
+                    <div class="tree-connector horizontal" style="top: 170px; left: 10%; width: 80%;"></div>
+                </div>
+                <div class="mt-2">
+                    <p class="text-sm text-gray-600"><i class="fas fa-check-circle text-green-500 mr-1"></i> 适合范围查询和排序</p>
+                    <p class="text-sm text-gray-600"><i class="fas fa-check-circle text-green-500 mr-1"></i> 高度平衡，查询效率稳定</p>
+                    <p class="text-sm text-gray-600"><i class="fas fa-check-circle text-green-500 mr-1"></i> 所有数据存储在叶子节点，支持顺序访问</p>
+                </div>
+            </div>
+
+            <!-- 哈希索引 -->
+            <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-bold text-blue-700 mb-4">
+                    <i class="fas fa-hashtag mr-2"></i>哈希索引
+                </h2>
+                <div class="hash-table">
+                    <div class="hash-bucket">
+                        <div class="text-center mb-2 font-bold">Hash(0)</div>
+                        <div class="hash-item">Key1</div>
+                        <div class="hash-item">Key5</div>
+                    </div>
+                    <div class="hash-bucket">
+                        <div class="text-center mb-2 font-bold">Hash(1)</div>
+                        <div class="hash-item">Key2</div>
+                    </div>
+                    <div class="hash-bucket">
+                        <div class="text-center mb-2 font-bold">Hash(2)</div>
+                        <div class="hash-item">Key3</div>
+                    </div>
+                    <div class="hash-bucket">
+                        <div class="text-center mb-2 font-bold">Hash(3)</div>
+                        <div class="hash-item">Key4</div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600"><i class="fas fa-bolt text-yellow-500 mr-1"></i> 等值查询效率极高，O(1)时间复杂度</p>
+                    <p class="text-sm text-gray-600"><i class="fas fa-times-circle text-red-500 mr-1"></i> 不支持范围查询和排序</p>
+                    <p class="text-sm text-gray-600"><i class="fas fa-exclamation-circle text-blue-500 mr-1"></i> 可能存在哈希冲突，需额外处理</p>
+                </div>
+            </div>
+
+            <!-- 缓冲池和缓存机制 -->
+            <div class="bg-blue-50 p-6 rounded-lg shadow-sm col-span-2">
+                <h2 class="text-2xl font-bold text-blue-700 mb-4">
+                    <i class="fas fa-memory mr-2"></i>缓冲池和缓存机制
+                </h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <div class="buffer-pool">
+                            <div class="buffer-page">
+                                <div>数据页 1</div>
+                                <div class="dirty-bit" title="脏页标记"></div>
+                            </div>
+                            <div class="buffer-page">
+                                <div>数据页 2</div>
+                            </div>
+                            <div class="buffer-page">
+                                <div>索引页 1</div>
+                                <div class="dirty-bit" title="脏页标记"></div>
+                            </div>
+                            <div class="buffer-page">
+                                <div>空闲页</div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600"><i class="fas fa-database text-blue-500 mr-1"></i> 缓冲池是内存中的一块区域，用于缓存磁盘数据页</p>
+                            <p class="text-sm text-gray-600"><i class="fas fa-sync text-green-500 mr-1"></i> LRU算法管理页的替换，脏页需要写回磁盘</p>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-tachometer-alt text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <span class="font-bold">性能提升</span>
+                                    <p class="text-gray-600">减少磁盘I/O，提高查询和更新速度</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-random text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <span class="font-bold">缓存策略</span>
+                                    <p class="text-gray-600">LRU、MRU、FIFO等多种页面替换算法</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-shield-alt text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <span class="font-bold">并发控制</span>
+                                    <p class="text-gray-600">锁、MVCC等机制保证数据一致性</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-auto pt-4 text-center text-gray-500 text-sm">
+            <p>数据库实现原理 | 第2页</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令获取和解析</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .code {
+            color: #f8f8f2;
+        }
+        .comment {
+            color: #6272a4;
+        }
+        .keyword {
+            color: #ff79c6;
+        }
+        .string {
+            color: #f1fa8c;
+        }
+        .function {
+            color: #50fa7b;
+        }
+        .flow-arrow {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flow-arrow:after {
+            content: '↓';
+            font-size: 24px;
+            color: #50fa7b;
+        }
+        .token {
+            background-color: rgba(80, 250, 123, 0.2);
+            border: 1px solid #50fa7b;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <h1 class="text-4xl font-bold mb-8 text-center">命令获取和解析</h1>
+        
+        <div class="flex flex-grow">
+            <!-- 左侧：命令获取和解析流程 -->
+            <div class="w-1/2 pr-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">命令获取</h2>
+                    <div class="bg-white/10 p-5 rounded-lg">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-keyboard text-3xl mr-4 text-green-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">安全读取用户输入</div>
+                                <div class="text-sm text-gray-300">使用fgets()替代gets()防止缓冲区溢出</div>
+                            </div>
+                        </div>
+                        <div class="terminal p-3 text-sm">
+                            <pre><span class="function">fgets</span>(buffer, <span class="keyword">BUFFER_SIZE</span>, <span class="function">stdin</span>);</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">命令解析</h2>
+                    <div class="bg-white/10 p-5 rounded-lg">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-puzzle-piece text-3xl mr-4 text-green-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">分割命令行为单词(token)</div>
+                                <div class="text-sm text-gray-300">使用strtok()函数进行字符串分割</div>
+                            </div>
+                        </div>
+                        <div class="terminal p-3 text-sm">
+                            <pre><span class="comment">// 首次调用</span>
+<span class="code">token = strtok</span>(command, <span class="string">" "</span>);
+
+<span class="comment">// 后续调用</span>
+<span class="code">while</span> ((token = strtok(<span class="keyword">NULL</span>, <span class="string">" "</span>)))</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 p-5 rounded-lg flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">引用处理</h2>
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-blue-900/50 p-3 rounded text-center">
+                            <div class="font-bold mb-1">反斜线引用</div>
+                            <div class="text-sm">转义单个字符</div>
+                            <div class="text-xs mt-1 text-gray-300">\<span class="token">$</span> → \$</div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded text-center">
+                            <div class="font-bold mb-1">单引号引用</div>
+                            <div class="text-sm">所有字符字面化</div>
+                            <div class="text-xs mt-1 text-gray-300"><span class="token">'$USER'</span> → $USER</div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded text-center">
+                            <div class="font-bold mb-1">双引号引用</div>
+                            <div class="text-sm">部分字符扩展</div>
+                            <div class="text-xs mt-1 text-gray-300"><span class="token">"$USER"</span> → user</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：解析示例和流程图 -->
+            <div class="w-1/2 pl-6 flex flex-col">
+                <div class="terminal p-5 mb-6">
+                    <div class="text-xl font-bold text-blue-300 mb-3">解析示例</div>
+                    <div class="mb-4">
+                        <div class="flex items-center mb-2">
+                            <span class="code">ls -l /home/user/Documents</span>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="grid grid-cols-4 gap-2 mt-2">
+                            <div class="token text-center">ls</div>
+                            <div class="token text-center">-l</div>
+                            <div class="token text-center col-span-2">/home/user/Documents</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <span class="code">echo "Hello $USER, today is $(date)"</span>
+                        </div>
+                        <div class="flow-arrow"></div>
+                        <div class="grid grid-cols-5 gap-2 mt-2">
+                            <div class="token text-center">echo</div>
+                            <div class="token text-center col-span-4">"Hello user, today is 2023-06-15"</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 p-6 rounded-lg flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">解析流程</h2>
+                    <ol class="space-y-4 text-xl">
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">1</div>
+                            <span>读取用户输入的命令行</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">2</div>
+                            <span>处理引用（单引号、双引号、反斜线）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">3</div>
+                            <span>分割命令行为token（单词）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">4</div>
+                            <span>执行各种扩展（变量、命令替换等）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">5</div>
+                            <span>构建参数数组（argv格式）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">6</div>
+                            <span>准备执行命令</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

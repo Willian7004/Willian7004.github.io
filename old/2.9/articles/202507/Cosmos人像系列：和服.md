@@ -1,0 +1,117 @@
+## Cosmos人像系列：和服
+
+本系列与之前的博客项目中的类似，图片改用flex布局。
+
+生成图片的提示词如下：
+
+#### user:
+
+创建30个分镜，每个分镜以“a teenage girl wearing kimono”开头，场景为花园或日式建筑，用英语回答。
+
+#### assistant:
+
+Here are 30 storyboard frames, each starting with "a teenage girl wearing kimono" in a garden or Japanese architectural setting:
+
+1.  **Wide Shot:** A teenage girl wearing kimono stands beneath a blooming cherry tree in a serene garden, pink petals drifting around her.
+2.  **Low Angle:** A teenage girl wearing kimono walks across a curved red bridge over a koi pond, looking down at the fish.
+3.  **Medium Shot:** A teenage girl wearing kimono kneels gracefully on a tatami mat, arranging flowers in a vase near an open shoji screen overlooking a moss garden.
+4.  **Close Up:** A teenage girl wearing kimono gently touches the petals of a vibrant camellia flower blooming beside a stone lantern.
+5.  **High Angle:** A teenage girl wearing kimono sits contemplatively on the wooden engawa (veranda) of a traditional house, overlooking a raked gravel Zen garden.
+6.  **Over the Shoulder:** A teenage girl wearing kimono carefully pours tea during a ceremony inside a tea house with a view of a small courtyard garden.
+7.  **Detail Shot:** A teenage girl wearing kimono holds a delicate paper fan, partially obscuring her face as she stands near bamboo groves in a garden corner.
+8.  **Action Shot:** A teenage girl wearing kimono playfully chases a butterfly fluttering past manicured azalea bushes.
+9.  **Reflection Shot:** A teenage girl wearing kimono gazes at her reflection in the still water of a garden pond, framed by maple trees.
+10. **Atmospheric Shot:** A teenage girl wearing kimono stands under the eaves of a pagoda-style structure as light rain falls on the garden path.
+11. **Interaction Shot:** A teenage girl wearing kimono feeds colorful koi fish from a small wooden bridge.
+12. **Interior Shot:** A teenage girl wearing kimono practices calligraphy by an open window, revealing a meticulously pruned pine tree outside.
+13. **Silhouette Shot:** A teenage girl wearing kimono is silhouetted against a shoji screen illuminated by the setting sun, casting long shadows in the garden.
+14. **Seasonal Shot:** A teenage girl wearing kimono brushes fresh snow off a stone lantern in a winter garden, her breath visible.
+15. **Panning Shot:** A teenage girl wearing kimono walks slowly along a winding garden path lined with moss-covered stones and ferns.
+16. **Point of View:** A teenage girl wearing kimono looks up through the intricate wooden beams of a garden gazebo at the blue sky.
+17. **Symmetry Shot:** A teenage girl wearing kimono stands centered under the torii gate entrance to a shrine garden.
+18. **Night Shot:** A teenage girl wearing kimono holds a paper lantern, its soft glow illuminating her path through a moonlit garden.
+19. **Dynamic Shot:** A teenage girl wearing kimono pauses mid-stride on stepping stones crossing a small stream in the garden.
+20. **Still Life Shot:** A teenage girl wearing kimono sits quietly beside a stone water basin (tsukubai) near a tea garden entrance.
+21. **Framed Shot:** A teenage girl wearing kimono is viewed through the arch of a wisteria trellis heavy with purple blooms.
+22. **Contemplative Shot:** A teenage girl wearing kimono leans against a wooden pillar on the engawa, watching dragonflies hover over a lotus pond.
+23. **Textured Shot:** A teenage girl wearing kimono runs her fingers along the rough bark of an ancient pine tree in the garden.
+24. **Ritual Shot:** A teenage girl wearing kimono washes her hands at a temizuya (purification fountain) before entering a shrine building.
+25. **Golden Hour:** A teenage girl wearing kimono reads a book on the engawa, bathed in the warm, late afternoon sunlight filtering through maple leaves.
+26. **Wind Shot:** A teenage girl wearing kimono holds her sleeves as a sudden breeze rustles through bamboo stalks and lifts her hair.
+27. **Autumn Shot:** A teenage girl wearing kimono stands amidst fiery red and orange maple trees, fallen leaves carpeting the ground.
+28. **Detail Shot:** A teenage girl wearing kimono adjusts her obi (sash) while standing in the doorway of a traditional storehouse (kura).
+29. **Perspective Shot:** A teenage girl wearing kimono looks out from the second-story balcony of a machiya (townhouse) over its small, private courtyard garden.
+30. **Closing Shot:** A teenage girl wearing kimono bows slightly before a small stone Jizo statue nestled among ferns in a quiet garden corner.
+<!-- AUTO-GENERATED MEDIA -->
+
+<style>
+/* 竖图组容器 - 大屏使用flex布局 */
+@media (min-width: 900px) {
+  .portrait-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  .portrait-item {
+    max-width: 450px;
+    flex: 1 1 auto;
+  }
+}
+
+/* 小屏竖图组布局 */
+@media (max-width: 899px) {
+  .portrait-group {
+    display: block;
+  }
+  .portrait-item {
+    margin-bottom: 20px;
+  }
+}
+
+/* 单独竖图容器 */
+.portrait-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+/* 横图和媒体容器 */
+.image-container, .media-container {
+  margin: 20px 0;
+}
+
+/* 确保图片在容器内正确缩放 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+</style>
+
+<div class="portrait-group">
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00001_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00006_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00007_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00009_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00014_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00020_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00022_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00024_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00026_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00027_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00029_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00031_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00033_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00035_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00038_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00040_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00045_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00048_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00049_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00052_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00054_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00056_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00058_.jpg" style="max-width:100%;"></div>
+<div class="portrait-item"><img src="../../files/202507/Cosmos人像系列：和服/ComfyUI_00059_.jpg" style="max-width:100%;"></div>
+</div>

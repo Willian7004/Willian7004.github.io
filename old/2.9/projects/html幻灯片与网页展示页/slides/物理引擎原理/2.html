@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 核心组件</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .component-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .icon-container {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .connection-line {
+            position: absolute;
+            background: rgba(77, 166, 255, 0.3);
+            z-index: 0;
+        }
+        .vertical-line {
+            width: 3px;
+            height: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .horizontal-line {
+            height: 3px;
+        }
+        .component-number {
+            font-size: 3rem;
+            font-weight: bold;
+            opacity: 0.2;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-10 flex flex-col">
+        <h1 class="title text-center">物理引擎核心组件</h1>
+        
+        <div class="flex-grow flex flex-col items-center justify-center relative">
+            <!-- 连接线 -->
+            <div class="connection-line vertical-line top-0"></div>
+            <div class="connection-line horizontal-line w-full top-60"></div>
+            <div class="connection-line vertical-line bottom-0"></div>
+            
+            <!-- 组件卡片 -->
+            <div class="grid grid-cols-2 gap-8 w-full z-10">
+                <!-- 数值积分 -->
+                <div class="component-card p-6 relative">
+                    <div class="component-number">01</div>
+                    <div class="icon-container bg-gradient-to-br from-blue-400 to-blue-600 self-start">
+                        <i class="fas fa-calculator text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-blue-300">数值积分</h3>
+                    <ul class="list-none space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-blue-400"></i>
+                            <span>根据外力计算物体的速度和位置</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-blue-400"></i>
+                            <span>欧拉法（显式、隐式、半隐式）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-blue-400"></i>
+                            <span>RK4（四阶龙格-库塔方法）</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 碰撞检测 -->
+                <div class="component-card p-6 relative">
+                    <div class="component-number">02</div>
+                    <div class="icon-container bg-gradient-to-br from-green-400 to-green-600 self-start">
+                        <i class="fas fa-object-group text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-green-300">碰撞检测</h3>
+                    <ul class="list-none space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-green-400"></i>
+                            <span>Broad Phase: 快速筛选可能碰撞的对象对</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-green-400"></i>
+                            <span>Narrow Phase: 精确检测碰撞并计算细节</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-green-400"></i>
+                            <span>GJK算法检测碰撞，EPA算法计算穿透深度</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 约束求解 -->
+                <div class="component-card p-6 relative">
+                    <div class="component-number">03</div>
+                    <div class="icon-container bg-gradient-to-br from-purple-400 to-purple-600 self-start">
+                        <i class="fas fa-puzzle-piece text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-purple-300">约束求解</h3>
+                    <ul class="list-none space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-purple-400"></i>
+                            <span>处理碰撞约束和关节约束</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-purple-400"></i>
+                            <span>基于冲量的Sequential Impulse方法</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-purple-400"></i>
+                            <span>基于约束的雅可比矩阵法</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 刚体动力学 -->
+                <div class="component-card p-6 relative">
+                    <div class="component-number">04</div>
+                    <div class="icon-container bg-gradient-to-br from-red-400 to-red-600 self-start">
+                        <i class="fas fa-cubes text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-red-300">刚体动力学</h3>
+                    <ul class="list-none space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-red-400"></i>
+                            <span>基于牛顿三大定律模拟刚体运动</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-red-400"></i>
+                            <span>考虑线性运动和旋转运动</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-angle-right mt-1 mr-2 text-red-400"></i>
+                            <span>自由度、广义坐标和约束的概念</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-blue-200 opacity-70">
+            <p>四大核心组件协同工作，构成完整的物理模拟系统</p>
+        </div>
+    </div>
+</body>
+</html>

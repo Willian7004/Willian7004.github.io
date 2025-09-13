@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache Web服务器的实现</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #0052cc;
+            color: white;
+            padding: 30px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 70px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 25px;
+            flex-grow: 1;
+        }
+        .grid-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border-left: 4px solid #0052cc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .item-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .item-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #e3f2fd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .item-icon .material-icons {
+            font-size: 28px;
+            color: #0052cc;
+        }
+        .item-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0052cc;
+        }
+        .item-content {
+            flex-grow: 1;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        .feature-item .material-icons {
+            color: #4fc3f7;
+            margin-right: 10px;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .mpm-modes {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .mpm-mode {
+            flex: 1;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 0 5px;
+            text-align: center;
+        }
+        .mpm-mode:first-child {
+            margin-left: 0;
+        }
+        .mpm-mode:last-child {
+            margin-right: 0;
+        }
+        .mpm-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0052cc;
+            margin-bottom: 10px;
+        }
+        .mpm-desc {
+            font-size: 16px;
+        }
+        .lifecycle-stages {
+            display: flex;
+            margin-top: 10px;
+        }
+        .lifecycle-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0 10px;
+            position: relative;
+        }
+        .lifecycle-stage:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 25px;
+            width: 20px;
+            height: 2px;
+            background-color: #0052cc;
+        }
+        .stage-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #0052cc;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .stage-name {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .stage-desc {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .phases-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin-top: 10px;
+        }
+        .phase-item {
+            background-color: #e3f2fd;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .highlight {
+            color: #0052cc;
+            font-weight: 500;
+        }
+        .footer {
+            padding: 20px 70px;
+            background-color: #f5f5f5;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">Apache Web服务器的实现</h1>
+        </div>
+        <div class="content">
+            <div class="grid-container">
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">architecture</i>
+                        </div>
+                        <h2 class="item-title">Apache的架构</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">模块化设计</span>：核心代码少，功能分散到各模块</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">可扩展性</span>：通过模块添加新功能</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">跨平台</span>：支持多种操作系统</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">Hook机制</span>：允许模块注入自定义函数</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">settings</i>
+                        </div>
+                        <h2 class="item-title">MPM（多重处理模块）</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span>Apache通过MPM使用操作系统资源，管理进程和线程</span>
+                            </li>
+                        </ul>
+                        <div class="mpm-modes">
+                            <div class="mpm-mode">
+                                <div class="mpm-name">prefork</div>
+                                <div class="mpm-desc">多进程模式<br>每个请求一个进程</div>
+                            </div>
+                            <div class="mpm-mode">
+                                <div class="mpm-name">worker</div>
+                                <div class="mpm-desc">多线程模式<br>一个进程多个线程</div>
+                            </div>
+                            <div class="mpm-mode">
+                                <div class="mpm-name">event</div>
+                                <div class="mpm-desc">事件驱动模式<br>一个进程处理多个请求</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">loop</i>
+                        </div>
+                        <h2 class="item-title">Apache的生命周期</h2>
+                    </div>
+                    <div class="item-content">
+                        <div class="lifecycle-stages">
+                            <div class="lifecycle-stage">
+                                <div class="stage-icon">
+                                    <i class="material-icons">power_settings_new</i>
+                                </div>
+                                <div class="stage-name">启动阶段</div>
+                                <div class="stage-desc">配置文件解析<br>模块加载<br>系统资源初始化</div>
+                            </div>
+                            <div class="lifecycle-stage">
+                                <div class="stage-icon">
+                                    <i class="material-icons">play_circle</i>
+                                </div>
+                                <div class="stage-name">运行阶段</div>
+                                <div class="stage-desc">处理用户服务请求<br>使用普通权限<br>通过Hook机制注入模块</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">alt_route</i>
+                        </div>
+                        <h2 class="item-title">HTTP请求处理阶段</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span>Apache将请求处理分为11个阶段，模块可在各阶段注入处理逻辑</span>
+                            </li>
+                        </ul>
+                        <div class="phases-grid">
+                            <div class="phase-item">Post-Read-Request</div>
+                            <div class="phase-item">URI Translation</div>
+                            <div class="phase-item">Header Parsing</div>
+                            <div class="phase-item">Access Control</div>
+                            <div class="phase-item">Authentication</div>
+                            <div class="phase-item">Authorization</div>
+                            <div class="phase-item">MIME Type Checking</div>
+                            <div class="phase-item">FixUp</div>
+                            <div class="phase-item">Response</div>
+                            <div class="phase-item">Logging</div>
+                            <div class="phase-item">CleanUp</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Web服务器实现原理</div>
+            <div>第 <span class="highlight">8</span> 页</div>
+        </div>
+    </div>
+</body>
+</html>

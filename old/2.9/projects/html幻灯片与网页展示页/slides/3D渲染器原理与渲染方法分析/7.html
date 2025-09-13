@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBR物理渲染</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a192f 0%, #203a63 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+        }
+        .pbr-box {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        .pbr-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(66, 153, 225, 0.8);
+        }
+        .theory-item {
+            transition: all 0.3s ease;
+        }
+        .theory-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(138, 43, 226, 0.2);
+        }
+        .workflow-step {
+            position: relative;
+            z-index: 2;
+        }
+        .workflow-arrow {
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            transform: translateY(-50%);
+            color: rgba(138, 43, 226, 0.7);
+            font-size: 1.5rem;
+            z-index: 3;
+        }
+        .circuit-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%),
+                linear-gradient(0deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+        .material-preview {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+        .material-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
+            z-index: -1;
+        }
+        .highlight-text {
+            background: linear-gradient(90deg, #8a2be2, #4b0082);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- 网格背景 -->
+        <div class="grid-pattern"></div>
+        <div class="circuit-lines"></div>
+        
+        <!-- 主要内容 -->
+        <div class="content flex flex-col h-full py-10 px-12">
+            <h1 class="text-5xl font-bold mb-6 glow tracking-wider text-center">PBR物理渲染</h1>
+            
+            <div class="flex-grow flex">
+                <!-- 左侧：定义和核心理论 -->
+                <div class="w-1/2 pr-6 flex flex-col space-y-5">
+                    <!-- 定义 -->
+                    <div class="pbr-box bg-blue-900 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-atom mr-3 text-purple-400"></i>定义
+                        </h2>
+                        <p class="text-xl text-blue-100 ml-10">基于<span class="highlight-text">物理世界</span>的原理和理论，模拟<span class="highlight-text">真实光照</span>现象的渲染方法</p>
+                    </div>
+                    
+                    <!-- 核心理论 -->
+                    <div class="pbr-box bg-blue-800 bg-opacity-40 rounded-lg p-5 flex-grow">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-brain mr-3 text-purple-400"></i>核心理论
+                        </h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-cubes text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">微平面理论</span>
+                                </div>
+                                <p class="text-sm text-blue-200">表面建模为无数微观镜面反射小平面</p>
+                            </div>
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-balance-scale text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">能量守恒</span>
+                                </div>
+                                <p class="text-sm text-blue-200">出射光能量≤入射光能量</p>
+                            </div>
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-glasses text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">菲涅尔反射</span>
+                                </div>
+                                <p class="text-sm text-blue-200">反射率与视角相关，掠射角度最大</p>
+                            </div>
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-lightbulb text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">线性空间光照</span>
+                                </div>
+                                <p class="text-sm text-blue-200">在线性空间中进行光照计算</p>
+                            </div>
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-adjust text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">色调映射</span>
+                                </div>
+                                <p class="text-sm text-blue-200">HDR到LDR的转换，保持视觉真实感</p>
+                            </div>
+                            <div class="theory-item bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-palette text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">材质解耦</span>
+                                </div>
+                                <p class="text-sm text-blue-200">光照与材质分离，提高效率</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：工作流程和实现方式 -->
+                <div class="w-1/2 pl-6 flex flex-col space-y-5">
+                    <!-- 工作流程 -->
+                    <div class="pbr-box bg-blue-800 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-4 flex items-center">
+                            <i class="fas fa-project-diagram mr-3 text-purple-400"></i>工作流程
+                        </h2>
+                        <div class="flex flex-col space-y-4">
+                            <div class="workflow-step flex bg-purple-900/30 p-3 rounded-lg relative">
+                                <div class="w-12 h-12 rounded-full bg-purple-700/50 flex items-center justify-center mr-4">
+                                    <i class="fas fa-cube text-2xl text-purple-200"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-purple-200">基于物理的材质定义</h3>
+                                    <p class="text-sm text-blue-200">粗糙度、金属度、基础颜色等物理属性</p>
+                                </div>
+                                <div class="workflow-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="workflow-step flex bg-purple-900/30 p-3 rounded-lg relative">
+                                <div class="w-12 h-12 rounded-full bg-purple-700/50 flex items-center justify-center mr-4">
+                                    <i class="fas fa-sun text-2xl text-purple-200"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-purple-200">光照计算</h3>
+                                    <p class="text-sm text-blue-200">BRDF/BTDF函数、能量守恒、菲涅尔效应</p>
+                                </div>
+                                <div class="workflow-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="workflow-step flex bg-purple-900/30 p-3 rounded-lg relative">
+                                <div class="w-12 h-12 rounded-full bg-purple-700/50 flex items-center justify-center mr-4">
+                                    <i class="fas fa-calculator text-2xl text-purple-200"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-purple-200">渲染方程求解</h3>
+                                    <p class="text-sm text-blue-200">全局光照、间接光照、IBL(图像基础光照)</p>
+                                </div>
+                                <div class="workflow-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="workflow-step flex bg-purple-900/30 p-3 rounded-lg">
+                                <div class="w-12 h-12 rounded-full bg-purple-700/50 flex items-center justify-center mr-4">
+                                    <i class="fas fa-magic text-2xl text-purple-200"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-purple-200">色调映射与后处理</h3>
+                                    <p class="text-sm text-blue-200">将HDR转换为LDR，应用后期效果</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 实现方式 -->
+                    <div class="pbr-box bg-blue-700 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-cogs mr-3 text-purple-400"></i>实现方式
+                        </h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center">
+                                    <i class="fas fa-microscope text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">微表面模型</span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center">
+                                    <i class="fas fa-wave-square text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">BRDF/BTDF函数</span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center">
+                                    <i class="fas fa-images text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">IBL(图像基础光照)</span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-900/20 p-3 rounded-lg border border-purple-700/30">
+                                <div class="flex items-center">
+                                    <i class="fas fa-cube text-purple-300 mr-2"></i>
+                                    <span class="text-lg text-purple-200">PBR材质库</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 材质示例 -->
+                    <div class="pbr-box bg-blue-700 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-layer-group mr-3 text-purple-400"></i>材质示例
+                        </h2>
+                        <div class="flex justify-around">
+                            <div class="material-preview w-24 h-24 bg-gradient-to-br from-gray-300 to-gray-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-square text-3xl text-gray-500"></i>
+                                <div class="absolute bottom-0 w-full text-center text-xs text-purple-200">金属</div>
+                            </div>
+                            <div class="material-preview w-24 h-24 bg-gradient-to-br from-blue-300 to-blue-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-square text-3xl text-blue-500"></i>
+                                <div class="absolute bottom-0 w-full text-center text-xs text-purple-200">塑料</div>
+                            </div>
+                            <div class="material-preview w-24 h-24 bg-gradient-to-br from-green-300 to-green-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-square text-3xl text-green-500"></i>
+                                <div class="absolute bottom-0 w-full text-center text-xs text-purple-200">木材</div>
+                            </div>
+                            <div class="material-preview w-24 h-24 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-square text-3xl text-yellow-500"></i>
+                                <div class="absolute bottom-0 w-full text-center text-xs text-purple-200">陶瓷</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 应用场景 -->
+            <div class="mt-5 bg-blue-900 bg-opacity-30 rounded-lg p-3">
+                <h3 class="text-xl font-semibold text-blue-300 mb-2 flex items-center">
+                    <i class="fas fa-film mr-2"></i>应用场景
+                </h3>
+                <div class="flex justify-around text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-film text-2xl text-purple-300 mb-1"></i>
+                        <span class="text-blue-100">电影特效</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-gamepad text-2xl text-purple-300 mb-1"></i>
+                        <span class="text-blue-100">游戏开发</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-building text-2xl text-purple-300 mb-1"></i>
+                        <span class="text-blue-100">建筑可视化</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-car text-2xl text-purple-300 mb-1"></i>
+                        <span class="text-blue-100">汽车设计</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-vr-cardboard text-2xl text-purple-300 mb-1"></i>
+                        <span class="text-blue-100">VR/AR内容</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部装饰 -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 z-10"></div>
+    </div>
+</body>
+</html>

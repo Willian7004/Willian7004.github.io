@@ -24,11 +24,11 @@
 ## 查看旧版本
 旧版本从release中恢复，位于old文件夹。
 
-[v2](old/v2.9/index.html)
+[v2](old/2.9/index.html)
 
-[v1](old/v1.9/index.html)
+[v1](old/1.9/index.html)
 
-[v0](old/v0.9/index.html)
+[v0](old/0.9/index.html)
 ## 后续调整
 
 ### 编程日常化

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用html写一个程序，实现以下功能：
+1. 创建一个复选框，用于选择“彩色模式”，未选中时可以设置“二值化”复选框，选中“二值化”复选框时显示一个滑块用于设置0到255的值，在界面上把这个值显示为0到1之间的比例并保留三位小数。
+2. 上传图片，使用滑块选择16到128之间的一个整数作为处理后的图片高度，把图片降低到同宽高比下对应的分辨率。未选中“彩色模式”时处理为黑白图片，选中“彩色模式”且选中“二值化”时通过滑块设定的阈值对图片进行二值化。添加一个下载按钮用于下载处理后的图片。
+3. 创建复选框，用于选择“使用文字表示颜色深度”，选中时创建下拉菜单选择进制，未选中时创建一个输入框。创建“创建与图片相同颜色的文字”复选框。
+4. 根据处理后的图片创建字符画，创建下载按钮下载markdown格式的字符画。选中“使用文字表示颜色深度”时使用选中的进制的数字范围表示颜色深度，未选中“使用文字表示颜色深度”时随机选择输入框中的一个文字作为字符，未选中“使用文字表示颜色深度”且输入框为空时选择随机数字和字母进行填充。选中“创建与图片相同颜色的文字”复选框时在字符画中使用与处理后的图片对应像素颜色相同的文字。
+
+注：界面修改未按要求进行。功能正常，使用Vditor时需要在分屏预览模式下显示，两位字符表示一个颜色时最多选择39px以免出现额外换行。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片处理工具</title>
+    <style>
+/* 基础重置 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border-left: 4px solid #3498db;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+input[type="range"] {
+    width: 200px;
+    margin: 0 10px;
+}
+
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+    margin-right: 10px;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+button:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+}
+
+.preview-section {
+    margin-top: 25px;
+}
+
+.preview-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.image-preview, .ascii-preview {
+    flex: 1;
+    min-width: 300px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 6px;
+    background: #fff;
+}
+
+#processedCanvas {
+    max-width: 100%;
+    border: 1px solid #eee;
+}
+
+#asciiOutput {
+    font-family: monospace;
+    font-size: 8px;
+    line-height: 1;
+    white-space: pre;
+    overflow: auto;
+    max-height: 400px;
+    background: #f8f8f8;
+    padding: 10px;
+    border: 1px solid #eee;
+}
+
+.hidden {
+    display: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .preview-container {
+        flex-direction: column;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- 图片上传区域 -->
+        <div class="section">
+
+            <input type="file" id="imageUpload" accept="image/*">
+            
+        <div class="compact-controls">
+            <div class="control-row">
+                <label>
+                    <input type="checkbox" id="colorMode"> 彩色模式
+                </label>
+                <label>
+                    <input type="checkbox" id="binaryMode"> 二值化
+                </label>
+            </div>
+            
+            <div id="thresholdControl" class="hidden control-row">
+                <label>阈值: 
+                    <input type="range" id="thresholdSlider" min="0" max="255" value="128">
+                    <span id="thresholdValue">0.500</span>
+                </label>
+            </div>
+            
+            <div class="control-row">
+                <label>图片高度:
+                    <input type="range" id="heightSlider" min="16" max="128" value="39">
+                    <span id="heightValue">39px</span>
+                </label>
+            </div>
+        </div>
+        
+        <button id="downloadImgBtn" disabled>下载处理后的图片</button>
+        </div>
+        
+        <!-- 字符画设置区域 -->
+        <div class="section">
+
+        <div class="compact-controls">
+            <div class="control-row">
+                <label>
+                    <input type="checkbox" id="textMode"> 使用文字表示颜色深度
+                </label>
+                <label>
+                    <input type="checkbox" id="colorTextMode"> 创建与图片相同颜色的文字
+                </label>
+            </div>
+            
+            <div id="textInputSection" class="hidden control-row">
+                <div id="charSetSection" class="control-item">
+                    <label>字符集:
+                        <input type="text" id="charSetInput" placeholder="输入字符(如@#$)">
+                    </label>
+                </div>
+                <div id="baseSelectSection" class="hidden control-item">
+                    <label>进制:
+                        <select id="baseSelect">
+                            <option value="2">二进制</option>
+                            <option value="8">八进制</option>
+                            <option value="10">十进制</option>
+                            <option value="16">十六进制</option>
+                        </select>
+                    </label>
+                </div>
+                <div id="digitsSelectSection" class="hidden control-item">
+                    <label>位数:
+                        <select id="digitsSelect">
+                            <option value="1">1位</option>
+                            <option value="2" selected>2位</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <button id="downloadAsciiBtn" disabled>下载字符画(Markdown)</button>
+        </div>
+        
+        <!-- 预览区域 -->
+        <div class="preview-section">
+            <h2>预览</h2>
+            <div class="preview-container">
+                <div class="image-preview">
+                    <h3>处理后的图片</h3>
+                    <canvas id="processedCanvas"></canvas>
+                </div>
+                <div class="ascii-preview">
+                    <h3>字符画</h3>
+                    <pre id="asciiOutput"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// 获取DOM元素
+const imageUpload = document.getElementById('imageUpload');
+const colorMode = document.getElementById('colorMode');
+const binaryMode = document.getElementById('binaryMode');
+const thresholdSlider = document.getElementById('thresholdSlider');
+const thresholdValue = document.getElementById('thresholdValue');
+const thresholdControl = document.getElementById('thresholdControl');
+const heightSlider = document.getElementById('heightSlider');
+const heightValue = document.getElementById('heightValue');
+const downloadImgBtn = document.getElementById('downloadImgBtn');
+const textMode = document.getElementById('textMode');
+const charSetInput = document.getElementById('charSetInput');
+const charSetSection = document.getElementById('charSetSection');
+const baseSelect = document.getElementById('baseSelect');
+const baseSelectSection = document.getElementById('baseSelectSection');
+const digitsSelect = document.getElementById('digitsSelect');
+const digitsSelectSection = document.getElementById('digitsSelectSection');
+const textInputSection = document.getElementById('textInputSection');
+const colorTextMode = document.getElementById('colorTextMode');
+const downloadAsciiBtn = document.getElementById('downloadAsciiBtn');
+const processedCanvas = document.getElementById('processedCanvas');
+const asciiOutput = document.getElementById('asciiOutput');
+
+const ctx = processedCanvas.getContext('2d');
+let processedImageData = null;
+let originalImage = null;
+
+// 初始化UI状态
+thresholdControl.classList.add('hidden');
+textInputSection.classList.add('hidden');
+baseSelectSection.classList.add('hidden');
+
+// 事件监听器
+binaryMode.addEventListener('change', () => {
+    thresholdControl.classList.toggle('hidden', !binaryMode.checked);
+    if (originalImage) processImage();
+});
+
+textMode.addEventListener('change', () => {
+    textInputSection.classList.toggle('hidden', !textMode.checked);
+    charSetSection.classList.toggle('hidden', textMode.checked);
+    baseSelectSection.classList.toggle('hidden', !textMode.checked);
+    digitsSelectSection.classList.toggle('hidden', !textMode.checked);
+    if (processedImageData) generateAsciiArt();
+});
+
+thresholdSlider.addEventListener('input', () => {
+    const value = parseInt(thresholdSlider.value);
+    thresholdValue.textContent = (value / 255).toFixed(3);
+    if (originalImage) processImage();
+});
+
+heightSlider.addEventListener('input', () => {
+    heightValue.textContent = `${heightSlider.value}px`;
+    if (originalImage) processImage();
+});
+
+colorMode.addEventListener('change', () => {
+    if (originalImage) processImage();
+});
+
+charSetInput.addEventListener('input', () => {
+    if (processedImageData) generateAsciiArt();
+});
+
+baseSelect.addEventListener('change', () => {
+    if (processedImageData) generateAsciiArt();
+});
+
+digitsSelect.addEventListener('change', () => {
+    if (processedImageData) generateAsciiArt();
+});
+
+colorTextMode.addEventListener('change', () => {
+    if (processedImageData) generateAsciiArt();
+});
+
+imageUpload.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            originalImage = new Image();
+            originalImage.onload = () => {
+                processImage();
+            };
+            originalImage.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+});
+
+downloadImgBtn.addEventListener('click', downloadProcessedImage);
+downloadAsciiBtn.addEventListener('click', downloadAsciiArt);
+
+// 处理图片
+function processImage() {
+    if (!originalImage) return;
+    
+    // 获取目标高度
+    const targetHeight = parseInt(heightSlider.value);
+    // 计算宽度保持比例
+    const aspectRatio = originalImage.width / originalImage.height;
+    const targetWidth = Math.round(targetHeight * aspectRatio);
+    
+    // 设置canvas尺寸
+    processedCanvas.width = targetWidth;
+    processedCanvas.height = targetHeight;
+    
+    // 绘制图片
+    ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+    
+    // 获取图片数据
+    const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+    const data = imageData.data;
+    
+    // 非彩色模式：转换为灰度
+    if (!colorMode.checked) {
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            
+            // 灰度计算
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            
+            // 二值化处理
+            if (binaryMode.checked) {
+                const threshold = parseInt(thresholdSlider.value);
+                const binary = gray > threshold ? 255 : 0;
+                data[i] = binary;
+                data[i + 1] = binary;
+                data[i + 2] = binary;
+            } else {
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+            }
+        }
+    } 
+    // 彩色模式下的二值化
+    else if (binaryMode.checked) {
+        const threshold = parseInt(thresholdSlider.value);
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const avg = (r + g + b) / 3;
+            const binary = avg > threshold ? 255 : 0;
+            data[i] = binary;
+            data[i + 1] = binary;
+            data[i + 2] = binary;
+        }
+    }
+    
+    // 更新图片数据
+    ctx.putImageData(imageData, 0, 0);
+    processedImageData = imageData;
+    
+    // 启用下载按钮
+    downloadImgBtn.disabled = false;
+    // 自动生成字符画
+    generateAsciiArt();
+}
+
+// 生成字符画
+function generateAsciiArt() {
+    if (!processedImageData) return;
+    
+    const {width, height, data} = processedImageData;
+    let asciiResult = '';
+    
+    // 字符集处理
+    let charSet = charSetInput.value;
+    if (!textMode.checked && charSet === '') {
+        // 默认字符集：数字和字母
+        charSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    }
+    
+    for (let y = 0; y < height; y++) {
+        let line = '';
+        for (let x = 0; x < width; x++) {
+            const index = (y * width + x) * 4;
+            const r = data[index];
+            const g = data[index + 1];
+            const b = data[index + 2];
+            
+            let char;
+            // 文本模式：使用进制表示颜色
+            if (textMode.checked) {
+                const base = parseInt(baseSelect.value);
+                const digits = parseInt(digitsSelect.value);
+                const gray = (r + g + b) / 3;
+                const maxValue = Math.pow(base, digits) - 1;
+                const normalizedValue = Math.round((gray / 255) * maxValue);
+                char = normalizedValue.toString(base).padStart(digits, '0');
+            } 
+            // 字符集模式：使用自定义字符
+            else if (charSet) {
+                const gray = (r + g + b) / 3;
+                const charIndex = Math.floor((gray / 255) * (charSet.length - 1));
+                char = charSet[charIndex];
+            } 
+            // 默认：随机字符
+            else {
+                char = String.fromCharCode(Math.floor(Math.random() * 94) + 33);
+            }
+            
+            // 添加颜色样式 - Markdown兼容格式
+            if (colorTextMode.checked) {
+                const hexColor = rgbToHex(r, g, b);
+                line += `<font color="${hexColor}">${char}</font>`;
+            } else {
+                line += char;
+            }
+        }
+        asciiResult += line + '\n';
+    }
+    
+    asciiOutput.innerHTML = asciiResult;
+    downloadAsciiBtn.disabled = false;
+}
+
+// 下载处理后的图片
+function downloadProcessedImage() {
+    const link = document.createElement('a');
+    link.download = 'processed_image.png';
+    link.href = processedCanvas.toDataURL('image/png');
+    link.click();
+}
+
+// RGB转十六进制（修正版）
+function rgbToHex(r, g, b) {
+    const toHex = (c) => {
+        const hex = c.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    };
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// 下载字符画(Markdown格式)
+function downloadAsciiArt() {
+    const content = asciiOutput.innerHTML;
+    const blob = new Blob([content], {type: 'text/markdown'});
+    const link = document.createElement('a');
+    link.download = 'ascii_art.md';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+}
+    </script>
+</body>
+</html>

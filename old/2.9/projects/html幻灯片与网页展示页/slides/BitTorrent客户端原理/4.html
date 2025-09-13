@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitTorrent关键技术</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            padding: 40px 70px 20px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 70px 40px;
+        }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            flex-grow: 1;
+        }
+        .tech-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background-color: #64b5f6;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: rgba(100, 181, 246, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .card-icon i {
+            font-size: 26px;
+            color: #64b5f6;
+        }
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #90caf9;
+        }
+        .card-content {
+            flex-grow: 1;
+        }
+        .feature-list {
+            list-style-type: none;
+        }
+        .feature-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        .feature-item i {
+            color: #64b5f6;
+            font-size: 20px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .feature-text {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .feature-text strong {
+            color: #bbdefb;
+            font-weight: 600;
+        }
+        .highlight {
+            background-color: rgba(100, 181, 246, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .message-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .message-type {
+            background-color: rgba(100, 181, 246, 0.15);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        .message-type i {
+            font-size: 16px;
+            margin-right: 5px;
+            color: #64b5f6;
+        }
+        .state-diagram {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .state-box {
+            background-color: rgba(100, 181, 246, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            width: 48%;
+        }
+        .state-title {
+            font-weight: 600;
+            color: #90caf9;
+            margin-bottom: 5px;
+        }
+        .state-desc {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">BitTorrent关键技术</h1>
+        </div>
+        <div class="content">
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">grid_view</i>
+                        </div>
+                        <h2 class="card-title">分块下载机制</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">content_cut</i>
+                                <div class="feature-text"><strong>文件分块</strong> - 文件被分割为<span class="highlight">256KB</span>固定大小的块</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">view_module</i>
+                                <div class="feature-text"><strong>切片传输</strong> - 每个块再分为<span class="highlight">16KB</span>的切片作为基本传输单位</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">shuffle</i>
+                                <div class="feature-text"><strong>随机策略</strong> - 以随机顺序请求下载文件块，提高效率</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">priority_high</i>
+                                <div class="feature-text"><strong>稀有优先</strong> - 优先下载拥有节点最少的分块，维持平衡</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">verified</i>
+                                <div class="feature-text"><strong>哈希验证</strong> - 每个块下载后进行SHA1哈希验证确保完整性</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">message</i>
+                        </div>
+                        <h2 class="card-title">消息类型</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">format_list_numbered</i>
+                                <div class="feature-text"><strong>消息格式</strong> - <span class="highlight">&lt;length prefix&gt;&lt;type id&gt;&lt;payload&gt;</span></div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">sync</i>
+                                <div class="feature-text"><strong>Keep-Alive</strong> - 每2分钟发送一次，维持连接</div>
+                            </li>
+                        </ul>
+                        
+                        <div class="message-types">
+                            <div class="message-type"><i class="material-icons">block</i>choke</div>
+                            <div class="message-type"><i class="material-icons">check_circle</i>unchoke</div>
+                            <div class="message-type"><i class="material-icons">thumb_up</i>interested</div>
+                            <div class="message-type"><i class="material-icons">thumb_down</i>not interested</div>
+                            <div class="message-type"><i class="material-icons">done_all</i>have</div>
+                            <div class="message-type"><i class="material-icons">grid_on</i>bitfield</div>
+                            <div class="message-type"><i class="material-icons">download</i>request</div>
+                            <div class="message-type"><i class="material-icons">upload</i>piece</div>
+                            <div class="message-type"><i class="material-icons">cancel</i>cancel</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">settings</i>
+                        </div>
+                        <h2 class="card-title">状态机制</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">memory</i>
+                                <div class="feature-text"><strong>状态机</strong> - 每个节点维护一个四比特位的状态机</div>
+                            </li>
+                        </ul>
+                        
+                        <div class="state-diagram">
+                            <div class="state-box">
+                                <div class="state-title">本地状态</div>
+                                <div class="state-desc">
+                                    <strong>am_choking</strong>: 是否阻塞对方<br>
+                                    <strong>am_interested</strong>: 是否对对方感兴趣
+                                </div>
+                            </div>
+                            <div class="state-box">
+                                <div class="state-title">远程状态</div>
+                                <div class="state-desc">
+                                    <strong>peer_choking</strong>: 对方是否阻塞我<br>
+                                    <strong>peer_interested</strong>: 对方是否对我感兴趣
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <ul class="feature-list" style="margin-top: 15px;">
+                            <li class="feature-item">
+                                <i class="material-icons">download</i>
+                                <div class="feature-text"><strong>下载条件</strong> - 对对方感兴趣且对方未阻塞</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">upload</i>
+                                <div class="feature-text"><strong>上传条件</strong> - 对方感兴趣且未阻塞对方</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="material-icons">balance</i>
+                        </div>
+                        <h2 class="card-title">阻塞算法</h2>
+                    </div>
+                    <div class="card-content">
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="material-icons">block</i>
+                                <div class="feature-text"><strong>初始状态</strong> - 对所有peer节点都是<span class="highlight">choked</span>状态</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">timer</i>
+                                <div class="feature-text"><strong>定期评估</strong> - 每10秒统计一次节点下载速度</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">speed</i>
+                                <div class="feature-text"><strong>最优选择</strong> - 选择下载速度最快的4个节点解除阻塞</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">thumb_up</i>
+                                <div class="feature-text"><strong>兴趣条件</strong> - 只对当前节点感兴趣的节点解除阻塞</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">swap_horiz</i>
+                                <div class="feature-text"><strong>公平机制</strong> - 防止"只下载不上传"的自私行为</div>
+                            </li>
+                            <li class="feature-item">
+                                <i class="material-icons">trending_up</i>
+                                <div class="feature-text"><strong>激励上传</strong> - 上传越多，获得解除阻塞的机会越大</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

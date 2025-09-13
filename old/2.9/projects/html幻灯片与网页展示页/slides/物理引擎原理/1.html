@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 概述</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4da6ff, #0a4b78);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-12 flex flex-col">
+        <h1 class="title text-center">物理引擎实现原理</h1>
+        <h2 class="text-2xl font-semibold text-center mb-8 text-blue-200">概述</h2>
+        
+        <div class="grid grid-cols-2 gap-8 flex-grow">
+            <div class="card flex flex-col">
+                <div class="icon-circle self-start">
+                    <i class="fas fa-cogs text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-blue-300">定义</h3>
+                <p class="text-lg">物理引擎是利用物理规则模拟物体运动和碰撞的软件模块</p>
+                <ul class="list-disc pl-6 mt-4 space-y-2">
+                    <li>模拟现实世界中的物理现象</li>
+                    <li>处理重力、弹力、摩擦力等作用力</li>
+                    <li>提供碰撞、关节等约束的合理反馈</li>
+                </ul>
+            </div>
+            
+            <div class="card flex flex-col">
+                <div class="icon-circle self-start">
+                    <i class="fas fa-gamepad text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-blue-300">应用场景</h3>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>游戏开发 - 角色控制、布娃娃系统</li>
+                    <li>动画制作 - 真实物理效果模拟</li>
+                    <li>虚拟现实 - 交互式物理体验</li>
+                    <li>工程仿真 - 机械系统模拟</li>
+                    <li>教育科研 - 物理现象可视化</li>
+                </ul>
+            </div>
+            
+            <div class="card col-span-2 flex flex-col">
+                <div class="icon-circle self-start">
+                    <i class="fas fa-tools text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-blue-300">主要功能</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-900 bg-opacity-50 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">刚体动力学</h4>
+                        <p>模拟物体在力作用下的运动，包括线性运动和旋转运动</p>
+                    </div>
+                    <div class="bg-blue-900 bg-opacity-50 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">碰撞检测</h4>
+                        <p>检测物体之间的碰撞，计算碰撞点和碰撞法线</p>
+                    </div>
+                    <div class="bg-blue-900 bg-opacity-50 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">约束解决</h4>
+                        <p>处理碰撞约束和关节约束，保持物体间的物理关系</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center text-sm text-blue-200 opacity-70">
+            <p>常见物理引擎: Box2D, PhysX, Bullet, Havok, Chaos</p>
+        </div>
+    </div>
+</body>
+</html>

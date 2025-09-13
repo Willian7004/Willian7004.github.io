@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用html根据以下要求创建一个程序：
+1. 创建输入框用于输入方程。
+2. 自动转换输入内容中的中文括号、中括号和大括号。
+3. 支持四则运算、乘方以及逻辑运算符。输入角度符号“°”时自动转换该符号前的数字或变量。
+4. 创建下拉菜单用于选择进制，可选十进制、八进制、二进制和十六进制，默认为十进制。
+5. 所有字母视为变量，每个字母为一个变量，区分大小写，连续的多个字母视为相乘。但包含三角函数符号时应当作为三角函数处理（此时三角函数符号后的一个字母为自变量）。
+6. 对于得到的所有变量，在下方分别创建输入框，输入至剩余一个变量时解方程并在下方显示最后一个变量的值。
+7. 创建两个界面，分别用于进制转换和直接计算（同样采用前面的运算符处理方法）。如果窗口宽度>高度则在右边对这两个界面使用上下布局；如果窗口宽度<高度则在下方对这两个界面使用左右布局。
+
+注：解方程功能未实现，不过可以通过直接计算功能实现类似效果。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学工具箱</title>
+    <style>
+:root {
+    --primary-color: #1e88e5;
+    --secondary-color: #0d47a1;
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --border-color: #ddd;
+    --error-color: #e53935;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    display: grid;
+    gap: 10px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: calc(100vh - 40px);
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .container {
+        grid-template-areas:
+            "equation"
+            "direct-conversion";
+        grid-template-rows: auto 1fr;
+    }
+    
+    #equation-section {
+        grid-area: equation;
+    }
+    
+    .direct-conversion-container {
+        grid-area: direct-conversion;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .container {
+        grid-template-areas:
+            "equation direct-conversion";
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    #equation-section {
+        grid-area: equation;
+    }
+    
+    .direct-conversion-container {
+        grid-area: direct-conversion;
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+#equation-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.direct-conversion-container {
+    height: 100%;
+}
+
+#direct-calculation, #conversion-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.tool-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+input[type="text"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+#variables-container {
+    margin: 15px 0;
+}
+
+.variable-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.variable-input label {
+    width: 80px;
+    margin-bottom: 0;
+}
+
+.variable-input input {
+    flex: 1;
+}
+
+#result, #conversion-result {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    min-height: 50px;
+}
+
+.error {
+    color: var(--error-color);
+    margin-top: 5px;
+    font-size: 14px;
+}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script>
+// 初始化math.js扩展
+math.import({
+    // 添加位运算支持
+    'bitAnd': function(a, b) { return a & b; },
+    'bitOr': function(a, b) { return a | b; },
+    'bitXor': function(a, b) { return a ^ b; },
+    'bitNot': function(a, b) { return ~a; },
+    'leftShift': function(a, b) { return a << b; },
+    'rightArithShift': function(a, b) { return a >> b; },
+    'rightLogShift': function(a, b) { return a >>> b; }
+}, { override: true });
+
+// 直接计算作用域
+const calculationScope = {};
+
+// 括号转换映射
+const bracketMap = {
+    '（': '(', '）': ')',
+    '【': '[', '】': ']',
+    '｛': '{', '｝': '}'
+};
+
+// 全局DOM元素引用
+let equationInput, variablesContainer, resultDisplay, 
+    numberInput, baseSelect, conversionResult, 
+    expressionInput, calculationResult;
+
+// 页面加载完成后初始化DOM引用和事件
+function initPage() {
+    // 获取DOM元素引用
+    equationInput = document.getElementById('equation');
+    variablesContainer = document.getElementById('variables-container');
+    resultDisplay = document.getElementById('result');
+    numberInput = document.getElementById('number');
+    baseSelect = document.getElementById('base');
+    conversionResult = document.getElementById('conversion-result');
+    expressionInput = document.getElementById('expression');
+    calculationResult = document.getElementById('calculation-result');
+
+    // 自动转换括号和角度符号
+    equationInput.addEventListener('input', function() {
+        let value = this.value;
+        // 替换中文括号
+        Object.keys(bracketMap).forEach(cnBracket => {
+            const regex = new RegExp(cnBracket, 'g');
+            value = value.replace(regex, bracketMap[cnBracket]);
+        });
+        // 替换角度符号为弧度
+        value = convertDegrees(value);
+        this.value = value;
+        
+        // 提取变量并生成输入框
+        extractVariables(value);
+    });
+
+    // 绑定直接计算事件（输入变化时自动计算）
+    expressionInput.addEventListener('input', calculateExpression);
+    
+    // 绑定进制转换事件（输入变化时自动转换）
+    numberInput.addEventListener('input', convertBase);
+    baseSelect.addEventListener('change', convertBase);
+    
+    // 初始提取变量
+    extractVariables(equationInput.value);
+}
+
+// 提取变量并生成输入框
+function extractVariables(equation) {
+    // 清空现有变量容器
+    variablesContainer.innerHTML = '';
+    
+    try {
+        // 检查方程是否包含等号
+        let left = equation;
+        let right = '';
+        if (equation.includes('=')) {
+            // 分割方程为左右两部分
+            [left, right] = equation.split('=').map(part => part.trim());
+        }
+        
+        // 分别解析左右表达式
+        const leftNode = math.parse(left);
+        const rightNode = math.parse(right || '0'); // 如果右边为空，默认为0
+        
+        // 提取所有符号（过滤掉函数名）
+        const symbols = [];
+        [leftNode, rightNode].forEach(node => {
+            node.traverse(function(node) {
+                if (node.isSymbolNode && !math.isFunction(node.name)) {
+                    // 去重
+                    if (!symbols.includes(node.name)) {
+                        symbols.push(node.name);
+                    }
+                }
+            });
+        });
+        
+        // 为每个变量创建输入框
+        symbols.forEach(symbol => {
+            const div = document.createElement('div');
+            div.className = 'variable-input';
+            
+            const label = document.createElement('label');
+            label.textContent = `${symbol}:`;
+            label.htmlFor = `var-${symbol}`;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `var-${symbol}`;
+            input.dataset.variable = symbol;
+            input.placeholder = '输入值';
+            
+            // 添加输入变化监听
+            input.addEventListener('input', solveEquation);
+            
+            div.appendChild(label);
+            div.appendChild(input);
+            variablesContainer.appendChild(div);
+        });
+    } catch (error) {
+        resultDisplay.textContent = `表达式错误: ${error.message}`;
+        resultDisplay.className = 'error';
+    }
+}
+
+// 求解方程
+function solveEquation() {
+    try {
+        const equation = equationInput.value;
+        if (!equation) return;
+        
+        // 检查方程是否包含等号
+        if (!equation.includes('=')) {
+            resultDisplay.textContent = '方程必须包含等号 (=)';
+            resultDisplay.className = 'error';
+            return;
+        }
+        
+        // 分割方程为左右两部分
+        const [left, right] = equation.split('=').map(part => part.trim());
+        
+        // 收集变量值
+        const scope = {};
+        let missingVars = [];
+        
+        document.querySelectorAll('.variable-input input').forEach(input => {
+            const varName = input.dataset.variable;
+            const value = input.value.trim();
+            
+            if (value) {
+                scope[varName] = parseFloat(value);
+            } else {
+                missingVars.push(varName);
+            }
+        });
+        
+        // 检查缺失变量
+        if (missingVars.length === 0) {
+            resultDisplay.textContent = '请至少保留一个变量未输入';
+            resultDisplay.className = 'error';
+            return;
+        }
+        
+        if (missingVars.length > 1) {
+            resultDisplay.textContent = `请为以下变量输入值: ${missingVars.join(', ')}`;
+            resultDisplay.className = '';
+            return;
+        }
+        
+        // 只有一个变量缺失，尝试求解
+        const varToSolve = missingVars[0];
+        
+        try {
+            // 解析左右表达式为节点
+            const leftNode = math.parse(left);
+            const rightNode = math.parse(right);
+            
+            // 构建方程: left - right = 0
+            const equationNode = new math.OperatorNode('-', 'subtract', [leftNode, rightNode]);
+            
+            // 将节点转换为字符串表达式
+            const equationString = equationNode.toString();
+            
+            // 添加π的定义
+            const scopeWithPi = { ...scope, π: Math.PI };
+            
+            // 代数求解
+            const solution = math.solve(equationString, varToSolve, scopeWithPi);
+            
+            if (Array.isArray(solution)) {
+                resultDisplay.innerHTML = `解得 ${varToSolve} = ${solution.join(', ')}`;
+            } else {
+                resultDisplay.innerHTML = `解得 ${varToSolve} = ${solution}`;
+            }
+            resultDisplay.className = '';
+        } catch (solveError) {
+            resultDisplay.textContent = `求解错误: ${solveError.message}`;
+            resultDisplay.className = 'error';
+        }
+    } catch (error) {
+        resultDisplay.textContent = `错误: ${error.message}`;
+        resultDisplay.className = 'error';
+    }
+}
+
+// 角度转换函数
+function convertDegrees(expr) {
+    // 匹配数字+°或变量+°的模式
+    return expr.replace(/([\d\w]+)°|(\)|\s)°|(^|\s)°|°(\s|$)/g, (match, p1, p2, p3, p4) => {
+        if (p1) {
+            return `${p1} * (π/180)`;  // 数字或变量后的°
+        } else if (p2) {
+            return `${p2} * (π/180)`;  // 右括号后的°
+        } else if (p3) {
+            return `${p3} * (π/180)`;  // 行首或空格后的°
+        } else {
+            return ' * (π/180)';       // °后跟空格或行尾
+        }
+    });
+}
+
+// 直接计算
+function calculateExpression() {
+    try {
+        let expr = expressionInput.value.trim();
+        if (!expr) return;
+        
+        // 转换角度符号为弧度
+        expr = convertDegrees(expr);
+        
+        // 创建包含π的作用域
+        const scopeWithPi = { ...calculationScope, π: Math.PI };
+        
+        // 解析并计算表达式
+        const result = math.evaluate(expr, scopeWithPi);
+        calculationResult.textContent = `结果: ${result}`;
+        calculationResult.className = '';
+    } catch (error) {
+        calculationResult.textContent = `计算错误: ${error.message}`;
+        calculationResult.className = 'error';
+    }
+}
+
+// 封装进制转换函数
+function convertBase() {
+    try {
+        const numberStr = numberInput.value.trim();
+        const base = parseInt(baseSelect.value);
+        
+        if (!numberStr) {
+            conversionResult.textContent = '';
+            conversionResult.className = '';
+            return;
+        }
+        
+        // 解析数值（考虑进制）
+        let numberValue;
+        if (numberStr.includes('.')) {
+            // 浮点数处理 - 先按十进制解析
+            numberValue = parseFloat(numberStr);
+        } else {
+            // 整数处理 - 根据选择的进制解析
+            numberValue = parseInt(numberStr, base);
+        }
+        
+        if (isNaN(numberValue)) {
+            conversionResult.textContent = '无效的数值';
+            conversionResult.className = 'error';
+            return;
+        }
+        
+        conversionResult.innerHTML = `
+            <div>十进制: ${numberValue.toString(10)}</div>
+            <div>二进制: ${numberValue.toString(2)}</div>
+            <div>八进制: ${numberValue.toString(8)}</div>
+            <div>十六进制: ${numberValue.toString(16).toUpperCase()}</div>
+        `;
+        conversionResult.className = '';
+    } catch (error) {
+        conversionResult.textContent = `转换错误: ${error.message}`;
+        conversionResult.className = 'error';
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div id="equation-section" class="tool-section">
+            <h2>方程求解</h2>
+            <div class="input-group">
+                <p>求解功能出现math.solve is not a function报错且无法修复，cdn确定正常，调试后也未解决。不过可以通过直接计算功能实现类似效果。</p>
+                <label for="equation">输入方程：</label>
+                <input type="text" id="equation" placeholder="例如: a+b^2 = sin(x)*c">
+            </div>
+            <div id="variables-container"></div>
+            <div id="result"></div>
+        </div>
+
+        <div class="direct-conversion-container">
+            <div id="direct-calculation" class="tool-section">
+                <h2>直接计算</h2>
+                <div class="input-group">
+                    <label for="expression">输入表达式：</label>
+                    <input type="text" id="expression" placeholder="例如: 2+3*sin(x)">
+                </div>
+                <div id="calculation-result"></div>
+            </div>
+
+            <div id="conversion-section" class="tool-section">
+                <h2>进制转换</h2>
+                <div class="input-group">
+                    <label for="number">输入数值：</label>
+                    <input type="text" id="number">
+                </div>
+                <div class="input-group">
+                    <label for="base">选择进制：</label>
+                    <select id="base">
+                        <option value="10">十进制</option>
+                        <option value="8">八进制</option>
+                        <option value="2">二进制</option>
+                        <option value="16">十六进制</option>
+                    </select>
+                </div>
+                <div id="conversion-result"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

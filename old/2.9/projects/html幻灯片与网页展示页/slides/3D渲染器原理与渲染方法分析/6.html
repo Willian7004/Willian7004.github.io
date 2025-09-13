@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光线投射原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a192f 0%, #203a63 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.6);
+        }
+        .ray-box {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        .ray-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(66, 153, 225, 0.8);
+        }
+        .ray-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255, 99, 71, 0.8), rgba(255, 69, 0, 0.8));
+            transform-origin: left center;
+            z-index: 1;
+        }
+        .ray-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(255, 99, 71, 0.9);
+            box-shadow: 0 0 10px rgba(255, 99, 71, 0.8);
+            z-index: 2;
+        }
+        .voxel {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(135, 206, 250, 0.5);
+            border: 1px solid rgba(135, 206, 250, 0.8);
+            transform-style: preserve-3d;
+        }
+        .circuit-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%),
+                linear-gradient(0deg, transparent 98%, rgba(66, 153, 225, 0.8) 2%);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+        .feature-tag {
+            transition: all 0.3s ease;
+        }
+        .feature-tag:hover {
+            transform: scale(1.05);
+            background-color: rgba(255, 99, 71, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- 网格背景 -->
+        <div class="grid-pattern"></div>
+        <div class="circuit-lines"></div>
+        
+        <!-- 主要内容 -->
+        <div class="content flex flex-col h-full py-10 px-12">
+            <h1 class="text-5xl font-bold mb-6 glow tracking-wider text-center">光线投射原理</h1>
+            
+            <div class="flex-grow flex">
+                <!-- 左侧：定义和特点 -->
+                <div class="w-1/2 pr-6 flex flex-col space-y-5">
+                    <!-- 定义 -->
+                    <div class="ray-box bg-blue-900 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-red-300 mb-3 flex items-center">
+                            <i class="fas fa-cube mr-3 text-red-400"></i>定义
+                        </h2>
+                        <p class="text-xl text-blue-100 ml-10">一种<span class="text-red-200 font-semibold">直接体绘制技术</span>，主要用于处理<span class="text-red-200 font-semibold">3D体数据</span></p>
+                    </div>
+                    
+                    <!-- 与光线追踪的区别 -->
+                    <div class="ray-box bg-blue-800 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-red-300 mb-3 flex items-center">
+                            <i class="fas fa-not-equal mr-3 text-red-400"></i>与光线追踪的区别
+                        </h2>
+                        <ul class="list-disc ml-10 text-lg text-blue-100 space-y-2">
+                            <li><span class="text-red-200 font-semibold">不考虑</span>二次反射和多次反射</li>
+                            <li><span class="text-red-200 font-semibold">不产生</span>二次射线</li>
+                            <li>主要关注<span class="text-red-200 font-semibold">体数据内部</span>而非表面</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 特点 -->
+                    <div class="ray-box bg-blue-700 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-red-300 mb-3 flex items-center">
+                            <i class="fas fa-fingerprint mr-3 text-red-400"></i>特点
+                        </h2>
+                        <div class="flex flex-wrap gap-3 ml-6">
+                            <span class="feature-tag bg-red-900/30 px-4 py-2 rounded-lg text-red-100 border border-red-700/30">计算量相对较小</span>
+                            <span class="feature-tag bg-red-900/30 px-4 py-2 rounded-lg text-red-100 border border-red-700/30">适合处理体数据</span>
+                            <span class="feature-tag bg-red-900/30 px-4 py-2 rounded-lg text-red-100 border border-red-700/30">半透明效果</span>
+                            <span class="feature-tag bg-red-900/30 px-4 py-2 rounded-lg text-red-100 border border-red-700/30">不适合表面渲染</span>
+                            <span class="feature-tag bg-red-900/30 px-4 py-2 rounded-lg text-red-100 border border-red-700/30">高质量梯度显示</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：工作流程和应用场景 -->
+                <div class="w-1/2 pl-6 flex flex-col space-y-5">
+                    <!-- 工作流程 -->
+                    <div class="ray-box bg-blue-800 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-red-300 mb-3 flex items-center">
+                            <i class="fas fa-project-diagram mr-3 text-red-400"></i>工作流程
+                        </h2>
+                        <div class="relative h-56 bg-blue-900/30 rounded-lg p-3 mb-3">
+                            <!-- 体数据表示 -->
+                            <div class="absolute left-10 top-5 w-32 h-32 border border-blue-400 grid grid-cols-4 grid-rows-4">
+                                <!-- 体素网格 -->
+                                <div class="voxel" style="left: 0; top: 0;"></div>
+                                <div class="voxel" style="left: 10px; top: 0;"></div>
+                                <div class="voxel" style="left: 20px; top: 0;"></div>
+                                <div class="voxel" style="left: 30px; top: 0;"></div>
+                                <div class="voxel" style="left: 0; top: 10px;"></div>
+                                <div class="voxel" style="left: 10px; top: 10px;"></div>
+                                <div class="voxel" style="left: 20px; top: 10px;"></div>
+                                <div class="voxel" style="left: 30px; top: 10px;"></div>
+                                <div class="voxel" style="left: 0; top: 20px;"></div>
+                                <div class="voxel" style="left: 10px; top: 20px;"></div>
+                                <div class="voxel" style="left: 20px; top: 20px;"></div>
+                                <div class="voxel" style="left: 30px; top: 20px;"></div>
+                                <div class="voxel" style="left: 0; top: 30px;"></div>
+                                <div class="voxel" style="left: 10px; top: 30px;"></div>
+                                <div class="voxel" style="left: 20px; top: 30px;"></div>
+                                <div class="voxel" style="left: 30px; top: 30px;"></div>
+                            </div>
+                            
+                            <!-- 光线投射 -->
+                            <div class="ray-line" style="left: 50px; top: 20px; width: 80px; transform: rotate(0deg);"></div>
+                            <div class="ray-dot" style="left: 130px; top: 20px;"></div>
+                            
+                            <div class="ray-line" style="left: 130px; top: 20px; width: 60px; transform: rotate(45deg);"></div>
+                            <div class="ray-dot" style="left: 175px; top: 62px;"></div>
+                            
+                            <div class="ray-line" style="left: 130px; top: 20px; width: 60px; transform: rotate(-45deg);"></div>
+                            <div class="ray-dot" style="left: 175px; top: -22px;"></div>
+                            
+                            <!-- 标签 -->
+                            <div class="absolute left-2 top-2 text-sm text-blue-300">体数据</div>
+                            <div class="absolute left-50 top-5 text-sm text-red-300">光线投射</div>
+                            <div class="absolute right-5 top-10 text-sm text-blue-300">采样点</div>
+                        </div>
+                        
+                        <!-- 工作流程步骤 -->
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <div class="bg-red-900/30 px-4 py-2 rounded-lg text-center">
+                                <i class="fas fa-play-circle text-red-300 mr-2"></i>
+                                <span class="text-red-100">从屏幕像素发射光线</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                            <div class="bg-red-900/30 px-4 py-2 rounded-lg text-center">
+                                <i class="fas fa-arrows-alt-h text-red-300 mr-2"></i>
+                                <span class="text-red-100">穿过体数据</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                            <div class="bg-red-900/30 px-4 py-2 rounded-lg text-center">
+                                <i class="fas fa-chart-bar text-red-300 mr-2"></i>
+                                <span class="text-red-100">采样计算</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-blue-400 self-center"></i>
+                            <div class="bg-red-900/30 px-4 py-2 rounded-lg text-center">
+                                <i class="fas fa-layer-group text-red-300 mr-2"></i>
+                                <span class="text-red-100">颜色合成</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 应用场景 -->
+                    <div class="ray-box bg-blue-700 bg-opacity-40 rounded-lg p-5">
+                        <h2 class="text-2xl font-semibold text-red-300 mb-3 flex items-center">
+                            <i class="fas fa-laptop-medical mr-3 text-red-400"></i>主要应用
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="feature-tag bg-red-900/20 p-3 rounded-lg flex flex-col items-center">
+                                <i class="fas fa-x-ray text-3xl text-red-300 mb-2"></i>
+                                <span class="text-red-100">医学成像</span>
+                                <span class="text-sm text-red-200 mt-1">CT、MRI</span>
+                            </div>
+                            <div class="feature-tag bg-red-900/20 p-3 rounded-lg flex flex-col items-center">
+                                <i class="fas fa-flask text-3xl text-red-300 mb-2"></i>
+                                <span class="text-red-100">科学可视化</span>
+                                <span class="text-sm text-red-200 mt-1">流体、气象</span>
+                            </div>
+                            <div class="feature-tag bg-red-900/20 p-3 rounded-lg flex flex-col items-center">
+                                <i class="fas fa-atom text-3xl text-red-300 mb-2"></i>
+                                <span class="text-red-100">计算流体力学</span>
+                                <span class="text-sm text-red-200 mt-1">CFD模拟</span>
+                            </div>
+                            <div class="feature-tag bg-red-900/20 p-3 rounded-lg flex flex-col items-center">
+                                <i class="fas fa-brain text-3xl text-red-300 mb-2"></i>
+                                <span class="text-red-100">脑科学</span>
+                                <span class="text-sm text-red-200 mt-1">神经元追踪</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部：技术优势 -->
+            <div class="mt-5 bg-blue-900 bg-opacity-30 rounded-lg p-3">
+                <h3 class="text-xl font-semibold text-blue-300 mb-2 flex items-center">
+                    <i class="fas fa-trophy mr-2"></i>技术优势
+                </h3>
+                <div class="flex justify-around text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-eye text-2xl text-red-300 mb-1"></i>
+                        <span class="text-blue-100">内部结构可视化</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-tachometer-alt text-2xl text-red-300 mb-1"></i>
+                        <span class="text-blue-100">高性能渲染</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-chart-area text-2xl text-red-300 mb-1"></i>
+                        <span class="text-blue-100">梯度显示清晰</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-microscope text-2xl text-red-300 mb-1"></i>
+                        <span class="text-blue-100">微观结构分析</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部装饰 -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 z-10"></div>
+    </div>
+</body>
+</html>

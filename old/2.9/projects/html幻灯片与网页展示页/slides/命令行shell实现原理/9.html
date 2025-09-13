@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell的高级特性</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .code {
+            color: #f8f8f2;
+        }
+        .comment {
+            color: #6272a4;
+        }
+        .keyword {
+            color: #ff79c6;
+        }
+        .function {
+            color: #50fa7b;
+        }
+        .string {
+            color: #f1fa8c;
+        }
+        .feature-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .builtin-card {
+            border-left-color: #ff79c6;
+        }
+        .job-card {
+            border-left-color: #50fa7b;
+        }
+        .history-card {
+            border-left-color: #8be9fd;
+        }
+        .alias-card {
+            border-left-color: #ffb86c;
+        }
+        .completion-card {
+            border-left-color: #bd93f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <h1 class="text-4xl font-bold mb-8 text-center">Shell的高级特性</h1>
+        
+        <div class="flex flex-grow">
+            <!-- 左侧：内置命令和作业控制 -->
+            <div class="w-1/2 pr-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">内置命令</h2>
+                    <div class="feature-card builtin-card p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-cogs text-3xl mr-4 text-pink-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">Shell内部命令</div>
+                                <div class="text-sm text-gray-300">无需创建新进程直接执行</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">cd</div>
+                                <div class="text-sm">切换目录</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">pwd</div>
+                                <div class="text-sm">显示当前目录</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">export</div>
+                                <div class="text-sm">设置环境变量</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">alias</div>
+                                <div class="text-sm">创建命令别名</div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal p-3 text-sm">
+                            <pre><span class="comment"># 内置命令执行示例</span>
+<span class="code">time cd /tmp  <span class="comment"># 几乎瞬间完成</span></span>
+<span class="code">time ls /tmp  <span class="comment"># 需要创建新进程</span></span></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">作业控制</h2>
+                    <div class="feature-card job-card p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-tasks text-3xl mr-4 text-green-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">多任务管理</div>
+                                <div class="text-sm text-gray-300">同时运行和管理多个进程</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">&</div>
+                                <div class="text-sm">后台运行</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">fg</div>
+                                <div class="text-sm">前台运行</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">bg</div>
+                                <div class="text-sm">后台运行</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">jobs</div>
+                                <div class="text-sm">查看后台任务</div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal p-3 text-sm">
+                            <pre><span class="comment"># 作业控制示例</span>
+<span class="code">sleep 300 &          <span class="comment"># 后台运行</span></span>
+<span class="code">jobs                <span class="comment"># 查看后台任务</span></span>
+<span class="code">fg %1               <span class="comment"># 将任务1调至前台</span></span>
+<span class="code">[Ctrl+Z]            <span class="comment"># 暂停前台任务</span></span></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-card history-card p-5 flex-grow">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-history text-3xl mr-4 text-blue-400"></i>
+                        <div>
+                            <div class="text-xl font-bold">命令历史</div>
+                            <div class="text-sm text-gray-300">记录和重用之前执行的命令</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                            <div class="font-bold mb-1">history</div>
+                            <div class="text-sm">显示历史命令</div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                            <div class="font-bold mb-1">!</div>
+                            <div class="text-sm">执行历史命令</div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                            <div class="font-bold mb-1">Ctrl+R</div>
+                            <div class="text-sm">反向搜索</div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                            <div class="font-bold mb-1">↑/↓</div>
+                            <div class="text-sm">浏览历史</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：命令别名、自动补全和其他特性 -->
+            <div class="w-1/2 pl-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">命令别名</h2>
+                    <div class="feature-card alias-card p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-tag text-3xl mr-4 text-yellow-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">命令简化和定制</div>
+                                <div class="text-sm text-gray-300">为常用命令创建简短别名</div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal p-3 text-sm mb-4">
+                            <pre><span class="comment"># 别名定义与使用</span>
+<span class="code">alias ll='ls -alF'</span>
+<span class="code">alias gs='git status'</span>
+<span class="code">alias ..='cd ..'</span>
+
+<span class="comment"># 查看所有别名</span>
+<span class="code">alias</span></pre>
+                        </div>
+                        
+                        <div class="bg-blue-900/50 p-3 rounded-lg">
+                            <div class="font-bold mb-2">持久化别名</div>
+                            <div class="text-sm">
+                                将别名定义添加到 <span class="code">~/.bashrc</span> 或 <span class="code">~/.zshrc</span> 等配置文件中
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">自动补全</h2>
+                    <div class="feature-card completion-card p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-magic text-3xl mr-4 text-purple-400"></i>
+                            <div>
+                                <div class="text-xl font-bold">智能命令补全</div>
+                                <div class="text-sm text-gray-300">提高命令输入效率</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">Tab</div>
+                                <div class="text-sm">命令/文件补全</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">Tab Tab</div>
+                                <div class="text-sm">显示所有选项</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">Ctrl+X Ctrl+E</div>
+                                <div class="text-sm">编辑命令行</div>
+                            </div>
+                            <div class="bg-blue-900/50 p-3 rounded-lg text-center">
+                                <div class="font-bold mb-1">Ctrl+U</div>
+                                <div class="text-sm">删除至行首</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 p-5 rounded-lg flex-grow">
+                    <h2 class="text-3xl font-bold mb-4 text-blue-300">其他高级特性</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-900/50 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-code-branch text-xl mr-2 text-green-400"></i>
+                                <div class="font-bold">条件执行</div>
+                            </div>
+                            <div class="text-sm">
+                                <span class="code">&&</span> 逻辑与<br>
+                                <span class="code">||</span> 逻辑或
+                            </div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-file-code text-xl mr-2 text-blue-400"></i>
+                                <div class="font-bold">通配符扩展</div>
+                            </div>
+                            <div class="text-sm">
+                                <span class="code">*</span> 任意字符<br>
+                                <span class="code">?</span> 单个字符
+                            </div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-exchange-alt text-xl mr-2 text-yellow-400"></i>
+                                <div class="font-bold">进程间通信</div>
+                            </div>
+                            <div class="text-sm">
+                                <span class="code">|</span> 管道<br>
+                                <span class="code">;</span> 命令分隔
+                            </div>
+                        </div>
+                        <div class="bg-blue-900/50 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-terminal text-xl mr-2 text-pink-400"></i>
+                                <div class="font-bold">Shell配置</div>
+                            </div>
+                            <div class="text-sm">
+                                <span class="code">~/.bashrc</span><br>
+                                <span class="code">~/.profile</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>从输入URL到页面加载</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .step-box {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .step-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 40px;
+            height: 40px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .arrow {
+            position: absolute;
+            color: #4285f4;
+            font-size: 1.5rem;
+        }
+        .highlight {
+            color: #4285f4;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-4xl font-bold text-blue-800 mb-2">从输入URL到页面加载</h1>
+            <p class="text-xl text-blue-600">浏览器导航流程全解析</p>
+        </div>
+        
+        <!-- Main Content: Navigation Flow -->
+        <div class="flex-grow flex flex-col">
+            <!-- Navigation Flow Diagram -->
+            <div class="relative flex flex-col space-y-4 mb-6">
+                <!-- Step 1: Input Processing -->
+                <div class="step-box p-4 pl-8 flex items-center">
+                    <div class="step-number">1</div>
+                    <div class="flex items-center">
+                        <i class="fas fa-keyboard text-3xl text-blue-500 mr-4"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">处理输入</h3>
+                            <p class="text-gray-600">UI线程判断输入内容是<span class="highlight">URL</span>还是<span class="highlight">搜索查询</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Arrow down -->
+                <div class="flex justify-center">
+                    <i class="fas fa-arrow-down text-2xl text-blue-400"></i>
+                </div>
+                
+                <!-- Step 2: Start Navigation -->
+                <div class="step-box p-4 pl-8 flex items-center">
+                    <div class="step-number">2</div>
+                    <div class="flex items-center">
+                        <i class="fas fa-paper-plane text-3xl text-blue-500 mr-4"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">开始导航</h3>
+                            <p class="text-gray-600">UI线程通知<span class="highlight">网络线程</span>获取网页内容，显示加载指示器</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Arrow down -->
+                <div class="flex justify-center">
+                    <i class="fas fa-arrow-down text-2xl text-blue-400"></i>
+                </div>
+                
+                <!-- Step 3: DNS & TCP -->
+                <div class="step-box p-4 pl-8 flex items-center">
+                    <div class="step-number">3</div>
+                    <div class="flex items-center">
+                        <i class="fas fa-network-wired text-3xl text-blue-500 mr-4"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">网络请求</h3>
+                            <p class="text-gray-600"><span class="highlight">DNS解析</span>域名 → <span class="highlight">TCP连接</span>建立 → <span class="highlight">TLS握手</span>（HTTPS）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Split Flow -->
+            <div class="flex space-x-4 mb-6">
+                <!-- Left Column: Response Handling -->
+                <div class="w-1/2 flex flex-col space-y-4">
+                    <!-- Step 4: Response Handling -->
+                    <div class="step-box p-4 pl-8 flex items-center">
+                        <div class="step-number">4</div>
+                        <div class="flex items-center">
+                            <i class="fas fa-file-download text-3xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">读取响应</h3>
+                                <p class="text-gray-600"><span class="highlight">Content-Type检查</span> → <span class="highlight">安全检查</span> → <span class="highlight">响应数据传递</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow down -->
+                    <div class="flex justify-center">
+                        <i class="fas fa-arrow-down text-2xl text-blue-400"></i>
+                    </div>
+                    
+                    <!-- Step 5: Find Renderer -->
+                    <div class="step-box p-4 pl-8 flex items-center">
+                        <div class="step-number">5</div>
+                        <div class="flex items-center">
+                            <i class="fas fa-search text-3xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">查找渲染进程</h3>
+                                <p class="text-gray-600">UI线程查找<span class="highlight">可用渲染进程</span>（可能预先启动）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Commit Navigation -->
+                <div class="w-1/2 flex flex-col space-y-4">
+                    <!-- Step 6: Commit Navigation -->
+                    <div class="step-box p-4 pl-8 flex items-center">
+                        <div class="step-number">6</div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-3xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">确认导航</h3>
+                                <p class="text-gray-600">Browser Process发送<span class="highlight">IPC消息</span>确认导航 → <span class="highlight">更新状态</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow down -->
+                    <div class="flex justify-center">
+                        <i class="fas fa-arrow-down text-2xl text-blue-400"></i>
+                    </div>
+                    
+                    <!-- Step 7: Page Rendering -->
+                    <div class="step-box p-4 pl-8 flex items-center">
+                        <div class="step-number">7</div>
+                        <div class="flex items-center">
+                            <i class="fas fa-paint-brush text-3xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">页面渲染</h3>
+                                <p class="text-gray-600">渲染进程<span class="highlight">解析HTML/CSS</span> → <span class="highlight">构建DOM/CSSOM</span> → <span class="highlight">渲染树</span> → <span class="highlight">布局</span> → <span class="highlight">绘制</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Special Cases -->
+            <div class="bg-white rounded-lg p-5 shadow-md">
+                <h3 class="text-xl font-bold text-blue-700 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i>
+                    特殊情况处理
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-redo-alt text-red-500 mt-1 mr-2"></i>
+                        <div>
+                            <p class="font-medium text-gray-800">重定向处理</p>
+                            <p class="text-sm text-gray-600">网络线程检测到重定向响应头，通知UI线程发起新请求</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-shield-alt text-green-500 mt-1 mr-2"></i>
+                        <div>
+                            <p class="font-medium text-gray-800">安全检查</p>
+                            <p class="text-sm text-gray-600">Safe Browsing检查、CORS检测，阻止恶意站点加载</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-user-secret text-purple-500 mt-1 mr-2"></i>
+                        <div>
+                            <p class="font-medium text-gray-800">Service Worker</p>
+                            <p class="text-sm text-gray-600">可拦截网络请求，从缓存提供资源，改变标准加载流程</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-bolt text-orange-500 mt-1 mr-2"></i>
+                        <div>
+                            <p class="font-medium text-gray-800">导航预加载</p>
+                            <p class="text-sm text-gray-600">UI线程预启动渲染进程，加速页面加载</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

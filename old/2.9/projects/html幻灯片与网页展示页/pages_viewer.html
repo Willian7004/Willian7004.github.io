@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页浏览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* 返回按钮样式 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .back-button:hover {
+            background: #333;
+        }
+
+        /* 网页显示区域 */
+        .page-viewer {
+            padding: 20px;
+            height: 100vh;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 100vh;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 网页列表视图 */
+        .pages-list {
+            padding: 80px 20px 20px;
+            display: none;
+        }
+
+        .pages-list h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .file-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .file-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .file-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .iframe-container {
+                height: calc(100vh - 180px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 网页显示区域 -->
+    <div class="page-viewer" id="page-viewer">
+        <div class="iframe-container">
+            <iframe id="page-iframe" src=""></iframe>
+            <!-- 返回按钮 -->
+            <button class="back-button" id="back-button-iframe" style="position: absolute; top: 20px; left: 20px;">←</button>
+        </div>
+    </div>
+    
+    <!-- 网页列表视图 -->
+    <div class="pages-list" id="pages-list">
+        <h1>网页列表</h1>
+        <div class="file-list" id="file-list">
+            <!-- 文件列表将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            parseUrlParams();
+            setupEventListeners();
+        });
+
+        // 解析URL参数
+        function parseUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pagePath = urlParams.get('page');
+            
+            if (pagePath) {
+                // 显示指定的网页
+                document.getElementById('page-viewer').style.display = 'block';
+                document.getElementById('pages-list').style.display = 'none';
+                
+                const iframe = document.getElementById('page-iframe');
+                iframe.src = decodeURIComponent(pagePath);
+            } else {
+                // 显示网页列表
+                document.getElementById('page-viewer').style.display = 'none';
+                document.getElementById('pages-list').style.display = 'block';
+                
+                loadPagesData();
+            }
+        }
+
+        // 加载网页数据
+        function loadPagesData() {
+            fetch('index.json')
+                .then(response => response.json())
+                .then(data => {
+                    renderFileList(data.pages);
+                })
+                .catch(error => {
+                    console.error('加载索引数据失败:', error);
+                });
+        }
+
+        // 渲染文件列表
+        function renderFileList(pages) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            
+            pages.forEach((page, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <h3>${page.name}</h3>
+                `;
+                fileItem.addEventListener('click', () => {
+                    // 在当前页面显示网页
+                    window.location.href = `?page=${encodeURIComponent(page.path)}`;
+                });
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // iframe上的返回按钮
+            const iframeBackButton = document.getElementById('back-button-iframe');
+            if (iframeBackButton) {
+                iframeBackButton.addEventListener('click', function() {
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

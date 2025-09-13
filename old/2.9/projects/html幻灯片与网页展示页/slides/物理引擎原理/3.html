@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 数值积分方法</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <script src="../../libs/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .method-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            display: inline-block;
+        }
+        .chart-container {
+            height: 180px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-10 flex flex-col">
+        <h1 class="title text-center">数值积分方法</h1>
+        <p class="text-center text-xl text-blue-200 mb-6">物理引擎中用于计算物体速度和位置的核心算法</p>
+        
+        <div class="flex-grow grid grid-cols-3 gap-6">
+            <!-- 欧拉法 -->
+            <div class="method-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mr-4">
+                        <i class="fas fa-equals text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-blue-300">欧拉法</h3>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-lg font-semibold mb-2 text-blue-200">显式欧拉法</h4>
+                    <div class="formula text-center">v(t+h) = v(t) + a(t)·h</div>
+                    <div class="formula text-center">x(t+h) = x(t) + v(t)·h</div>
+                    <p class="text-sm mt-2">简单但精度低，稳定性较差</p>
+                </div>
+                
+                <div class="chart-container mb-4">
+                    <canvas id="explicitChart"></canvas>
+                </div>
+                
+                <div class="mt-auto">
+                    <h4 class="text-lg font-semibold mb-2 text-blue-200">半隐式欧拉法</h4>
+                    <div class="formula text-center">v(t+h) = v(t) + a(t)·h</div>
+                    <div class="formula text-center">x(t+h) = x(t) + v(t+h)·h</div>
+                    <p class="text-sm mt-2">物理引擎中最常用，稳定性较好</p>
+                </div>
+            </div>
+            
+            <!-- RK4 -->
+            <div class="method-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-purple-300">RK4方法</h3>
+                </div>
+                
+                <p class="mb-4">四阶龙格-库塔方法，精度高但计算成本大</p>
+                
+                <div class="formula text-center mb-3">
+                    k<sub>1</sub> = f(t, y)<br>
+                    k<sub>2</sub> = f(t + h/2, y + hk<sub>1</sub>/2)<br>
+                    k<sub>3</sub> = f(t + h/2, y + hk<sub>2</sub>/2)<br>
+                    k<sub>4</sub> = f(t + h, y + hk<sub>3</sub>)<br>
+                    y<sub>n+1</sub> = y<sub>n</sub> + h(k<sub>1</sub> + 2k<sub>2</sub> + 2k<sub>3</sub> + k<sub>4</sub>)/6
+                </div>
+                
+                <div class="chart-container flex-grow">
+                    <canvas id="rk4Chart"></canvas>
+                </div>
+                
+                <div class="mt-4 bg-purple-900 bg-opacity-30 p-3 rounded-lg">
+                    <h4 class="font-semibold mb-1">特点</h4>
+                    <ul class="list-disc pl-5 text-sm">
+                        <li>四阶精度，误差小</li>
+                        <li>适用于高精度物理模拟</li>
+                        <li>计算量大，影响性能</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 对比和选择 -->
+            <div class="method-card p-6 flex flex-col">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mr-4">
+                        <i class="fas fa-balance-scale text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-green-300">方法对比</h3>
+                </div>
+                
+                <div class="chart-container mb-4">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                
+                <div class="bg-blue-900 bg-opacity-30 p-3 rounded-lg mb-4">
+                    <h4 class="font-semibold mb-1">精度与稳定性</h4>
+                    <div class="flex items-center justify-between text-sm">
+                        <span>低</span>
+                        <div class="w-3/5 bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 h-2.5 rounded-full" style="width: 100%"></div>
+                        </div>
+                        <span>高</span>
+                    </div>
+                    <div class="flex justify-between text-xs mt-1">
+                        <span>显式欧拉</span>
+                        <span>半隐式欧拉</span>
+                        <span>RK4</span>
+                    </div>
+                </div>
+                
+                <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg">
+                    <h4 class="font-semibold mb-1">选择建议</h4>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><span class="text-blue-300 font-medium">游戏物理引擎</span>: 半隐式欧拉法</li>
+                        <li><span class="text-purple-300 font-medium">高精度模拟</span>: RK4方法</li>
+                        <li><span class="text-green-300 font-medium">稳定性优先</span>: 隐式欧拉法</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-blue-200 opacity-70">
+            <p>数值积分方法的选择影响物理模拟的精度和稳定性</p>
+        </div>
+    </div>
+
+    <script>
+        // 显式欧拉法图表
+        const explicitCtx = document.getElementById('explicitChart').getContext('2d');
+        const explicitChart = new Chart(explicitCtx, {
+            type: 'line',
+            data: {
+                labels: ['t', 't+h', 't+2h', 't+3h', 't+4h'],
+                datasets: [{
+                    label: '真实解',
+                    data: [1, 1.5, 2, 2.5, 3],
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.4
+                }, {
+                    label: '显式欧拉',
+                    data: [1, 1.2, 1.4, 1.6, 1.8],
+                    borderColor: 'rgba(77, 166, 255, 0.8)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // RK4图表
+        const rk4Ctx = document.getElementById('rk4Chart').getContext('2d');
+        const rk4Chart = new Chart(rk4Ctx, {
+            type: 'line',
+            data: {
+                labels: ['t', 't+h', 't+2h', 't+3h', 't+4h'],
+                datasets: [{
+                    label: '真实解',
+                    data: [1, 1.5, 2, 2.5, 3],
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.4
+                }, {
+                    label: 'RK4',
+                    data: [1, 1.48, 1.98, 2.48, 3],
+                    borderColor: 'rgba(167, 139, 250, 0.8)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // 对比图表
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        const comparisonChart = new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['计算速度', '精度', '稳定性'],
+                datasets: [
+                    {
+                        label: '显式欧拉',
+                        data: [90, 30, 20],
+                        backgroundColor: 'rgba(77, 166, 255, 0.7)',
+                    },
+                    {
+                        label: '半隐式欧拉',
+                        data: [70, 60, 70],
+                        backgroundColor: 'rgba(77, 166, 255, 0.5)',
+                    },
+                    {
+                        label: 'RK4',
+                        data: [30, 90, 80],
+                        backgroundColor: 'rgba(167, 139, 250, 0.7)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'white',
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false,
+                        max: 100
+                    },
+                    y: {
+                        ticks: {
+                            color: 'white',
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

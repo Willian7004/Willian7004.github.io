@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幻灯片浏览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        /* 返回按钮样式 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .back-button:hover {
+            background: #333;
+        }
+
+        /* iframe容器 */
+        .iframe-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1280px;
+            height: 880px;
+            max-width: 90vw;
+            max-height: 95vh;
+            background: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            transform-origin: center center;
+        }
+
+        /* 翻页按钮 */
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            font-size: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .nav-button:hover {
+            background: #333;
+        }
+
+        .prev-button {
+            left: 20px;
+        }
+
+        .next-button {
+            right: 20px;
+        }
+
+        /* 页面信息 */
+        .page-info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1001;
+        }
+
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1002;
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .iframe-container {
+                width: 95vw;
+                height: 53.4375vw; /* 16:9 比例 */
+                max-height: 80vh;
+            }
+            
+            .nav-button {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回按钮 -->
+    <button class="back-button" id="back-button">←</button>
+    
+    
+    <!-- 翻页按钮 -->
+    <button class="nav-button prev-button" id="prev-button">‹</button>
+    <button class="nav-button next-button" id="next-button">›</button>
+    
+    <!-- iframe容器 -->
+    <div class="iframe-container">
+        <iframe id="slides-iframe" src=""></iframe>
+    </div>
+    
+    <!-- Toast提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 全局变量
+        let currentFolder = "";  // 当前幻灯片文件夹路径
+        let currentSlide = 1;    // 当前幻灯片页码
+        let maxSlides = 10;      // 最大幻灯片页数
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            parseUrlParams();
+            setupEventListeners();
+            loadSlide();
+            applyIframeScaling();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', applyIframeScaling);
+        });
+
+        // 解析URL参数
+        function parseUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentFolder = urlParams.get('folder') || '';
+            maxSlides = parseInt(urlParams.get('max')) || 10;
+            
+            if (!currentFolder) {
+                showToast('未指定幻灯片文件夹');
+                return;
+            }
+            
+        }
+
+        // 加载幻灯片页面
+        function loadSlide() {
+            if (!currentFolder) return;
+            
+            const iframe = document.getElementById('slides-iframe');
+            iframe.src = `${currentFolder}/${currentSlide}.html`;
+            
+            // 在iframe加载完成后重新应用缩放
+            iframe.onload = function() {
+                applyIframeScaling();
+            };
+        }
+
+        // 显示Toast提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        // 应用iframe缩放
+        function applyIframeScaling() {
+            const iframeContainer = document.querySelector('.iframe-container');
+            const iframe = document.getElementById('slides-iframe');
+            
+            if (!iframeContainer || !iframe) return;
+            
+            // 获取容器的实际尺寸
+            const containerWidth = iframeContainer.clientWidth;
+            const containerHeight = iframeContainer.clientHeight;
+            
+            // 原始iframe尺寸
+            const originalWidth = 1280;
+            const originalHeight = 720;
+            
+            // 计算缩放比例
+            const scaleX = containerWidth / originalWidth;
+            const scaleY = containerHeight / originalHeight;
+            
+            // 使用较小的缩放比例以保持宽高比
+            const scale = Math.min(scaleX, scaleY);
+            
+            // 应用反向缩放
+            if (iframe.contentDocument) {
+                // 如果iframe内容已加载，直接应用缩放
+                applyScaleToIframeContent(iframe.contentDocument, 1*scale);
+            } else {
+                // 如果iframe内容未加载，等待加载完成后应用缩放
+                iframe.onload = function() {
+                    if (iframe.contentDocument) {
+                        applyScaleToIframeContent(iframe.contentDocument, 1*scale);
+                    }
+                };
+            }
+        }
+        
+        // 应用缩放到iframe内容
+        function applyScaleToIframeContent(contentDocument, scale) {
+            // 创建或更新缩放样式
+            let scaleStyle = contentDocument.getElementById('iframe-scale-style');
+            if (!scaleStyle) {
+                scaleStyle = contentDocument.createElement('style');
+                scaleStyle.id = 'iframe-scale-style';
+                contentDocument.head.appendChild(scaleStyle);
+            }
+            
+            // 应用反向缩放样式
+            scaleStyle.textContent = `
+                body {
+                    transform: scale(${scale});
+                    transform-origin: top left;
+                    width: ${100/scale}% !important;
+                    height: ${100/scale}% !important;
+                }
+            `;
+        }
+
+        // 上一页
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                loadSlide();
+                showToast(`第 ${currentSlide} 页 / 共 ${maxSlides} 页`);
+            }
+        }
+
+        // 下一页
+        function nextSlide() {
+            if (currentSlide < maxSlides) {
+                currentSlide++;
+                loadSlide();
+                showToast(`第 ${currentSlide} 页 / 共 ${maxSlides} 页`);
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 返回按钮
+            document.getElementById('back-button').addEventListener('click', function() {
+                window.location.href = 'index.html';
+            });
+            
+            // 上一页按钮
+            document.getElementById('prev-button').addEventListener('click', prevSlide);
+            
+            // 下一页按钮
+            document.getElementById('next-button').addEventListener('click', nextSlide);
+            
+            // 键盘事件
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (event.key === 'ArrowRight') {
+                    nextSlide();
+                } else if (event.key === 'Escape') {
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

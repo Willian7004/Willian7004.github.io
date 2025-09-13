@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<!--
+创建一个2d布料模拟，布料使用方形网格形式，固定顶部部分点。点击并拖动界面时绘制箭头并模拟风力效果，通过拖动方向确定风向，拖动距离确定风力强度。在菜单设置风力强度倍数以及是否开启多个风力。关闭多个风力时结束拖动撤销风力并删除相应箭头；开启多个风力时结束拖动仍保留风力并可创建其它风力，点击相应箭头撤销风力。
+
+注：本程序在网页版进行修改，处理了生成逻辑、风力逻辑和触屏支持问题，手动修改了风力倍数。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2D布料模拟</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;overflow:hidden;}
+        body{font-family:Arial,Helvetica,sans-serif;background:#111;color:#fff;}
+        #canvas{display:block;background:#fff;}
+        #controls{
+            position:absolute;top:0;left:0;
+            background:rgba(0,0,0,.6);color:#fff;
+            padding:10px;border-radius:0 0 8px 0;
+            font-size:14px;line-height:1.4;
+            user-select:none;-webkit-user-select:none;
+        }
+        #controls label{display:block;margin-bottom:4px;}
+        #controls input[type=range]{width:120px;vertical-align:middle;}
+        #windForceVal{margin-left:4px;font-weight:bold;}
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <label>
+            风力倍数：<span id="windForceVal">0.001</span>
+            <input type="range" id="windMul" min="0.0003" max="0.003" step="0.0001" value="0.001">
+        </label>
+        <label>
+            <input type="checkbox" id="multiWind" checked>
+            多风力
+        </label>
+    </div>
+
+    <script>
+    // ================== 基础设置 ==================
+    const cv = document.getElementById('canvas');
+    const ctx = cv.getContext('2d');
+
+    // 全屏
+    function resize(){
+        cv.width = window.innerWidth;
+        cv.height = window.innerHeight;
+    }
+    window.addEventListener('resize',resize);
+    resize();
+
+    // 控制面板
+    const mulSlider = document.getElementById('windMul');
+    const mulVal    = document.getElementById('windForceVal');
+    const multiChk  = document.getElementById('multiWind');
+    mulSlider.addEventListener('input',()=>mulVal.textContent = mulSlider.value);
+
+    // ================== 布料参数 ==================
+    const GRAVITY = 0.25;
+    const DAMPING = 0.99;
+    const INTS    = 3;
+
+    let points = [], cons = [];
+    let cols,rows,space;
+
+    function initCloth(){
+        // 根据窗口决定网格
+        cols = Math.floor(cv.width/30);
+        rows = Math.floor(cv.height/30);
+        space = Math.min(cv.width/(cols+1), cv.height/(rows+1));
+
+        points = [];
+        cons   = [];
+
+        // 创建点
+        const startX = (cv.width - cols*space)/2;
+        const startY = 40;
+        for(let r=0;r<=rows;r++){
+            for(let c=0;c<=cols;c++){
+                const x = startX + c*space;
+                const y = startY + r*space;
+                const pinned = r===0 && c%3===0;
+                points.push(new Point(x,y,pinned));
+            }
+        }
+
+        // 创建约束
+        for(let r=0;r<=rows;r++){
+            for(let c=0;c<=cols;c++){
+                const idx = r*(cols+1)+c;
+                if(c<cols)   cons.push(new Constraint(points[idx],points[idx+1]));
+                if(r<rows)   cons.push(new Constraint(points[idx],points[idx+cols+1]));
+            }
+        }
+    }
+
+    // ================== 物理类 ==================
+    class Point{
+        constructor(x,y,p=false){
+            this.x=x;this.y=y;
+            this.ox=x;this.oy=y;
+            this.p=p;
+        }
+        update(){
+            if(this.p) return;
+            let vx=(this.x-this.ox)*DAMPING;
+            let vy=(this.y-this.oy)*DAMPING;
+            this.ox=this.x;this.oy=this.y;
+            this.x+=vx;this.y+=vy;
+            this.y+=GRAVITY;
+
+            // 统一风力
+            for(const w of winds){
+                const dx = w.ex-w.sx;
+                const dy = w.ey-w.sy;
+                const f  = Math.sqrt(dx*dx+dy*dy)*mulSlider.value*0.008;
+                this.x += dx*f;
+                this.y += dy*f;
+            }
+        }
+        constrain(){
+            this.x = Math.max(0,Math.min(cv.width,this.x));
+            this.y = Math.max(0,Math.min(cv.height,this.y));
+        }
+    }
+
+    class Constraint{
+        constructor(a,b){this.a=a;this.b=b;this.len=Math.hypot(b.x-a.x,b.y-a.y);}
+        satisfy(){
+            const dx=this.b.x-this.a.x;
+            const dy=this.b.y-this.a.y;
+            const d = Math.hypot(dx,dy);
+            const diff = (this.len-d)/d/2;
+            const ox = dx*diff;
+            const oy = dy*diff;
+            if(!this.a.p){this.a.x-=ox;this.a.y-=oy;}
+            if(!this.b.p){this.b.x+=ox;this.b.y+=oy;}
+        }
+    }
+
+    // ================== 风力管理 ==================
+    let winds = [];
+    let curWind = null;
+    let drag = null;
+
+    function drawArrow(sx,sy,ex,ey,color='rgba(255,0,0,0.6)'){
+        ctx.save();
+        ctx.strokeStyle=color;
+        ctx.fillStyle=color;
+        ctx.lineWidth=3;
+        ctx.beginPath();
+        ctx.moveTo(sx,sy);
+        ctx.lineTo(ex,ey);
+        ctx.stroke();
+        const ang = Math.atan2(ey-sy,ex-sx);
+        const h=12;
+        ctx.beginPath();
+        ctx.moveTo(ex,ey);
+        ctx.lineTo(ex-h*Math.cos(ang-Math.PI/6),ey-h*Math.sin(ang-Math.PI/6));
+        ctx.lineTo(ex-h*Math.cos(ang+Math.PI/6),ey-h*Math.sin(ang+Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ================== 触摸/鼠标事件 ==================
+    function pointerPos(e){
+        const rect = cv.getBoundingClientRect();
+        return {x:e.clientX-rect.left,y:e.clientY-rect.top};
+    }
+
+    function onDown(e){
+        const p = pointerPos(e);
+        // 检查是否点击箭头
+        for(let i=winds.length-1;i>=0;i--){
+            const w=winds[i];
+            const d = Math.hypot(w.ex-w.sx,w.ey-w.sy);
+            const dist = Math.abs((w.ey-w.sy)*p.x-(w.ex-w.sx)*p.y+w.ex*w.sy-w.ey*w.sx)/d;
+            if(dist<15 &&
+               p.x>=Math.min(w.sx,w.ex)-15 && p.x<=Math.max(w.sx,w.ex)+15 &&
+               p.y>=Math.min(w.sy,w.ey)-15 && p.y<=Math.max(w.sy,w.ey)+15){
+                winds.splice(i,1);
+                return;
+            }
+        }
+        drag = {sx:p.x,sy:p.y,ex:p.x,ey:p.y};
+    }
+
+    function onMove(e){
+        if(!drag) return;
+        const p = pointerPos(e);
+        drag.ex=p.x;drag.ey=p.y;
+    }
+
+    function onUp(e){
+        if(!drag) return;
+        const dx = drag.ex-drag.sx;
+        const dy = drag.ey-drag.sy;
+        if(Math.hypot(dx,dy)>20){
+            const w = {sx:drag.sx,sy:drag.sy,ex:drag.ex,ey:drag.ey};
+            if(!multiChk.checked) winds=[w];
+            else winds.push(w);
+        }
+        drag=null;
+    }
+
+    // 鼠标
+    cv.addEventListener('mousedown',onDown);
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('mouseup',onUp);
+    // 触屏
+    cv.addEventListener('touchstart',e=>{e.preventDefault();onDown(e.touches[0]);});
+    window.addEventListener('touchmove',e=>{e.preventDefault();onMove(e.touches[0]);});
+    window.addEventListener('touchend',e=>{e.preventDefault();onUp(e.changedTouches[0]);});
+
+    // ================== 主循环 ==================
+    function loop(){
+        // 物理
+        points.forEach(pt=>pt.update());
+        for(let i=0;i<INTS;i++) cons.forEach(c=>c.satisfy());
+        points.forEach(pt=>pt.constrain());
+
+        // 绘制
+        ctx.clearRect(0,0,cv.width,cv.height);
+
+        // 布料
+        ctx.strokeStyle='#222';
+        ctx.lineWidth=1;
+        for(let r=0;r<rows;r++){
+            for(let c=0;c<cols;c++){
+                const i1 = r*(cols+1)+c;
+                const i2 = i1+1;
+                const i3 = i1+cols+1;
+                const i4 = i3+1;
+                ctx.beginPath();
+                ctx.moveTo(points[i1].x,points[i1].y);
+                ctx.lineTo(points[i2].x,points[i2].y);
+                ctx.lineTo(points[i3].x,points[i3].y);
+                ctx.closePath();ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(points[i2].x,points[i2].y);
+                ctx.lineTo(points[i4].x,points[i4].y);
+                ctx.lineTo(points[i3].x,points[i3].y);
+                ctx.closePath();ctx.stroke();
+            }
+        }
+
+        // 固定点
+        ctx.fillStyle='red';
+        points.forEach(p=>{
+            if(p.p){ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();}
+        });
+
+        // 风力箭头
+        winds.forEach(w=>drawArrow(w.sx,w.sy,w.ex,w.ey,'rgba(255,0,0,0.6)'));
+        if(drag) drawArrow(drag.sx,drag.sy,drag.ex,drag.ey,'rgba(0,255,0,0.7)');
+
+        requestAnimationFrame(loop);
+    }
+
+    // 首次初始化
+    initCloth();
+    loop();
+    </script>
+</body>
+</html>

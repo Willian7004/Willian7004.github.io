@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器基本架构</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .process-box {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .process-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .browser-process {
+            border-left: 5px solid #4285f4;
+        }
+        .renderer-process {
+            border-left: 5px solid #34a853;
+        }
+        .gpu-process {
+            border-left: 5px solid #fbbc05;
+        }
+        .plugin-process {
+            border-left: 5px solid #ea4335;
+        }
+        .connection-line {
+            position: absolute;
+            background-color: #ccc;
+            z-index: 1;
+        }
+        .vertical-line {
+            width: 2px;
+        }
+        .horizontal-line {
+            height: 2px;
+        }
+        .connection-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-blue-800 mb-2">浏览器基本架构</h1>
+            <p class="text-xl text-blue-600">多进程模型及其职责分工</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow flex flex-col">
+            <!-- Process Diagram -->
+            <div class="relative flex justify-center mb-8">
+                <!-- Browser Process (Main) -->
+                <div class="process-box browser-process w-1/3 z-10">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-desktop text-3xl text-blue-500 mr-3"></i>
+                        <h2 class="text-2xl font-bold text-blue-700">Browser Process</h2>
+                    </div>
+                    <ul class="list-disc pl-6 text-gray-700">
+                        <li>界面控制（地址栏、按钮）</li>
+                        <li>用户交互处理</li>
+                        <li>网络请求管理</li>
+                        <li>文件访问控制</li>
+                        <li>子进程协调与管理</li>
+                    </ul>
+                </div>
+                
+                <!-- Connection lines -->
+                <div class="connection-line vertical-line h-12" style="top: 90px; left: 640px;"></div>
+                <div class="connection-line horizontal-line w-96" style="top: 102px; left: 440px;"></div>
+                
+                <!-- Arrows -->
+                <div class="connection-arrow" style="top: 102px; left: 440px; border-width: 5px 0 5px 8px; border-color: transparent transparent transparent #ccc;"></div>
+                <div class="connection-arrow" style="top: 102px; left: 832px; border-width: 5px 8px 5px 0; border-color: transparent #ccc transparent transparent;"></div>
+            </div>
+            
+            <!-- Secondary Processes Row -->
+            <div class="flex justify-between mb-10">
+                <!-- Renderer Process -->
+                <div class="process-box renderer-process w-1/4 z-10">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-code text-3xl text-green-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-green-700">Renderer Process</h2>
+                    </div>
+                    <ul class="list-disc pl-6 text-gray-700 text-sm">
+                        <li>网页内容渲染</li>
+                        <li>DOM/CSS解析</li>
+                        <li>JavaScript执行</li>
+                        <li>每个标签页一个进程</li>
+                    </ul>
+                </div>
+                
+                <!-- GPU Process -->
+                <div class="process-box gpu-process w-1/4 z-10">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-microchip text-3xl text-yellow-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-yellow-700">GPU Process</h2>
+                    </div>
+                    <ul class="list-disc pl-6 text-gray-700 text-sm">
+                        <li>图形处理加速</li>
+                        <li>Canvas渲染</li>
+                        <li>GPU资源管理</li>
+                        <li>跨进程共享</li>
+                    </ul>
+                </div>
+                
+                <!-- Plugin Process -->
+                <div class="process-box plugin-process w-1/4 z-10">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-puzzle-piece text-3xl text-red-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-red-700">Plugin Process</h2>
+                    </div>
+                    <ul class="list-disc pl-6 text-gray-700 text-sm">
+                        <li>插件独立运行</li>
+                        <li>Flash/ActiveX等</li>
+                        <li>沙箱隔离</li>
+                        <li>崩溃隔离</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- IPC Communication -->
+            <div class="bg-white rounded-lg p-6 shadow-md">
+                <h3 class="text-xl font-bold text-blue-700 mb-3 flex items-center">
+                    <i class="fas fa-exchange-alt text-blue-500 mr-2"></i>
+                    进程间通信 (IPC)
+                </h3>
+                <div class="flex justify-between">
+                    <div class="w-1/2 pr-4">
+                        <p class="font-medium text-gray-800 mb-2">通信机制</p>
+                        <ul class="list-disc pl-6 text-gray-700">
+                            <li>管道 (Pipes)</li>
+                            <li>消息队列 (Message Queues)</li>
+                            <li>共享内存 (Shared Memory)</li>
+                            <li>套接字 (Sockets)</li>
+                        </ul>
+                    </div>
+                    <div class="w-1/2 pl-4 border-l border-gray-200">
+                        <p class="font-medium text-gray-800 mb-2">优势</p>
+                        <ul class="list-disc pl-6 text-gray-700">
+                            <li>稳定性：进程隔离，一个崩溃不影响其他</li>
+                            <li>安全性：权限隔离，限制恶意代码影响</li>
+                            <li>性能：资源独立，可根据设备调整</li>
+                            <li>可维护性：模块化设计，易于扩展</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

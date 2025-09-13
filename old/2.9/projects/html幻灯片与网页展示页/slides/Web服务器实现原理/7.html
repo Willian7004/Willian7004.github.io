@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web服务器的并发处理机制</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #0052cc;
+            color: white;
+            padding: 30px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 70px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 25px;
+            flex-grow: 1;
+        }
+        .grid-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border-left: 4px solid #0052cc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .item-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .item-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #e3f2fd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .item-icon .material-icons {
+            font-size: 28px;
+            color: #0052cc;
+        }
+        .item-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0052cc;
+        }
+        .item-content {
+            flex-grow: 1;
+        }
+        .model-list, .strategy-list, .tech-list, .metric-list {
+            list-style: none;
+        }
+        .model-item, .strategy-item, .tech-item, .metric-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        .model-item .material-icons, .strategy-item .material-icons, .tech-item .material-icons, .metric-item .material-icons {
+            color: #4fc3f7;
+            margin-right: 10px;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .highlight {
+            color: #0052cc;
+            font-weight: 500;
+        }
+        .footer {
+            padding: 20px 70px;
+            background-color: #f5f5f5;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">Web服务器的并发处理机制</h1>
+        </div>
+        <div class="content">
+            <div class="grid-container">
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">input</i>
+                        </div>
+                        <h2 class="item-title">Linux下的I/O模型</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="model-list">
+                            <li class="model-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">阻塞I/O</span>：进程阻塞直到数据准备好</span>
+                            </li>
+                            <li class="model-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">非阻塞I/O</span>：立即返回，轮询检查数据状态</span>
+                            </li>
+                            <li class="model-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">I/O复用</span>：select/poll，同时监控多个I/O</span>
+                            </li>
+                            <li class="model-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">信号驱动I/O</span>：数据就绪时发送信号</span>
+                            </li>
+                            <li class="model-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">异步I/O</span>：内核完成I/O后通知应用</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">strategy</i>
+                        </div>
+                        <h2 class="item-title">并发处理策略</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="strategy-list">
+                            <li class="strategy-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">多进程/多线程</span>：每个连接分配一个进程或线程</span>
+                            </li>
+                            <li class="strategy-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">非阻塞I/O模型</span>：避免I/O操作阻塞进程</span>
+                            </li>
+                            <li class="strategy-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">事件驱动模型</span>：基于事件通知处理连接</span>
+                            </li>
+                            <li class="strategy-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">负载均衡</span>：分散请求到多个服务器</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">bolt</i>
+                        </div>
+                        <h2 class="item-title">高并发处理技术</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="tech-list">
+                            <li class="tech-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">连接池</span>：复用TCP连接，减少握手开销</span>
+                            </li>
+                            <li class="tech-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">线程池</span>：避免频繁创建销毁线程</span>
+                            </li>
+                            <li class="tech-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">异步处理</span>：非阻塞方式处理耗时操作</span>
+                            </li>
+                            <li class="tech-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">缓存机制</span>：减少后端服务压力</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="grid-item">
+                    <div class="item-header">
+                        <div class="item-icon">
+                            <i class="material-icons">speed</i>
+                        </div>
+                        <h2 class="item-title">并发性能指标</h2>
+                    </div>
+                    <div class="item-content">
+                        <ul class="metric-list">
+                            <li class="metric-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">并发连接数</span>：同时处理的连接数量</span>
+                            </li>
+                            <li class="metric-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">吞吐量</span>：单位时间内处理的请求数</span>
+                            </li>
+                            <li class="metric-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">响应时间</span>：请求从发送到接收的时间</span>
+                            </li>
+                            <li class="metric-item">
+                                <i class="material-icons">arrow_right</i>
+                                <span><span class="highlight">资源利用率</span>：CPU、内存、网络等使用率</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Web服务器实现原理</div>
+            <div>第 <span class="highlight">7</span> 页</div>
+        </div>
+    </div>
+</body>
+</html>

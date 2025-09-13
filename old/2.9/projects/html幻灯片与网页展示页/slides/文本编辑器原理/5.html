@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本编辑器的渲染机制</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #e6e6e6;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            display: flex;
+            flex-direction: column;
+        }
+        .highlight {
+            color: #569cd6;
+        }
+        .highlight-green {
+            color: #4ec9b0;
+        }
+        .highlight-yellow {
+            color: #dcdcaa;
+        }
+        .highlight-purple {
+            color: #c586c0;
+        }
+        .highlight-red {
+            color: #ce9178;
+        }
+        .render-card {
+            background-color: #252526;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .render-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .code-block {
+            background-color: #252526;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            border-left: 4px solid #569cd6;
+        }
+        .flow-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 15px solid #569cd6;
+            z-index: 10;
+        }
+        .flow-arrow-right {
+            border-left: 15px solid #4ec9b0;
+        }
+        .flow-arrow-down {
+            border-left: 0;
+            border-right: 15px solid #569cd6;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            top: auto;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .flow-step {
+            position: relative;
+            z-index: 5;
+        }
+        .blot-example {
+            border: 1px dashed #569cd6;
+            border-radius: 4px;
+            padding: 4px;
+            margin: 2px;
+            display: inline-block;
+        }
+        .blot-node {
+            display: inline-block;
+            padding: 2px 8px;
+            margin: 2px;
+            border-radius: 4px;
+        }
+        .blot-text {
+            background-color: #333;
+            border: 1px solid #555;
+        }
+        .blot-bold {
+            background-color: #333;
+            border: 1px solid #555;
+            font-weight: bold;
+        }
+        .blot-image {
+            background-color: #333;
+            border: 1px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <!-- Header with subtle gradient -->
+        <div class="h-2 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500"></div>
+        
+        <!-- Main Content -->
+        <div class="flex flex-col justify-start items-center flex-grow p-8">
+            <h1 class="text-4xl font-bold mb-6 text-center">
+                <span class="highlight">文本编辑器</span>的渲染机制
+                <span class="text-2xl font-normal ml-2 opacity-70">以Quill编辑器为例</span>
+            </h1>
+            
+            <!-- Rendering Flow Diagram -->
+            <div class="relative w-full flex justify-center mb-8">
+                <div class="flex items-center justify-between w-4/5">
+                    <div class="flow-step render-card p-4 w-56 border-t-4 border-blue-500 text-center">
+                        <i class="fas fa-file-code text-3xl highlight mb-2"></i>
+                        <h3 class="text-xl font-bold highlight">Delta 数据结构</h3>
+                        <p class="text-xs opacity-70 mt-1">JSON格式的内容描述</p>
+                    </div>
+                    
+                    <i class="fas fa-long-arrow-alt-right text-3xl highlight flow-arrow-right"></i>
+                    
+                    <div class="flow-step render-card p-4 w-56 border-t-4 border-purple-500 text-center">
+                        <i class="fas fa-cubes text-3xl highlight-purple mb-2"></i>
+                        <h3 class="text-xl font-bold highlight-purple">Blot 系统</h3>
+                        <p class="text-xs opacity-70 mt-1">DOM节点抽象层</p>
+                    </div>
+                    
+                    <i class="fas fa-long-arrow-alt-right text-3xl highlight-green flow-arrow-right"></i>
+                    
+                    <div class="flow-step render-card p-4 w-56 border-t-4 border-green-500 text-center">
+                        <i class="fas fa-desktop text-3xl highlight-green mb-2"></i>
+                        <h3 class="text-xl font-bold highlight-green">DOM 渲染</h3>
+                        <p class="text-xs opacity-70 mt-1">浏览器显示内容</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-8 w-full">
+                <!-- Left Column: Delta Data Structure -->
+                <div class="flex flex-col space-y-6">
+                    <h2 class="text-2xl font-bold mb-2 highlight flex items-center">
+                        <i class="fas fa-file-code mr-3"></i>Delta 数据结构
+                    </h2>
+                    
+                    <div class="render-card p-5 border-l-4 border-blue-500">
+                        <h3 class="text-xl font-bold highlight mb-3">Delta 基本概念</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight"></i>
+                                <span>基于JSON的内容描述格式</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight"></i>
+                                <span>三种基本操作：insert（插入）、retain（保留）、delete（删除）</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight"></i>
+                                <span>格式属性：attributes（加粗、颜色、链接等）</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="render-card p-5 border-l-4 border-blue-500">
+                        <h3 class="text-xl font-bold highlight mb-3">Delta 示例</h3>
+                        <div class="code-block">
+                            <pre class="text-xs"><span class="highlight-green">// 插入普通文本和格式化文本</span>
+{
+  <span class="highlight-yellow">"ops"</span>: [
+    { <span class="highlight-yellow">"insert"</span>: <span class="highlight-green">"Hello "</span> },
+    { 
+      <span class="highlight-yellow">"insert"</span>: <span class="highlight-green">"World"</span>, 
+      <span class="highlight-yellow">"attributes"</span>: { 
+        <span class="highlight-yellow">"bold"</span>: true,
+        <span class="highlight-yellow">"color"</span>: <span class="highlight-green">"#ff0000"</span>
+      } 
+    },
+    { <span class="highlight-yellow">"insert"</span>: <span class="highlight-green">"\\n"</span> }
+  ]
+}</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="render-card p-5 border-l-4 border-blue-500">
+                        <h3 class="text-xl font-bold highlight mb-3">Delta 优势</h3>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-sync-alt mr-2 highlight-yellow"></i>
+                                <span>操作可逆</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-code-branch mr-2 highlight-yellow"></i>
+                                <span>易于版本控制</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-network-wired mr-2 highlight-yellow"></i>
+                                <span>网络传输高效</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-puzzle-piece mr-2 highlight-yellow"></i>
+                                <span>高度可扩展</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Blot System -->
+                <div class="flex flex-col space-y-6">
+                    <h2 class="text-2xl font-bold mb-2 highlight-purple flex items-center">
+                        <i class="fas fa-cubes mr-3"></i>Blot 系统
+                    </h2>
+                    
+                    <div class="render-card p-5 border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold highlight-purple mb-3">Blot 基本概念</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight-purple"></i>
+                                <span>DOM节点的抽象层</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight-purple"></i>
+                                <span>所有Blot的根Blot是Scroll类</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mt-1 mr-2 highlight-purple"></i>
+                                <span>通过Parchment库实现</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="render-card p-5 border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold highlight-purple mb-3">Blot 层次结构</h3>
+                        <div class="flex flex-col items-center">
+                            <div class="blot-example p-2 w-full text-center mb-2">
+                                <span class="highlight-purple font-bold">Scroll (根Blot)</span>
+                                <div class="flex justify-center mt-1">
+                                    <div class="blot-example p-2 w-3/4 text-center">
+                                        <span class="highlight-green font-bold">Block (块级Blot)</span>
+                                        <div class="flex justify-center mt-1">
+                                            <div class="blot-example p-1 mx-1">
+                                                <span class="blot-text">文本</span>
+                                            </div>
+                                            <div class="blot-example p-1 mx-1">
+                                                <span class="blot-bold">加粗</span>
+                                            </div>
+                                            <div class="blot-example p-1 mx-1">
+                                                <span class="blot-image"><i class="fas fa-image"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="render-card p-5 border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold highlight-purple mb-3">Blot 方法</h3>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-pen mr-2 highlight-red"></i>
+                                <span>formatAt</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-plus mr-2 highlight-red"></i>
+                                <span>insertAt</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-minus mr-2 highlight-red"></i>
+                                <span>deleteAt</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-eye mr-2 highlight-red"></i>
+                                <span>optimize</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Section: Rendering Process -->
+            <div class="w-full mt-6">
+                <div class="render-card p-5 border-t-4 border-green-500">
+                    <h3 class="text-xl font-bold highlight-green mb-3 flex items-center">
+                        <i class="fas fa-desktop mr-2"></i>内容渲染流程
+                    </h3>
+                    <div class="grid grid-cols-4 gap-4 text-sm">
+                        <div class="flex flex-col items-center">
+                            <div class="rounded-full bg-blue-900 p-2 mb-2">
+                                <i class="fas fa-file-code text-xl highlight"></i>
+                            </div>
+                            <p class="text-center">Delta数据</p>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-arrow-right text-lg highlight"></i>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="rounded-full bg-purple-900 p-2 mb-2">
+                                <i class="fas fa-cogs text-xl highlight-purple"></i>
+                            </div>
+                            <p class="text-center">applyDelta</p>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-arrow-right text-lg highlight"></i>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="rounded-full bg-green-900 p-2 mb-2">
+                                <i class="fas fa-cubes text-xl highlight-green"></i>
+                            </div>
+                            <p class="text-center">insertAt/formatAt</p>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-arrow-right text-lg highlight"></i>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="rounded-full bg-yellow-900 p-2 mb-2">
+                                <i class="fas fa-code-branch text-xl highlight-yellow"></i>
+                            </div>
+                            <p class="text-center">optimize</p>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-arrow-right text-lg highlight"></i>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="rounded-full bg-red-900 p-2 mb-2">
+                                <i class="fas fa-desktop text-xl highlight-red"></i>
+                            </div>
+                            <p class="text-center">DOM更新</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="p-4 flex justify-between items-center bg-opacity-20 bg-black">
+            <div class="text-sm opacity-70">文本编辑器实现原理</div>
+            <div class="text-sm opacity-70">第5页 / 共6页</div>
+        </div>
+    </div>
+</body>
+</html>

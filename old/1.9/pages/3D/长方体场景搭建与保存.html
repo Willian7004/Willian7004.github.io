@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用three.js写一个程序，实现以下功能：
+1. 需要时使用cdn导入库文件。
+2. 创建天空球，在菜单中选择“日出”、“中午”和“夜晚”分别用于创建对应的天空球和环境光。选中“夜晚”时创建星空效果。创建边长为64的颜色为#4c566a的平面。使用鼠标拖动旋转场景。
+3. 输入1到9的数字分别设置长方体的长、宽、高，连续输入数字时设置下一个值。设置后长方体跟随鼠标移动并堆叠在平面或其它长方体上方，以半透明显示预览，在平面上显示栅格并确保长方体坐标为整数。鼠标点击时确定放置。已设置尺寸时关闭使用鼠标拖动旋转场景的功能，多次点击时连续放置当前尺寸的长方体，按右键清除尺寸设置并恢复使用鼠标拖动旋转场景功能。
+4. 按q、w、e、r、t键分别把长方体颜色设为#bf616a、#d08770、#ebcb8b、#a3be8c或、#b48ead。未设置尺寸时点击鼠标左键删除选中的长方体。在菜单添加一个复选框，选中时改为双击删除长方体。
+5. 使用json记录场景数据，创建下载和上传场景的功能。
+6. 开启PBR渲染和阴影渲染，使用塑料材质。
+
+注：由于此前的版本添加尺寸偏移造成不少额外问题，重写了程序以取消偏移功能。新的版本除了无法混用奇数和偶数水平尺寸外，功能基本正常，改变场景选项后无法删除星空场景的问题仍然存在。
+-->
+<head>
+    <meta charset="UTF-8">
+    <title>Three.js 建造场景</title>
+    <style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+#menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+#menu select, #menu button, #menu label {
+    margin: 0 5px;
+}
+
+#upload {
+    display: none;
+}
+    </style>
+    <script src="../../libs/three.min.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+    <script src="../../libs/FileSaver.min.js"></script>
+</head>
+<body>
+    <div id="menu">
+        <select id="time-select">
+            <option value="sunrise">日出</option>
+            <option value="noon" selected>中午</option>
+            <option value="night">夜晚</option>
+        </select>
+        <label>
+            <input type="checkbox" id="double-click-delete"> 双击删除
+        </label>
+        <button id="download">下载场景</button>
+        <button id="upload-btn">上传场景</button>
+        <input type="file" id="upload" accept=".json" style="display: none;">
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+// 初始化变量
+let scene, camera, renderer, controls;
+let ground, gridHelper;
+let cubes = [];
+let currentCube = null;
+let currentDimensions = [1, 1, 1]; // 默认尺寸 [长, 宽, 高]
+let currentColor = 0xbf616a; // 默认颜色
+let dimensionIndex = 0; // 当前设置尺寸的索引 (0:长, 1:宽, 2:高)
+let isBuildingMode = false;
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+
+// 颜色映射
+const colorMap = {
+    'q': 0xbf616a, // #bf616a
+    'w': 0xd08770, // #d08770
+    'e': 0xebcb8b, // #ebcb8b
+    'r': 0xa3be8c, // #a3be8c
+    't': 0xb48ead  // #b48ead
+};
+
+// 初始化场景
+function init() {
+    // 创建场景
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB); // 默认天空色
+    
+    // 创建相机
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 10, 20);
+    
+    // 创建渲染器
+    renderer = new THREE.WebGLRenderer({ 
+        canvas: document.getElementById('canvas'),
+        antialias: true 
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // 添加轨道控制器
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    
+    // 添加环境光
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    // 添加方向光（太阳）并配置阴影
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+    sunLight.position.set(5, 10, 7);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 4096; // 提高阴影质量
+    sunLight.shadow.mapSize.height = 4096;
+    // 设置阴影相机参数以覆盖整个场景
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 100;
+    sunLight.shadow.camera.left = -40;
+    sunLight.shadow.camera.right = 40;
+    sunLight.shadow.camera.top = 40;
+    sunLight.shadow.camera.bottom = -40;
+    scene.add(sunLight);
+    
+    // 创建地面
+    const groundGeometry = new THREE.PlaneGeometry(64, 64);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x4c566a,
+        roughness: 0.6,
+        metalness: 0.4
+    });
+    ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    
+    // 添加网格辅助（初始隐藏）
+    gridHelper = new THREE.GridHelper(64, 64, 0xffffff, 0xffffff);
+    gridHelper.material.opacity = 0.2;
+    gridHelper.material.transparent = true;
+    gridHelper.visible = false; // 初始隐藏
+    scene.add(gridHelper);
+    
+    // 初始化天空盒
+    createNoonSky();
+    
+    // 事件监听
+    setupEventListeners();
+    
+    // 开始动画循环
+    animate();
+}
+
+// 动画循环
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    
+    // 更新预览立方体位置
+    if (currentCube) {
+        updateCubePosition();
+    }
+}
+
+// 设置事件监听器
+function setupEventListeners() {
+    // 时间选择
+    document.getElementById('time-select').addEventListener('change', (e) => {
+        switch(e.target.value) {
+            case 'sunrise': createSunriseSky(); break;
+            case 'noon': createNoonSky(); break;
+            case 'night': createNightSky(); break;
+        }
+    });
+    
+    // 下载场景
+    document.getElementById('download').addEventListener('click', saveScene);
+    
+    // 上传场景按钮
+    document.getElementById('upload-btn').addEventListener('click', () => {
+        document.getElementById('upload').click();
+    });
+    document.getElementById('upload').addEventListener('change', loadScene);
+    
+    // 右键菜单事件
+    window.addEventListener('contextmenu', onContextMenu);
+    
+    // 鼠标移动
+    window.addEventListener('mousemove', onMouseMove);
+    
+    // 鼠标点击
+    window.addEventListener('click', onClick);
+    
+    // 鼠标双击
+    window.addEventListener('dblclick', onDoubleClick);
+    
+    // 键盘事件
+    window.addEventListener('keydown', onKeyDown);
+    
+    // 窗口大小调整
+    window.addEventListener('resize', onWindowResize);
+}
+
+// 窗口大小调整处理
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// 创建日出天空
+function createSunriseSky() {
+    scene.background = new THREE.Color(0xFFC9A7);
+    // 添加暖色调环境光
+    scene.children.filter(child => child instanceof THREE.AmbientLight).forEach(light => scene.remove(light));
+    const ambientLight = new THREE.AmbientLight(0xFFDAB9, 0.8);
+    scene.add(ambientLight);
+}
+
+// 创建中午天空
+function createNoonSky() {
+    scene.background = new THREE.Color(0x87CEEB);
+    // 恢复默认环境光
+    scene.children.filter(child => child instanceof THREE.AmbientLight).forEach(light => scene.remove(light));
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+}
+
+// 创建夜晚天空
+function createNightSky() {
+    scene.background = new THREE.Color(0x111122);
+    // 减弱环境光
+    scene.children.filter(child => child instanceof THREE.AmbientLight).forEach(light => scene.remove(light));
+    const ambientLight = new THREE.AmbientLight(0x333366, 0.2);
+    scene.add(ambientLight);
+    
+    // 创建星空
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 2,
+        sizeAttenuation: false
+    });
+    
+    const starsVertices = [];
+    for (let i = 0; i < 5000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000);
+        const y = THREE.MathUtils.randFloatSpread(2000);
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        starsVertices.push(x, y, z);
+    }
+    
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starField);
+}
+
+// 更新立方体位置（跟随鼠标）
+function updateCubePosition() {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects([ground, ...cubes]);
+    
+    if (intersects.length > 0) {
+        const point = intersects[0].point;
+        // 对齐到网格（1单位=1米）
+        const alignedPoint = new THREE.Vector3(
+            Math.round(point.x),
+            Math.round(point.y) + currentDimensions[1]/2, // 提升到网格上方
+            Math.round(point.z)
+        );
+        
+        currentCube.position.copy(alignedPoint);
+    }
+}
+
+// 鼠标移动事件
+function onMouseMove(event) {
+    // 计算标准化设备坐标（-1到+1）
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+}
+
+// 鼠标点击事件
+function onClick(event) {
+    if (isBuildingMode && currentCube) {
+        // 放置立方体
+        placeCube(currentCube.position.clone());
+    } else if (!isBuildingMode) {
+        // 删除立方体（如果双击删除未启用）
+        const doubleClickDelete = document.getElementById('double-click-delete').checked;
+        if (!doubleClickDelete) {
+            deleteCube();
+        }
+    }
+}
+
+// 右键菜单事件
+function onContextMenu(event) {
+    if (isBuildingMode) {
+        event.preventDefault();
+        cancelBuildingMode();
+    }
+}
+
+// 取消建造模式
+function cancelBuildingMode() {
+    isBuildingMode = false;
+    controls.enabled = true;
+    if (currentCube) {
+        scene.remove(currentCube);
+        currentCube = null;
+    }
+    dimensionIndex = 0;
+    gridHelper.visible = false;
+}
+
+// 鼠标双击事件
+function onDoubleClick(event) {
+    const doubleClickDelete = document.getElementById('double-click-delete').checked;
+    if (doubleClickDelete && !isBuildingMode) {
+        deleteCube();
+    }
+}
+
+// 放置立方体
+function placeCube(position) {
+    // 创建长方体：长(currentDimensions[0])、宽(currentDimensions[2])、高(currentDimensions[1])
+    // 高度方向为Y轴
+    const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(currentDimensions[0], currentDimensions[2], currentDimensions[1]),
+        new THREE.MeshStandardMaterial({ 
+            color: currentColor,
+            roughness: 0.6,
+            metalness: 0.4
+        })
+    );
+    cube.position.copy(position);
+    cube.castShadow = true;
+    cube.receiveShadow = true;
+    scene.add(cube);
+    cubes.push(cube);
+}
+
+// 删除选中的立方体
+function deleteCube() {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(cubes);
+    
+    if (intersects.length > 0) {
+        const object = intersects[0].object;
+        scene.remove(object);
+        cubes = cubes.filter(cube => cube !== object);
+    }
+}
+
+// 键盘事件
+function onKeyDown(event) {
+    const key = event.key.toLowerCase();
+    
+    // 颜色选择
+    if (colorMap[key]) {
+        currentColor = colorMap[key];
+        if (currentCube) {
+            currentCube.material.color.set(currentColor);
+        }
+        return;
+    }
+    
+    // 数字键设置尺寸
+    const num = parseInt(key);
+    if (num >= 1 && num <= 9) {
+        if (!isBuildingMode) {
+            // 进入建造模式
+            isBuildingMode = true;
+            controls.enabled = false;
+            gridHelper.visible = true; // 显示网格
+            
+            // 创建预览立方体（显式指定尺寸）
+            currentCube = new THREE.Mesh(
+                new THREE.BoxGeometry(currentDimensions[0], currentDimensions[2], currentDimensions[1]),
+                new THREE.MeshStandardMaterial({ 
+                    color: currentColor,
+                    transparent: true,
+                    opacity: 0.7,
+                    roughness: 0.6,
+                    metalness: 0.4
+                })
+            );
+            currentCube.castShadow = true;
+            scene.add(currentCube);
+        }
+        
+        // 设置尺寸
+        currentDimensions[dimensionIndex] = num;
+        dimensionIndex = (dimensionIndex + 1) % 3;
+        
+            // 更新预览立方体尺寸（显式指定尺寸）
+            if (currentCube) {
+                scene.remove(currentCube);
+                currentCube = new THREE.Mesh(
+                    new THREE.BoxGeometry(currentDimensions[0], currentDimensions[1], currentDimensions[2]),
+                    new THREE.MeshStandardMaterial({ 
+                        color: currentColor,
+                        transparent: true,
+                        opacity: 0.7,
+                        roughness: 0.6,
+                        metalness: 0.4
+                    })
+                );
+                currentCube.castShadow = true;
+                scene.add(currentCube);
+            }
+    }
+    
+    // 右键清除建造模式（通过右键菜单事件处理）
+    // 键盘事件中不再处理右键
+}
+
+// 保存场景
+function saveScene() {
+    const sceneData = {
+        cubes: cubes.map(cube => ({
+            position: cube.position.toArray(),
+            dimensions: [cube.geometry.parameters.width, 
+                        cube.geometry.parameters.height, 
+                        cube.geometry.parameters.depth],
+            color: cube.material.color.getHex()
+        }))
+    };
+    
+    const blob = new Blob([JSON.stringify(sceneData)], {type: 'application/json'});
+    saveAs(blob, 'scene.json');
+}
+
+// 加载场景
+function loadScene(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const sceneData = JSON.parse(e.target.result);
+            
+            // 清除现有立方体
+            cubes.forEach(cube => scene.remove(cube));
+            cubes = [];
+            
+            // 添加新立方体
+            sceneData.cubes.forEach(cubeData => {
+                const cube = new THREE.Mesh(
+                    new THREE.BoxGeometry(...cubeData.dimensions),
+                    new THREE.MeshStandardMaterial({ 
+                        color: cubeData.color,
+                        roughness: 0.6,
+                        metalness: 0.4
+                    })
+                );
+                cube.position.set(...cubeData.position);
+                cube.castShadow = true;
+                cube.receiveShadow = true;
+                scene.add(cube);
+                cubes.push(cube);
+            });
+        } catch (error) {
+            console.error('Error loading scene:', error);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// 初始化完成
+init();
+    </script>
+</body>
+</html>

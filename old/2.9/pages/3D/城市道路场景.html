@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<!--
+写一个html程序，在场景中间创建一条道路，道路中间创建包含随机缩放、固定间距的树的绿化带，道路两边各创建两排随机颜色和层数的建筑。创建天空球，使用pbr渲染。通过可折叠菜单设置太阳高度和方向、摄像机在道路左半部分或右半部分中间、摄像机高度、摄像机视野范围和摄像机向前移动的速度。场景根据摄像机位置生成和删除。
+
+注：后期添加了草地并调参，基本功能符合预期但建筑样式有一定问题。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>道路场景生成器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            width: 250px;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .control-group input {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        .collapsible {
+            cursor: pointer;
+            padding: 5px;
+            border: none;
+            background: none;
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            text-align: left;
+            border-bottom: 1px solid #555;
+            margin-bottom: 10px;
+        }
+        
+        .collapsible:after {
+            content: '+';
+            float: right;
+        }
+        
+        .collapsible.active:after {
+            content: '-';
+        }
+        
+        .content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .content.active {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div id="controls">
+        <button class="collapsible active">太阳设置</button>
+        <div class="content active">
+            <div class="control-group">
+                <label>太阳高度: <span id="sunHeightValue">45</span>°</label>
+                <input type="range" id="sunHeight" min="0" max="90" value="45">
+            </div>
+            <div class="control-group">
+                <label>太阳方向: <span id="sunDirectionValue">45</span>°</label>
+                <input type="range" id="sunDirection" min="0" max="360" value="45">
+            </div>
+        </div>
+        
+        <button class="collapsible active">摄像机设置</button>
+        <div class="content active">
+            <div class="control-group">
+                <label>摄像机位置:</label>
+                <select id="cameraSide">
+                    <option value="right">道路右侧</option>
+                    <option value="left">道路左侧</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>摄像机高度: <span id="cameraHeightValue">5</span>m</label>
+                <input type="range" id="cameraHeight" min="1" max="20" value="5" step="0.5">
+            </div>
+            <div class="control-group">
+                <label>视野范围: <span id="fovValue">75</span>°</label>
+                <input type="range" id="fov" min="45" max="120" value="75">
+            </div>
+            <div class="control-group">
+                <label>移动速度: <span id="speedValue">30</span>m/s</label>
+                <input type="range" id="speed" min="10" max="100" value="30">
+            </div>
+        </div>
+    </div>
+
+    <script src="../../libs/three.min.js"></script>
+    <script>
+        // 场景设置
+        const scene = new THREE.Scene();
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+
+        // 相机设置
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50000);
+        let cameraPosition = { x: -6, y: 5, z: 0 };
+        let cameraSpeed = 30;
+
+        // 光照设置
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 500;
+        sunLight.shadow.camera.left = -100;
+        sunLight.shadow.camera.right = 100;
+        sunLight.shadow.camera.top = 100;
+        sunLight.shadow.camera.bottom = -100;
+        scene.add(sunLight);
+
+        // 环境光
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+
+        // 天空球
+        const skyGeometry = new THREE.SphereGeometry(40000, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: 0x87CEEB,
+            side: THREE.BackSide
+        });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        // 道路和场景对象
+        const roadWidth = 20;
+        const roadLength = 1000;
+        const chunkSize = 100;
+        const chunks = new Map();
+        let currentChunkZ = 0;
+
+        // 创建道路
+        function createRoad() {
+            const roadGeometry = new THREE.BoxGeometry(roadWidth, roadLength,0.1);
+            const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const road = new THREE.Mesh(roadGeometry, roadMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.receiveShadow = true;
+            return road;
+        }
+
+        // 创建草地
+        function createGrass() {
+            const grassWidth = 200; // 草地宽度，覆盖建筑区域
+            const grassGeometry = new THREE.PlaneGeometry(grassWidth, roadLength);
+            const grassMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x3a5f3a, // 草地绿色
+                transparent: true,
+                opacity: 0.9
+            });
+            const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+            grass.rotation.x = -Math.PI / 2;
+            grass.position.y = 0.01; // 稍微抬高一点，避免z-fighting
+            grass.receiveShadow = true;
+            return grass;
+        }
+
+        // 创建树
+        function createTree(scale) {
+            const tree = new THREE.Group();
+            
+            // 树干
+            const trunkGeometry = new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2 * scale, 8);
+            const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 1 * scale;
+            trunk.castShadow = true;
+            tree.add(trunk);
+            
+            // 树冠
+            const leavesGeometry = new THREE.SphereGeometry(1.5 * scale, 8, 6);
+            const leavesMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+            const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+            leaves.position.y = 3 * scale;
+            leaves.castShadow = true;
+            tree.add(leaves);
+            
+            return tree;
+        }
+
+        // 创建建筑
+        function createBuilding() {
+            const colors = [0xFF6B6B, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFECA57, 0xFF9FF3, 0x54A0FF];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const width = 5 + Math.random() * 10;
+            const height = 10 + Math.random() * 30;
+            const depth = 5 + Math.random() * 10;
+            const floors = Math.floor(1 + Math.random() * 5);
+            
+            const building = new THREE.Group();
+            
+            // 主体建筑
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const material = new THREE.MeshLambertMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.y = height / 2;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            building.add(mesh);
+            
+            // 窗户
+            for (let f = 0; f < floors; f++) {
+                for (let w = 0; w < Math.floor(width / 2); w++) {
+                    const windowGeometry = new THREE.PlaneGeometry(0.8, 1);
+                    const windowMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0xFFFFFF, 
+                        transparent: true, 
+                        opacity: 0.8 
+                    });
+                    
+                    // 前面窗户
+                    const windowFront = new THREE.Mesh(windowGeometry, windowMaterial);
+                    windowFront.position.set(
+                        -width/2 + w * 2 + 1,
+                        f * 3 + 2,
+                        depth/2 + 0.01
+                    );
+                    building.add(windowFront);
+                    
+                    // 后面窗户
+                    const windowBack = new THREE.Mesh(windowGeometry, windowMaterial);
+                    windowBack.position.set(
+                        -width/2 + w * 2 + 1,
+                        f * 3 + 2,
+                        -depth/2 - 0.01
+                    );
+                    windowBack.rotation.y = Math.PI;
+                    building.add(windowBack);
+                }
+            }
+            
+            return building;
+        }
+
+        // 创建场景块
+        function createChunk(z) {
+            const chunk = new THREE.Group();
+            
+            // 草地（在建筑区域底部）
+            const grass = createGrass();
+            grass.position.z = z * chunkSize;
+            chunk.add(grass);
+            
+            // 道路
+            const road = createRoad();
+            road.position.z = z * chunkSize;
+            chunk.add(road);
+            
+            // 绿化带
+            for (let i = -chunkSize/2; i < chunkSize/2; i += 10) {
+                const tree = createTree(0.5 + Math.random() * 0.5);
+                tree.position.set(0, 0, z * chunkSize + i);
+                chunk.add(tree);
+            }
+            
+            // 左侧建筑
+            for (let i = -chunkSize/2; i < chunkSize/2; i += 15) {
+                const building = createBuilding();
+                const x = -roadWidth/2 - 10 - Math.random() * 20;
+                building.position.set(x, 0, z * chunkSize + i);
+                chunk.add(building);
+                
+                const building2 = createBuilding();
+                const x2 = -roadWidth/2 - 30 - Math.random() * 20;
+                building2.position.set(x2, 0, z * chunkSize + i + 5);
+                chunk.add(building2);
+            }
+            
+            // 右侧建筑
+            for (let i = -chunkSize/2; i < chunkSize/2; i += 15) {
+                const building = createBuilding();
+                const x = roadWidth/2 + 10 + Math.random() * 20;
+                building.position.set(x, 0, z * chunkSize + i);
+                chunk.add(building);
+                
+                const building2 = createBuilding();
+                const x2 = roadWidth/2 + 30 + Math.random() * 20;
+                building2.position.set(x2, 0, z * chunkSize + i + 5);
+                chunk.add(building2);
+            }
+            
+            return chunk;
+        }
+
+        // 场景管理
+        function updateChunks() {
+            const chunkZ = Math.floor(camera.position.z / chunkSize);
+            
+            // 加载当前和附近的块
+            for (let z = chunkZ ; z <= chunkZ + 10; z++) {
+                if (!chunks.has(z)) {
+                    const chunk = createChunk(z);
+                    scene.add(chunk);
+                    chunks.set(z, chunk);
+                }
+            }
+            
+            // 删除远处的块
+            chunks.forEach((chunk, z) => {
+                if (Math.abs(z - chunkZ) > 3) {
+                    scene.remove(chunk);
+                    chunks.delete(z);
+                }
+            });
+        }
+
+        // 更新太阳位置
+        function updateSun() {
+            const height = document.getElementById('sunHeight').value;
+            const direction = document.getElementById('sunDirection').value;
+            
+            const phi = (90 - height) * Math.PI / 180;
+            const theta = direction * Math.PI / 180;
+            
+            sunLight.position.x = 100 * Math.sin(phi) * Math.cos(theta);
+            sunLight.position.y = 100 * Math.cos(phi);
+            sunLight.position.z = 100 * Math.sin(phi) * Math.sin(theta);
+            sunLight.lookAt(0, 0, 0);
+            
+            // 根据太阳高度调整天空颜色
+            const skyColor = new THREE.Color();
+            skyColor.setHSL(0.6, 0.7, 0.5 + height / 180);
+            sky.material.color = skyColor;
+            
+            // 调整环境光强度
+            ambientLight.intensity = 0.5 + height / 180;
+        }
+
+        // 更新摄像机
+        function updateCamera() {
+            const side = document.getElementById('cameraSide').value;
+            const height = parseFloat(document.getElementById('cameraHeight').value);
+            const fov = parseFloat(document.getElementById('fov').value);
+            const speed = parseFloat(document.getElementById('speed').value);
+            
+            cameraPosition.x = side === 'left' ? 6 : -6;
+            cameraPosition.y = height;
+            camera.fov = fov;
+            cameraSpeed = speed;
+            camera.updateProjectionMatrix();
+        }
+
+        // 控制事件
+        document.querySelectorAll('.collapsible').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        document.getElementById('sunHeight').addEventListener('input', function() {
+            document.getElementById('sunHeightValue').textContent = this.value;
+            updateSun();
+        });
+
+        document.getElementById('sunDirection').addEventListener('input', function() {
+            document.getElementById('sunDirectionValue').textContent = this.value;
+            updateSun();
+        });
+
+        document.getElementById('cameraSide').addEventListener('change', updateCamera);
+        document.getElementById('cameraHeight').addEventListener('input', function() {
+            document.getElementById('cameraHeightValue').textContent = this.value;
+            updateCamera();
+        });
+
+        document.getElementById('fov').addEventListener('input', function() {
+            document.getElementById('fovValue').textContent = this.value;
+            updateCamera();
+        });
+
+        document.getElementById('speed').addEventListener('input', function() {
+            document.getElementById('speedValue').textContent = this.value;
+            updateCamera();
+        });
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 移动摄像机
+            cameraPosition.z += cameraSpeed * 0.016; // 60fps
+            camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            camera.lookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z + 100);
+            
+            // 更新场景
+            updateChunks();
+            
+            renderer.render(scene, camera);
+        }
+
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 初始化
+        updateSun();
+        updateCamera();
+        updateChunks();
+        animate();
+    </script>
+</body>
+</html>

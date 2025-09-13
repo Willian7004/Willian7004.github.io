@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体素引擎应用与案例</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            font-family: 'Arial', sans-serif;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 248, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            color: #38bdf8;
+        }
+        .game-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.4);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+        .glow {
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+        }
+        .game-image {
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+        .game-card:hover .game-image img {
+            transform: scale(1.05);
+        }
+        .game-image img {
+            transition: transform 0.5s ease;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <div class="grid-pattern"></div>
+        
+        <div class="content flex flex-col h-full px-16 py-10">
+            <!-- 标题区域 -->
+            <div class="text-center mb-6">
+                <h1 class="text-5xl font-bold glow">
+                    <span class="highlight">体素引擎应用与案例</span>
+                </h1>
+                <p class="text-xl text-blue-300 opacity-80 mt-2">Voxel Engine Applications & Case Studies</p>
+            </div>
+            
+            <!-- 主要内容区域：游戏案例 -->
+            <div class="flex-grow grid grid-cols-3 gap-6">
+                <!-- Minecraft -->
+                <div class="game-card flex flex-col">
+                    <div class="game-image h-40 overflow-hidden rounded-t-lg">
+                        <img src="../../libs/239-400x200.jpg" alt="Minecraft游戏画面" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-2xl font-bold flex items-center">
+                                <i class="fas fa-cubes text-green-400 mr-3"></i>
+                                Minecraft
+                            </h2>
+                            <span class="bg-green-900/60 text-green-300 px-2 py-1 rounded text-xs">2009年</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <span class="tag bg-green-900/60 text-green-300">开放世界</span>
+                            <span class="tag bg-green-900/60 text-green-300">生存建造</span>
+                        </div>
+                        
+                        <ul class="space-y-2 text-sm flex-grow">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>基于<span class="highlight">体素块</span>构建世界</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>支持<span class="highlight">实时编辑</span>地形与建筑</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-400 mt-1 mr-2"></i>
+                                <span>开创性<span class="highlight">体素游戏</span>商业模式</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-4 text-center text-sm text-green-300 font-semibold">
+                            全球销量超过2.3亿份
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Teardown -->
+                <div class="game-card flex flex-col">
+                    <div class="game-image h-40 overflow-hidden rounded-t-lg">
+                        <img src="../../libs/407-400x200.jpg" alt="Teardown游戏画面" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-2xl font-bold flex items-center">
+                                <i class="fas fa-hammer text-amber-400 mr-3"></i>
+                                Teardown
+                            </h2>
+                            <span class="bg-amber-900/60 text-amber-300 px-2 py-1 rounded text-xs">2020年</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <span class="tag bg-amber-900/60 text-amber-300">物理模拟</span>
+                            <span class="tag bg-amber-900/60 text-amber-300">破坏环境</span>
+                        </div>
+                        
+                        <ul class="space-y-2 text-sm flex-grow">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-amber-400 mt-1 mr-2"></i>
+                                <span>结合<span class="highlight">体素与物理</span>引擎</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-amber-400 mt-1 mr-2"></i>
+                                <span>实现<span class="highlight">真实破坏</span>效果</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-amber-400 mt-1 mr-2"></i>
+                                <span>高度<span class="highlight">交互式</span>游戏环境</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-4 text-center text-sm text-amber-300 font-semibold">
+                            独特体素物理技术专利
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Core Keeper -->
+                <div class="game-card flex flex-col">
+                    <div class="game-image h-40 overflow-hidden rounded-t-lg">
+                        <img src="../../libs/366-400x200.jpg" alt="Core Keeper游戏画面" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-2xl font-bold flex items-center">
+                                <i class="fas fa-gem text-purple-400 mr-3"></i>
+                                Core Keeper
+                            </h2>
+                            <span class="bg-purple-900/60 text-purple-300 px-2 py-1 rounded text-xs">2022年</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <span class="tag bg-purple-900/60 text-purple-300">挖掘探索</span>
+                            <span class="tag bg-purple-900/60 text-purple-300">多人合作</span>
+                        </div>
+                        
+                        <ul class="space-y-2 text-sm flex-grow">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-purple-400 mt-1 mr-2"></i>
+                                <span>程序化<span class="highlight">生成体素世界</span></span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-purple-400 mt-1 mr-2"></i>
+                                <span>复杂<span class="highlight">地下洞穴</span>系统</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-purple-400 mt-1 mr-2"></i>
+                                <span>优化<span class="highlight">大型多人</span>在线体验</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-4 text-center text-sm text-purple-300 font-semibold">
+                            Steam好评率 97%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部：应用领域 -->
+            <div class="mt-6">
+                <div class="bg-slate-800/40 rounded-lg p-4">
+                    <h3 class="text-xl font-semibold mb-3 text-center text-blue-300">体素技术应用领域</h3>
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-3xl text-blue-400 mb-2">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <div class="font-bold">游戏开发</div>
+                            <div class="text-xs mt-1 text-blue-200">开放世界沙盒</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-3xl text-green-400 mb-2">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <div class="font-bold">体积渲染</div>
+                            <div class="text-xs mt-1 text-green-200">医学影像可视化</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-3xl text-amber-400 mb-2">
+                                <i class="fas fa-mountain"></i>
+                            </div>
+                            <div class="font-bold">地形生成</div>
+                            <div class="text-xs mt-1 text-amber-200">程序化景观</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-3xl text-purple-400 mb-2">
+                                <i class="fas fa-vr-cardboard"></i>
+                            </div>
+                            <div class="font-bold">VR/AR应用</div>
+                            <div class="text-xs mt-1 text-purple-200">交互式环境</div>
+                        </div>
+                        <div class="text-center p-3 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-lg">
+                            <div class="text-3xl text-red-400 mb-2">
+                                <i class="fas fa-atom"></i>
+                            </div>
+                            <div class="font-bold">科学模拟</div>
+                            <div class="text-xs mt-1 text-red-200">分子结构可视化</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

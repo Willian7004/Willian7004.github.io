@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物理引擎实现原理 - 刚体动力学</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: white;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #4da6ff, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .highlight {
+            color: #4da6ff;
+            font-weight: bold;
+        }
+        .glow {
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.5);
+        }
+        .law-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            display: inline-block;
+        }
+        .concept-item {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .concept-item:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .arrow-flow {
+            position: relative;
+            padding: 0 1rem;
+        }
+        .arrow-flow:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -1rem;
+            width: 2rem;
+            height: 2px;
+            background: rgba(77, 166, 255, 0.7);
+        }
+        .arrow-flow:last-child:after {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide p-10 flex flex-col">
+        <h1 class="title text-center">刚体动力学</h1>
+        <p class="text-center text-xl text-blue-200 mb-6">牛顿三大定律在物理引擎中的数学实现</p>
+        
+        <div class="flex-grow grid grid-cols-2 gap-8">
+            <!-- Newton's Laws -->
+            <div class="card p-6 flex flex-col">
+                <h3 class="text-2xl font-bold mb-4 text-blue-300">牛顿三大定律</h3>
+                
+                <div class="space-y-6 flex-grow">
+                    <div class="flex items-start">
+                        <div class="law-icon bg-gradient-to-br from-blue-500 to-blue-700 glow">
+                            <i class="fas fa-equals text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-blue-200">第一定律 - 惯性</h4>
+                            <p class="text-sm mt-1">物体在不受外力时，保持静止或匀速直线运动状态</p>
+                            <div class="formula text-center mt-2">
+                                ΣF = 0 ⇒ a = 0
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="law-icon bg-gradient-to-br from-green-500 to-green-700 glow">
+                            <i class="fas fa-exchange-alt text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-green-200">第二定律 - 动力学</h4>
+                            <p class="text-sm mt-1">物体加速度与所受合外力成正比，与质量成反比</p>
+                            <div class="formula text-center mt-2">
+                                F = ma
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="law-icon bg-gradient-to-br from-purple-500 to-purple-700 glow">
+                            <i class="fas fa-retweet text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-purple-200">第三定律 - 作用力与反作用力</h4>
+                            <p class="text-sm mt-1">两个物体间的作用力与反作用力大小相等，方向相反</p>
+                            <div class="formula text-center mt-2">
+                                F<sub>AB</sub> = -F<sub>BA</sub>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 bg-gradient-to-r from-blue-900 to-blue-700 p-3 rounded-lg">
+                    <p class="text-sm">物理引擎通过数值积分方法将微分方程转化为离散形式，模拟物体运动</p>
+                </div>
+            </div>
+            
+            <!-- Degrees of Freedom -->
+            <div class="card p-6 flex flex-col">
+                <h3 class="text-2xl font-bold mb-4 text-green-300">自由度与广义坐标</h3>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-900 bg-opacity-30 p-4 rounded-lg">
+                        <h4 class="text-lg font-bold mb-2 text-green-200">自由度 (DOF)</h4>
+                        <p class="text-sm">物体在空间中独立运动的数量</p>
+                        <div class="flex justify-around mt-3">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto rounded-full border-2 border-green-400 flex items-center justify-center">
+                                    <span class="text-2xl font-bold">2D</span>
+                                </div>
+                                <p class="text-xs mt-1">3个自由度</p>
+                                <p class="text-xs">(2平移 + 1旋转)</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto rounded-full border-2 border-green-400 flex items-center justify-center">
+                                    <span class="text-2xl font-bold">3D</span>
+                                </div>
+                                <p class="text-xs mt-1">6个自由度</p>
+                                <p class="text-xs">(3平移 + 3旋转)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-900 bg-opacity-30 p-4 rounded-lg">
+                        <h4 class="text-lg font-bold mb-2 text-green-200">广义坐标</h4>
+                        <p class="text-sm">描述系统位形所需的最少独立参数</p>
+                        <div class="mt-3 flex justify-center">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto flex items-center justify-center">
+                                    <span class="text-2xl font-bold">θ</span>
+                                </div>
+                                <p class="text-xs mt-1">单摆：1个广义坐标</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-900 bg-opacity-20 p-4 rounded-lg mb-4">
+                    <h4 class="text-lg font-bold mb-2 text-blue-200">自由度 = 广义坐标数</h4>
+                    <p class="text-sm">刚体的自由度决定了描述其运动状态所需的变量数量</p>
+                </div>
+                
+                <div class="mt-auto bg-gradient-to-r from-green-900 to-green-700 p-3 rounded-lg">
+                    <h4 class="font-semibold mb-1">刚体运动描述</h4>
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="arrow-flow text-blue-300">位置</div>
+                        <div class="arrow-flow text-green-300">速度</div>
+                        <div class="arrow-flow text-purple-300">加速度</div>
+                        <div class="arrow-flow text-red-300">力/力矩</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Constraints -->
+            <div class="card p-6 col-span-2 flex flex-col">
+                <h3 class="text-2xl font-bold mb-4 text-purple-300">约束系统</h3>
+                
+                <div class="grid grid-cols-3 gap-6 mb-4">
+                    <div class="bg-purple-900 bg-opacity-30 p-4 rounded-lg">
+                        <h4 class="text-lg font-bold mb-2 text-purple-200">约束定义</h4>
+                        <p class="text-sm">限制刚体运动自由的条件</p>
+                        <div class="formula text-center mt-3">
+                            C(q) = 0
+                        </div>
+                        <p class="text-xs mt-1 italic">q为广义坐标向量</p>
+                    </div>
+                    
+                    <div class="bg-purple-900 bg-opacity-30 p-4 rounded-lg">
+                        <h4 class="text-lg font-bold mb-2 text-purple-200">约束类型</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-link text-purple-400 mr-2"></i>
+                                <span>距离约束</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-lock text-purple-400 mr-2"></i>
+                                <span>旋转关节</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-arrows-alt text-purple-400 mr-2"></i>
+                                <span>接触约束</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-ban text-purple-400 mr-2"></i>
+                                <span>不等式约束</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-900 bg-opacity-30 p-4 rounded-lg">
+                        <h4 class="text-lg font-bold mb-2 text-purple-200">约束雅可比矩阵</h4>
+                        <p class="text-sm">描述约束对状态变量的变化率</p>
+                        <div class="formula text-center mt-3">
+                            J = ∂C/∂q
+                        </div>
+                        <p class="text-xs mt-1 italic">用于约束求解</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 p-4 rounded-lg">
+                    <h4 class="text-lg font-bold mb-3 text-center text-blue-200">刚体动力学在物理引擎中的实现流程</h4>
+                    <div class="flex justify-between items-center">
+                        <div class="bg-blue-800 bg-opacity-50 p-3 rounded-lg text-center w-1/5">
+                            <i class="fas fa-cubes text-2xl mb-2 text-blue-300"></i>
+                            <h5 class="font-bold">刚体建模</h5>
+                            <p class="text-xs">质量、惯性、形状</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-blue-400"></i>
+                        <div class="bg-blue-800 bg-opacity-50 p-3 rounded-lg text-center w-1/5">
+                            <i class="fas fa-calculator text-2xl mb-2 text-blue-300"></i>
+                            <h5 class="font-bold">力与力矩</h5>
+                            <p class="text-xs">重力、摩擦、弹性</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-blue-400"></i>
+                        <div class="bg-blue-800 bg-opacity-50 p-3 rounded-lg text-center w-1/5">
+                            <i class="fas fa-equals text-2xl mb-2 text-blue-300"></i>
+                            <h5 class="font-bold">牛顿定律</h5>
+                            <p class="text-xs">F=ma, 角动量守恒</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-blue-400"></i>
+                        <div class="bg-blue-800 bg-opacity-50 p-3 rounded-lg text-center w-1/5">
+                            <i class="fas fa-puzzle-piece text-2xl mb-2 text-blue-300"></i>
+                            <h5 class="font-bold">约束求解</h5>
+                            <p class="text-xs">碰撞、关节、接触</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-blue-200 opacity-70">
+            <p>刚体动力学是物理引擎的核心，将牛顿力学原理转化为计算机可执行的算法</p>
+        </div>
+    </div>
+</body>
+</html>

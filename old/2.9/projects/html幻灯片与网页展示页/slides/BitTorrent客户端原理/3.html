@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitTorrent工作流程</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            padding: 40px 70px 20px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 70px 40px;
+        }
+        .workflow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            flex-grow: 1;
+        }
+        .workflow-row {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
+        .workflow-card {
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .workflow-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background-color: #64b5f6;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: rgba(100, 181, 246, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .card-icon i {
+            font-size: 26px;
+            color: #64b5f6;
+        }
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #90caf9;
+        }
+        .card-content {
+            flex-grow: 1;
+        }
+        .step-list {
+            list-style-type: none;
+        }
+        .step-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #64b5f6;
+            color: #0a2463;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .step-text {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .highlight {
+            background-color: rgba(100, 181, 246, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .key-point {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .key-point:last-child {
+            margin-bottom: 0;
+        }
+        .key-point i {
+            color: #64b5f6;
+            font-size: 20px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .key-point-text {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .key-point-text strong {
+            color: #bbdefb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">BitTorrent工作流程</h1>
+        </div>
+        <div class="content">
+            <div class="workflow-container">
+                <div class="workflow-row">
+                    <div class="workflow-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="material-icons">publish</i>
+                            </div>
+                            <h2 class="card-title">种子发布</h2>
+                        </div>
+                        <div class="card-content">
+                            <ul class="step-list">
+                                <li class="step-item">
+                                    <div class="step-number">1</div>
+                                    <div class="step-text">发布者使用<span class="highlight">BT客户端</span>创建种子文件</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">2</div>
+                                    <div class="step-text">将文件分割为固定大小的<span class="highlight">分块</span>并计算哈希值</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">3</div>
+                                    <div class="step-text">将分块信息、Tracker地址等写入种子文件</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">4</div>
+                                    <div class="step-text">通知Tracker服务器种子信息并发布种子</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="workflow-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="material-icons">dns</i>
+                            </div>
+                            <h2 class="card-title">Tracker服务器</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="key-point">
+                                <i class="material-icons">hub</i>
+                                <div class="key-point-text"><strong>协调中心</strong> - 记录所有下载同一资源的节点信息</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">sync_alt</i>
+                                <div class="key-point-text"><strong>响应请求</strong> - 返回可用节点的IP和端口列表</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">analytics</i>
+                                <div class="key-point-text"><strong>统计信息</strong> - 记录完成/未完成下载的节点数量</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">update</i>
+                                <div class="key-point-text"><strong>定期更新</strong> - 节点定期向Tracker报告状态</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">alt_route</i>
+                                <div class="key-point-text"><strong>DHT网络</strong> - 无Tracker时可通过分布式哈希表查找节点</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="workflow-row">
+                    <div class="workflow-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="material-icons">connect_without_contact</i>
+                            </div>
+                            <h2 class="card-title">节点连接</h2>
+                        </div>
+                        <div class="card-content">
+                            <ul class="step-list">
+                                <li class="step-item">
+                                    <div class="step-number">1</div>
+                                    <div class="step-text">下载者获取种子文件并解析Tracker地址</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">2</div>
+                                    <div class="step-text">向Tracker发送请求，获取其他节点信息</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">3</div>
+                                    <div class="step-text">与其他节点建立<span class="highlight">TCP连接</span>并完成握手</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">4</div>
+                                    <div class="step-text">交换<span class="highlight">bitfield消息</span>，告知对方已拥有的分块</div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-number">5</div>
+                                    <div class="step-text">维护连接状态，定期发送Keep-Alive消息</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="workflow-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="material-icons">swap_horiz</i>
+                            </div>
+                            <h2 class="card-title">数据交换</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="key-point">
+                                <i class="material-icons">download</i>
+                                <div class="key-point-text"><strong>请求策略</strong> - 优先下载稀有分块，维持平衡</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">upload</i>
+                                <div class="key-point-text"><strong>上传机制</strong> - 下载的同时上传已拥有的分块</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">verified</i>
+                                <div class="key-point-text"><strong>数据验证</strong> - 每个分块下载后进行SHA1哈希验证</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">block</i>
+                                <div class="key-point-text"><strong>阻塞算法</strong> - 每10秒选择最优4个节点解除阻塞</div>
+                            </div>
+                            <div class="key-point">
+                                <i class="material-icons">done_all</i>
+                                <div class="key-point-text"><strong>完成校验</strong> - 所有分块下载完成后验证整个文件</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用html根据以下要求创建一个程序：
+1. 需要时使用cdn导入库文件。
+2. 使用页面尺寸作为画布尺寸，使用2d形式。
+3. 在页面底部依次创建连续的草地和道路场景，道路页面高度10%，草地场景底部与页面底部重合，在道路场景上下两侧各包含占页面高度5%的草地场景。
+4. 创建混凝土结构和钢结构两种程序化建筑，每个建筑宽度80像素，间距20像素，每次生成时选中每种建筑概率均为40%，有20%概率额外生成40像素的间隔。建筑底部与道路场景顶部重合，高度为页面高度35%到65%的随机值且确保生成整数层数。
+5. 创建天空场景，包含太阳和月球，把太阳和月球设为高度角相差180°，在左上角的输入框设置模拟速度倍数和太阳/月球旋转半径（按占屏幕高度的比例，默认为80%）。
+6. 地面场景根据画布位置生成和删除，移动速度和方向通过滑块调节，夜间在窗的位置添加灯光效果并加深其它部分颜色。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市天际线模拟</title>
+    <style>
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+#city-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #87CEEB; /* 天空蓝 */
+}
+
+.controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+.controls label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.controls input[type="range"] {
+    width: 200px;
+    margin-bottom: 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label>地面速度:</label>
+        <input type="range" id="speed-slider" min="-5" max="5" step="0.1" value="0">
+        <label>天空速度:</label>
+        <input type="range" id="sky-speed-slider" min="0" max="2.5" step="0.1" value="0.5">
+        <label>旋转半径(%):</label>
+        <input type="range" id="radius-slider" min="10" max="90" step="1" value="70">
+    </div>
+    <canvas id="city-canvas"></canvas>
+    <script>
+// 全局变量
+const canvas = document.getElementById('city-canvas');
+const ctx = canvas.getContext('2d');
+const speedSlider = document.getElementById('speed-slider');
+const radiusSlider = document.getElementById('radius-slider');
+
+// 场景参数
+let buildings = [];
+let scrollX = 0;
+let scrollSpeed = 0;
+let skySpeed = 0.5;  // 新增天空速度变量
+let orbitRadius = 0.7;
+let sunAngle = 0;
+let isNight = false;
+
+// 初始化
+function init() {
+    resizeCanvas();
+    generateInitialBuildings();
+    setupEventListeners();
+    requestAnimationFrame(animate);
+}
+
+// 设置画布尺寸
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+// 生成初始建筑
+function generateInitialBuildings() {
+    const buildingWidth = 80;
+    const gap = 20;
+    let x = 0;
+    
+    while (x < canvas.width * 2) {
+        const rand = Math.random();
+        if (rand < 0.4) {
+            buildings.push(createConcreteBuilding(x));
+            x += buildingWidth + gap;
+        } else if (rand < 0.8) {
+            buildings.push(createSteelBuilding(x));
+            x += buildingWidth + gap;
+        } else {
+            x += 40; // 20%概率生成40px间隔
+        }
+    }
+}
+
+// 创建混凝土建筑
+function createConcreteBuilding(x) {
+    const minHeight = canvas.height * 0.35;
+    const maxHeight = canvas.height * 0.65;
+    const height = minHeight + Math.floor(Math.random() * (maxHeight - minHeight));
+    const floors = Math.floor(height / 20);
+    
+    return {
+        type: 'concrete',
+        x: x,
+        y: canvas.height * 0.85 - height,
+        width: 80,
+        height: height,
+        floors: floors
+    };
+}
+
+// 创建钢结构建筑
+function createSteelBuilding(x) {
+    const minHeight = canvas.height * 0.35;
+    const maxHeight = canvas.height * 0.65;
+    const height = minHeight + Math.floor(Math.random() * (maxHeight - minHeight));
+    const floors = Math.floor(height / 20);
+    
+    return {
+        type: 'steel',
+        x: x,
+        y: canvas.height * 0.85 - height,
+        width: 80,
+        height: height,
+        floors: floors
+    };
+}
+
+// 设置事件监听
+function setupEventListeners() {
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        buildings = [];
+        generateInitialBuildings();
+    });
+    
+    speedSlider.addEventListener('input', (e) => {
+        scrollSpeed = parseFloat(e.target.value);
+    });
+    
+    radiusSlider.addEventListener('input', (e) => {
+        orbitRadius = parseFloat(e.target.value) / 100;
+    });
+    
+    // 新增天空速度滑块事件监听
+    document.getElementById('sky-speed-slider').addEventListener('input', (e) => {
+        skySpeed = parseFloat(e.target.value);
+    });
+}
+
+// 渲染地面场景
+function renderGround() {
+    // 底部草地 (95%-100%)
+    ctx.fillStyle = '#2E8B57';
+    ctx.fillRect(0, canvas.height * 0.95, canvas.width, canvas.height * 0.05);
+    
+    // 道路 (85%-95%)
+    ctx.fillStyle = '#708090';
+    ctx.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.10);
+
+    // 道路上方草地 (80%-85%)
+    ctx.fillStyle = '#2E8B57';
+    ctx.fillRect(0, canvas.height * 0.80, canvas.width, canvas.height * 0.05);
+}
+
+// 渲染建筑
+function renderBuildings() {
+    buildings.forEach(building => {
+        if (building.x + building.width < scrollX || building.x > scrollX + canvas.width) return;
+        
+        const screenX = building.x - scrollX;
+        
+        if (building.type === 'concrete') {
+            // 混凝土建筑
+            ctx.fillStyle = isNight ? '#555' : '#A9A9A9';
+            ctx.fillRect(screenX, building.y, building.width, building.height);
+            
+            // 窗户
+            ctx.fillStyle = isNight ? '#FFD700' : '#ADD8E6';
+            const windowWidth = 10;
+            const windowHeight = 15;
+            const windowGap = 5;
+            
+            for (let floor = 0; floor < building.floors; floor++) {
+                for (let col = 0; col < 4; col++) {
+                    const wx = screenX + 10 + col * (windowWidth + windowGap);
+                    const wy = building.y + 5 + floor * (windowHeight + windowGap);
+                    ctx.fillRect(wx, wy, windowWidth, windowHeight);
+                }
+            }
+        } else {
+            // 钢结构建筑
+            ctx.fillStyle = isNight ? '#333' : '#4682B4';
+            ctx.fillRect(screenX, building.y, building.width, building.height);
+            
+            // 钢结构框架
+            ctx.strokeStyle = isNight ? '#666' : '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            // 垂直线条
+            for (let i = 0; i <= 4; i++) {
+                const x = screenX + i * (building.width / 4);
+                ctx.moveTo(x, building.y);
+                ctx.lineTo(x, building.y + building.height);
+            }
+            
+            // 水平线条
+            for (let i = 0; i <= building.floors; i++) {
+                const y = building.y + i * (building.height / building.floors);
+                ctx.moveTo(screenX, y);
+                ctx.lineTo(screenX + building.width, y);
+            }
+            
+            ctx.stroke();
+        }
+    });
+}
+
+// 渲染天空场景
+function renderSky() {
+    // 天空背景渐变
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    if (isNight) {
+        gradient.addColorStop(0, '#0a0a2a');
+        gradient.addColorStop(1, '#1a1a4a');
+    } else {
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#1E90FF');
+    }
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.80);
+    
+    // 更新天体角度（仅使用天空速度，反向旋转）
+    sunAngle -= skySpeed * 0.01;
+    const moonAngle = sunAngle + Math.PI;
+    
+    // 确定日夜模式（使用余弦函数）
+    isNight = Math.cos(sunAngle+1.5) < 0;
+    
+    // 计算轨道半径像素值（以道路顶部为中心）
+    const centerY = canvas.height * 0.85;
+    const orbitRadiusPx = canvas.height * orbitRadius;
+    
+    // 绘制太阳
+    const sunX = canvas.width / 2 + Math.cos(sunAngle) * orbitRadiusPx;
+    const sunY = centerY + Math.sin(sunAngle) * orbitRadiusPx;
+    ctx.fillStyle = isNight ? '#333' : '#FFD700';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 30, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 绘制月球
+    const moonX = canvas.width / 2 + Math.cos(moonAngle) * orbitRadiusPx;
+    const moonY = centerY + Math.sin(moonAngle) * orbitRadiusPx;
+    ctx.fillStyle = isNight ? '#DDD' : '#AAA';
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, 25, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 动画循环
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 更新滚动位置
+    scrollX += scrollSpeed;
+    
+    // 渲染场景
+    renderSky();
+    renderGround();
+    renderBuildings();
+    
+    // 检查是否需要生成新建筑
+    checkBuildingGeneration();
+    
+    requestAnimationFrame(animate);
+}
+
+// 检查是否需要生成新建筑
+function checkBuildingGeneration() {
+    const lastBuilding = buildings[buildings.length - 1];
+    if (lastBuilding.x + lastBuilding.width < scrollX + canvas.width * 1.5) {
+        const newX = lastBuilding.x + lastBuilding.width + 20;
+        const rand = Math.random();
+        if (rand < 0.4) {
+            buildings.push(createConcreteBuilding(newX));
+        } else if (rand < 0.8) {
+            buildings.push(createSteelBuilding(newX));
+        } else {
+            buildings.push({
+                type: 'gap',
+                x: newX,
+                width: 40
+            });
+        }
+    }
+    
+    // 移除屏幕外的建筑
+    buildings = buildings.filter(b => b.x + b.width > scrollX - canvas.width);
+}
+
+// 启动程序
+window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+使用three.js写一个程序，实现以下功能：
+1. 需要时使用cdn导入库文件。
+2. 创建一个边长为128的正方体，显示为8*8*8的栅格。
+3. 在正方体内部随机位置生成随机颜色的半径为6的球，默认生成64个，可通过滑块选择16到256且为16的倍数的值。
+4. 用鼠标拖动控制正方体旋转，模拟球与正方体以及不同球之间的弹性碰撞，默认重力加速度为32格/s^2，可通过滑块选择8到128且为8的倍数的值。正方体不受碰撞和重力加速度影响。
+5. 添加复选框，分别用于添加球体的拖影效果以及每次碰撞改变相应球体的颜色。
+
+注：已修改部分参数。拖影效果有一定问题，考虑到球体占位较多，还是决定按目前方法作为背景。
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js 立方体球体碰撞模拟</title>
+    <style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#container {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+    </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <!-- 轨道控制器 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- dat.GUI -->
+    <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.7/build/dat.gui.min.js"></script>
+    <!-- Stats.js -->
+    <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
+</head>
+<body>
+    <div id="container"></div>
+    <script>
+// 初始化场景
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+
+// 初始化相机
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(110, 110, 110);
+camera.lookAt(0, 0, 0);
+
+// 初始化渲染器
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.getElementById('container').appendChild(renderer.domElement);
+
+// 创建场景组用于旋转
+const sceneGroup = new THREE.Group();
+scene.add(sceneGroup);
+
+// 初始旋转四元数
+let rotationQuaternion = new THREE.Quaternion();
+const initialRotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0));
+
+// 鼠标控制变量
+let isDragging = false;
+let previousMousePosition = {
+    x: 0,
+    y: 0
+};
+
+// 鼠标事件监听
+renderer.domElement.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    previousMousePosition = {
+        x: e.clientX,
+        y: e.clientY
+    };
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+    };
+    
+    // 基于全局坐标系旋转
+    const rotationSpeed = 0.01;
+    const deltaQuaternion = new THREE.Quaternion()
+        .setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaMove.x * rotationSpeed)
+        .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaMove.y * rotationSpeed));
+    
+    rotationQuaternion = deltaQuaternion.multiply(rotationQuaternion);
+    sceneGroup.setRotationFromQuaternion(rotationQuaternion);
+    
+    previousMousePosition = {
+        x: e.clientX,
+        y: e.clientY
+    };
+});
+
+window.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+// 触摸事件支持
+renderer.domElement.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    previousMousePosition = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+    };
+});
+
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    
+    const deltaMove = {
+        x: e.touches[0].clientX - previousMousePosition.x,
+        y: e.touches[0].clientY - previousMousePosition.y
+    };
+    
+    // 基于全局坐标系旋转
+    const rotationSpeed = 0.01;
+    const deltaQuaternion = new THREE.Quaternion()
+        .setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaMove.x * rotationSpeed)
+        .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaMove.y * rotationSpeed));
+    
+    rotationQuaternion = deltaQuaternion.multiply(rotationQuaternion);
+    sceneGroup.setRotationFromQuaternion(rotationQuaternion);
+    
+    previousMousePosition = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+    };
+    
+    e.preventDefault();
+});
+
+window.addEventListener('touchend', () => {
+    isDragging = false;
+});
+
+// 创建立方体栅格 (128x128x128, 6面栅格)
+const createCubeGrid = () => {
+    const size = 128;
+    const divisions = 8;
+    const grid = new THREE.Group();
+    const halfSize = size / 2;
+    
+    // 创建六个面的栅格
+    const createFace = (position, rotation) => {
+        const plane = new THREE.GridHelper(size, divisions, 0x00ffff, 0x00ffff);
+        plane.position.copy(position);
+        plane.rotation.copy(rotation);
+        grid.add(plane);
+    };
+    
+    // 前后面 (Z轴)
+    createFace(new THREE.Vector3(0, 0, halfSize), new THREE.Euler(0, Math.PI/2, Math.PI/2));
+    createFace(new THREE.Vector3(0, 0, -halfSize), new THREE.Euler(0, Math.PI/2, Math.PI/2));
+    
+    // 左右面 (X轴)
+    createFace(new THREE.Vector3(halfSize, 0, 0), new THREE.Euler(Math.PI/2, 0, Math.PI/2));
+    createFace(new THREE.Vector3(-halfSize, 0, 0), new THREE.Euler(Math.PI/2, 0, Math.PI/2));
+    
+    // 顶底面 (Y轴)
+    createFace(new THREE.Vector3(0, halfSize, 0), new THREE.Euler(0, 0, 0));
+    createFace(new THREE.Vector3(0, -halfSize, 0), new THREE.Euler(0, 0, 0));
+    
+    return grid;
+};
+
+// 生成随机球体
+const createBalls = (count) => {
+    const balls = new THREE.Group();
+    const radius = 6;
+    const geometry = new THREE.SphereGeometry(radius, 16, 16);
+    
+    for (let i = 0; i < count; i++) {
+        // 随机位置 (确保在立方体内)
+        const x = Math.random() * 112 - 56;
+        const y = Math.random() * 112 - 56;
+        const z = Math.random() * 112 - 56;
+        
+        // 随机颜色
+        const color = new THREE.Color(Math.random() * 0xffffff);
+        const material = new THREE.MeshPhongMaterial({ 
+            color,
+            shininess: 100
+        });
+        
+        const ball = new THREE.Mesh(geometry, material);
+        ball.position.set(x, y, z);
+        ball.userData = {
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10
+            ),
+            radius: radius,
+            id: i
+        };
+        
+        balls.add(ball);
+    }
+    
+    return balls;
+};
+
+// 添加灯光
+const addLights = () => {
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+};
+
+// 初始化GUI参数
+const params = {
+    ballCount: 64,
+    gravity: 32,
+    trailEffect: true,
+    colorChange: true
+};
+
+// 拖影系统
+const trailSystem = {
+    history: new Map(),
+    maxHistory: 16,
+    trailGroup: new THREE.Group(),
+    trailMaterial: new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 2,
+        transparent: true,
+        opacity: 0.6
+    }),
+    
+    init: () => {
+        scene.add(trailSystem.trailGroup);
+    },
+    
+    update: (balls) => {
+        if (!params.trailEffect) return;
+        
+        balls.children.forEach(ball => {
+            if (!trailSystem.history.has(ball.id)) {
+                trailSystem.history.set(ball.id, []);
+            }
+            
+            const history = trailSystem.history.get(ball.id);
+            history.push(ball.position.clone());
+            
+            if (history.length > trailSystem.maxHistory) {
+                history.shift();
+            }
+        });
+    },
+    
+    render: () => {
+        if (!params.trailEffect) return;
+        
+        // 清除旧拖影
+        while(trailSystem.trailGroup.children.length > 0) {
+            trailSystem.trailGroup.remove(trailSystem.trailGroup.children[0]);
+        }
+        
+        // 创建新拖影
+        trailSystem.history.forEach((positions, id) => {
+            if (positions.length < 2) return;
+            
+            const points = [];
+            positions.forEach((pos, index) => {
+                points.push(pos.clone());
+            });
+            
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+                color: 0x00ff00,
+                transparent: true,
+                opacity: 0.3
+            }));
+            
+            trailSystem.trailGroup.add(line);
+        });
+    }
+};
+
+// 物理系统
+const physics = {
+    cubeSize: 128,
+    elasticity: 0.8,
+    
+    // 检测球体与立方体碰撞
+    handleCubeCollision: (ball) => {
+        const halfSize = physics.cubeSize / 2;
+        const radius = ball.userData.radius;
+        let collided = false;
+        
+        ['x', 'y', 'z'].forEach(axis => {
+            if (ball.position[axis] + radius > halfSize) {
+                ball.position[axis] = halfSize - radius;
+                ball.userData.velocity[axis] = -ball.userData.velocity[axis] * physics.elasticity;
+                collided = true;
+            } else if (ball.position[axis] - radius < -halfSize) {
+                ball.position[axis] = -halfSize + radius;
+                ball.userData.velocity[axis] = -ball.userData.velocity[axis] * physics.elasticity;
+                collided = true;
+            }
+        });
+        
+        if (collided && params.colorChange) {
+            ball.material.color.setHex(Math.random() * 0xffffff);
+        }
+    },
+    
+    // 检测球体间碰撞
+    handleBallCollisions: (balls) => {
+        const ballArray = balls.children;
+        
+        for (let i = 0; i < ballArray.length; i++) {
+            for (let j = i + 1; j < ballArray.length; j++) {
+                const ball1 = ballArray[i];
+                const ball2 = ballArray[j];
+                
+                const distance = ball1.position.distanceTo(ball2.position);
+                const minDistance = ball1.userData.radius + ball2.userData.radius;
+                
+                if (distance < minDistance) {
+                    // 碰撞响应
+                    const collisionVector = new THREE.Vector3()
+                        .subVectors(ball2.position, ball1.position)
+                        .normalize();
+                    
+                    // 更新速度
+                    const v1 = ball1.userData.velocity.dot(collisionVector);
+                    const v2 = ball2.userData.velocity.dot(collisionVector);
+                    
+                    const m1 = ball1.userData.radius;
+                    const m2 = ball2.userData.radius;
+                    
+                    const newV1 = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
+                    const newV2 = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+                    
+                    ball1.userData.velocity.add(
+                        collisionVector.clone().multiplyScalar(newV1 - v1)
+                    );
+                    
+                    ball2.userData.velocity.add(
+                        collisionVector.clone().multiplyScalar(newV2 - v2)
+                    );
+                    
+                    // 防止粘连
+                    const overlap = minDistance - distance;
+                    const correction = collisionVector.multiplyScalar(overlap * 0.5);
+                    ball1.position.sub(correction);
+                    ball2.position.add(correction);
+                    
+                    // 碰撞变色
+                    if (params.colorChange) {
+                        ball1.material.color.setHex(Math.random() * 0xffffff);
+                        ball2.material.color.setHex(Math.random() * 0xffffff);
+                    }
+                }
+            }
+        }
+    },
+    
+    update: (balls, deltaTime) => {
+        // 计算世界坐标系下的重力加速度向量 (0, -gravity, 0)
+        const worldGravity = new THREE.Vector3(0, -params.gravity * deltaTime, 0);
+        
+        // 将世界坐标系重力转换为场景组局部坐标系
+        const localGravity = new THREE.Vector3();
+        sceneGroup.worldToLocal(localGravity.copy(worldGravity));
+        
+        // 应用重力并更新位置
+        balls.children.forEach(ball => {
+            // 应用重力（在局部坐标系）
+            ball.userData.velocity.add(localGravity);
+            
+            // 更新位置
+            ball.position.add(ball.userData.velocity.clone().multiplyScalar(deltaTime));
+            
+            // 立方体碰撞检测
+            physics.handleCubeCollision(ball);
+        });
+        
+        // 球体间碰撞检测
+        physics.handleBallCollisions(balls);
+    }
+};
+
+// 创建GUI控制面板
+const createGUI = () => {
+    const gui = new dat.GUI();
+    
+    gui.add(params, 'ballCount', 16, 256).step(16).name('球体数量').onChange(value => {
+        scene.remove(ballGroup);
+        ballGroup = createBalls(value);
+        scene.add(ballGroup);
+        trailSystem.history.clear();
+    });
+    
+    gui.add(params, 'gravity', 8, 128).step(8).name('重力加速度');
+    gui.add(params, 'trailEffect').name('拖影效果');
+    gui.add(params, 'colorChange').name('碰撞变色');
+};
+
+// 添加性能监控
+const addStats = () => {
+    const stats = new Stats();
+    stats.showPanel(0);
+    document.body.appendChild(stats.dom);
+    return stats;
+};
+
+// 主场景初始化
+let ballGroup = createBalls(params.ballCount);
+sceneGroup.add(createCubeGrid());
+sceneGroup.add(ballGroup);
+addLights();
+trailSystem.init();
+createGUI();
+const stats = addStats();
+
+// 处理窗口大小变化
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 动画循环
+let lastTime = 0;
+const animate = (time) => {
+    const deltaTime = Math.min(0.1, (time - lastTime) / 1000);
+    lastTime = time;
+    
+    stats.begin();
+    
+    // 更新物理系统
+    physics.update(ballGroup, deltaTime);
+    
+    // 更新拖影系统
+    trailSystem.update(ballGroup);
+    trailSystem.render();
+    
+    // 不再需要控制器更新
+    
+    // 渲染场景
+    renderer.render(scene, camera);
+    
+    stats.end();
+    requestAnimationFrame(animate);
+};
+
+animate(0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容浏览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: -1;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .sidebar-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-header button:hover {
+            opacity: 0.7;
+        }
+
+        .sidebar-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .group {
+            margin-bottom: 20px;
+        }
+
+        .group-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 2px;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .item.active {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .item-name {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .item:hover .item-actions,
+        .item.active .item-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            transition: flex 0.3s ease, width 0.3s ease;
+        }
+
+        .content.full-width {
+            flex: none;
+            width: 100%;
+        }
+
+        .content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .content-markdown {
+            width: 100%;
+            height: 100%;
+            background: white;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Resize handle */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: -5px;
+            width: 10px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 10;
+        }
+
+        .resize-handle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Toggle button */
+        /* Default for portrait mode - top right */
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: auto;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Landscape mode - top left */
+        @media (min-aspect-ratio: 1/1) {
+            .toggle-btn {
+                right: auto;
+                left: 20px;
+            }
+        }
+
+        .toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .toggle-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Modal for project README */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 50%;
+            max-height: 50%;
+            overflow-y: auto;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive for vertical layout */
+        @media (max-aspect-ratio: 1/1) {
+            .main-container {
+                flex-direction: column;
+                position: relative;
+            }
+
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                max-height: 50%;
+            }
+
+            .sidebar.collapsed {
+                transform: translateY(-100%);
+            }
+
+            /* 修复竖屏模式下收起侧边栏时内容区域边界问题 */
+            .sidebar.collapsed + .content {
+                height: 100vh;
+                margin-top: 0;
+            }
+            
+            .sidebar.collapsed + .content.full-width {
+                height: 100vh;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            
+            .resize-handle {
+                position: absolute;
+                bottom: -5px;
+                left: 0;
+                width: 100%;
+                height: 10px;
+                cursor: row-resize;
+                top: auto;
+                right: auto;
+            }
+
+            .resize-handle:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: white;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <button class="toggle-btn hidden" id="toggleBtn" onclick="toggleSidebar()">☰</button>
+    
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <div class="resize-handle" id="resizeHandle"></div>
+            
+            <div class="sidebar-header">
+                <button onclick="goBack()" title="返回">↩</button>
+                <div class="sidebar-title" id="sidebarTitle">加载中...</div>
+                <button onclick="toggleSidebar()" title="收起">☰</button>
+            </div>
+            
+            <div class="sidebar-content" id="sidebarContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <div class="content" id="content">
+            <div class="loading">请选择内容查看</div>
+        </div>
+    </div>
+
+    <!-- Modal for project README -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script src="libs/marked.min.js"></script>
+    <script>
+        let currentType = null;
+        let currentData = null;
+        let isResizing = false;
+        let sidebarWidth = 250;  // Consistent width for all pages
+        let sidebarHeight = 250;
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentType = urlParams.get('type') || 'README';
+            
+            setBackground();
+            initSidebarSize(); // 初始化侧边栏尺寸
+            loadSidebarContent();
+            setupResizeHandler();
+            setupModal();
+        });
+        
+        // 初始化侧边栏尺寸
+        function initSidebarSize() {
+            const sidebar = document.getElementById('sidebar');
+            const isVertical = window.innerWidth < window.innerHeight;
+            
+            if (isVertical) {
+                sidebar.style.width = '100%';
+                sidebar.style.height = '250px';
+            } else {
+                sidebar.style.height = '100%';
+                sidebar.style.width = '250px';
+            }
+        }
+
+        // Background image selection
+        function setBackground() {
+            const isHorizontal = window.innerWidth > window.innerHeight;
+            const folder = isHorizontal ? 'horizontal' : 'vertical';
+            const count = isHorizontal ? 93 : 90;
+            const randomNum = Math.floor(Math.random() * count) + 1;
+            const imageUrl = `backgrounds/${folder}/${randomNum}.jpg`;
+            
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+        }
+
+        // Load sidebar content based on type
+        async function loadSidebarContent() {
+            const sidebarTitle = document.getElementById('sidebarTitle');
+            const sidebarContent = document.getElementById('sidebarContent');
+            
+            try {
+                let data = null;
+                
+                switch(currentType) {
+                    case 'articles':
+                        sidebarTitle.textContent = '文章';
+                        const articlesRes = await fetch('data/articles.json');
+                        data = await articlesRes.json();
+                        renderArticlesSidebar(data);
+                        break;
+                        
+                    case 'pages':
+                        sidebarTitle.textContent = '网页';
+                        const pagesRes = await fetch('data/pages.json');
+                        data = await pagesRes.json();
+                        renderPagesSidebar(data);
+                        break;
+                        
+                    case 'projects':
+                        sidebarTitle.textContent = '项目';
+                        const projectsRes = await fetch('data/projects.json');
+                        data = await projectsRes.json();
+                        renderProjectsSidebar(data);
+                        break;
+                        
+                    default:
+                        sidebarTitle.textContent = '说明';
+                        loadReadme();
+                        return;
+                }
+                
+                currentData = data;
+                
+                // Auto-select first item
+                const firstItem = document.querySelector('.item');
+                if (firstItem) {
+                    firstItem.click();
+                }
+                
+            } catch (error) {
+                console.error('Error loading sidebar content:', error);
+                sidebarContent.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        function renderArticlesSidebar(data) {
+            const sidebarContent = document.getElementById('sidebarContent');
+            sidebarContent.innerHTML = '';
+            
+            // Pinned articles
+            if (data.pinned && data.pinned.length > 0) {
+                const group = createGroup('置顶文章', data.pinned, 'articles');
+                sidebarContent.appendChild(group);
+            }
+            
+            // Date folders
+            Object.entries(data.folders || {}).forEach(([folder, articles]) => {
+                const group = createGroup(folder, articles, 'articles');
+                sidebarContent.appendChild(group);
+            });
+        }
+
+        function renderPagesSidebar(data) {
+            const sidebarContent = document.getElementById('sidebarContent');
+            sidebarContent.innerHTML = '';
+            
+            Object.entries(data).forEach(([category, pages]) => {
+                const group = createGroup(category, pages, 'pages');
+                sidebarContent.appendChild(group);
+            });
+        }
+
+        function renderProjectsSidebar(data) {
+            const sidebarContent = document.getElementById('sidebarContent');
+            sidebarContent.innerHTML = '';
+            
+            data.forEach(project => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.dataset.path = project.path;
+                item.onclick = () => loadProject(project);
+                
+                item.innerHTML = `
+                    <span class="item-name">${project.name}</span>
+                    <div class="item-actions">
+                        <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('projects/${project.path}/index.html')">↗</button>
+                        ${project.has_readme ? `<button class="action-btn" onclick="event.stopPropagation(); showProjectReadme('${project.path}')">i</button>` : ''}
+                    </div>
+                `;
+                
+                sidebarContent.appendChild(item);
+            });
+        }
+
+        function createGroup(title, items, basePath) {
+            const group = document.createElement('div');
+            group.className = 'group';
+            
+            const groupTitle = document.createElement('div');
+            groupTitle.className = 'group-title';
+            groupTitle.textContent = title;
+            group.appendChild(groupTitle);
+            
+            items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                itemElement.dataset.path = item.path;
+                
+                if (basePath === 'articles') {
+                    itemElement.onclick = () => loadArticle(item);
+                    const mdPath = `articles/${item.path}`;
+                    const htmlPath = mdPath.replace('.md', '.html');
+                    itemElement.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="event.stopPropagation(); openArticleInNewTab('${mdPath}', '${htmlPath}')">↗</button>
+                        </div>
+                    `;
+                } else if (basePath === 'pages') {
+                    itemElement.onclick = () => loadPage(item);
+                    itemElement.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="event.stopPropagation(); openInNewTab('${basePath}/${item.path}')">↗</button>
+                        </div>
+                    `;
+                }
+                
+                group.appendChild(itemElement);
+            });
+            
+            return group;
+        }
+
+        async function openArticleInNewTab(mdPath, htmlPath) {
+            try {
+                // Check if HTML version exists
+                const htmlResponse = await fetch(htmlPath);
+                if (htmlResponse.ok) {
+                    window.open(htmlPath, '_blank');
+                } else {
+                    window.open(mdPath, '_blank');
+                }
+            } catch (error) {
+                window.open(mdPath, '_blank');
+            }
+        }
+
+        // Content loading functions
+        async function loadArticle(article) {
+            const content = document.getElementById('content');
+            const mdPath = `articles/${article.path}`;
+            const htmlPath = mdPath.replace('.md', '.html');
+            
+            // Update active state
+            document.querySelectorAll('.item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-path="${article.path}"]`).classList.add('active');
+            
+            try {
+                // Check if HTML version exists
+                const htmlResponse = await fetch(htmlPath);
+                if (htmlResponse.ok) {
+                    content.innerHTML = `<iframe class="content-iframe" src="${htmlPath}"></iframe>`;
+                } else {
+                    // Load and render markdown
+                    const mdResponse = await fetch(mdPath);
+                    const mdText = await mdResponse.text();
+                    
+                    const markdownDiv = document.createElement('div');
+                    markdownDiv.className = 'content-markdown';
+                    markdownDiv.innerHTML = marked.parse(mdText);
+                    
+                    content.innerHTML = '';
+                    content.appendChild(markdownDiv);
+                }
+            } catch (error) {
+                content.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        async function loadPage(page) {
+            const content = document.getElementById('content');
+            const pagePath = `pages/${page.path}`;
+            
+            // Update active state
+            document.querySelectorAll('.item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-path="${page.path}"]`).classList.add('active');
+            
+            content.innerHTML = `<iframe class="content-iframe" src="${pagePath}"></iframe>`;
+        }
+
+        async function loadProject(project) {
+            const content = document.getElementById('content');
+            const projectPath = `projects/${project.path}/index.html`;
+            
+            // Update active state
+            document.querySelectorAll('.item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-path="${project.path}"]`).classList.add('active');
+            
+            content.innerHTML = `<iframe class="content-iframe" src="${projectPath}"></iframe>`;
+        }
+
+        async function loadReadme() {
+            const content = document.getElementById('content');
+            const sidebarContent = document.getElementById('sidebarContent');
+            
+            sidebarContent.innerHTML = '<div class="loading">README.md</div>';
+            
+            try {
+                const response = await fetch('README.md');
+                const mdText = await response.text();
+                
+                const markdownDiv = document.createElement('div');
+                markdownDiv.className = 'content-markdown';
+                markdownDiv.innerHTML = marked.parse(mdText);
+                
+                content.innerHTML = '';
+                content.appendChild(markdownDiv);
+            } catch (error) {
+                content.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        async function showProjectReadme(projectPath) {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            
+            try {
+                const response = await fetch(`projects/${projectPath}/README.md`);
+                const mdText = await response.text();
+                modalContent.innerHTML = marked.parse(mdText);
+                modal.style.display = 'flex';
+            } catch (error) {
+                modalContent.innerHTML = '无法加载项目说明';
+                modal.style.display = 'flex';
+            }
+        }
+
+        function openInNewTab(url) {
+            window.open(url, '_blank');
+        }
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleBtn');
+            const content = document.getElementById('content');
+            const mainContainer = document.querySelector('.main-container');
+            
+            const isCollapsing = !sidebar.classList.contains('collapsed');
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('hidden');
+            
+            if (isCollapsing) {
+                content.classList.add('full-width');
+            } else {
+                content.classList.remove('full-width');
+            }
+
+            // 添加竖屏模式状态标记
+            const isVertical = window.innerWidth < window.innerHeight;
+            if (isVertical) {
+                mainContainer.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        // Go back
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // Resize handler
+        function setupResizeHandler() {
+            const resizeHandle = document.getElementById('resizeHandle');
+            const sidebar = document.getElementById('sidebar');
+            const isVertical = window.innerWidth < window.innerHeight;
+            
+            let startX, startY, startWidth, startHeight;
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                if (isVertical) {
+                    startHeight = sidebar.offsetHeight;
+                } else {
+                    startWidth = sidebar.offsetWidth;
+                }
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+            });
+            
+            function handleMouseMove(e) {
+                if (!isResizing) return;
+                
+                if (isVertical) {
+                    const newHeight = startHeight + (e.clientY - startY);
+                    sidebar.style.height = Math.max(250, Math.min(600, newHeight)) + 'px';
+                } else {
+                    const newWidth = startWidth + (e.clientX - startX);
+                    sidebar.style.width = Math.max(250, Math.min(500, newWidth)) + 'px';
+                }
+            }
+            
+            function handleMouseUp() {
+                isResizing = false;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            }
+        }
+
+        // Modal setup
+        function setupModal() {
+            const modal = document.getElementById('modal');
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Responsive layout
+        window.addEventListener('resize', initSidebarSize);
+    </script>
+</body>
+</html>

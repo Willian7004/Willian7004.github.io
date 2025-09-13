@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>总结与展望</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .terminal {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .code {
+            color: #f8f8f2;
+        }
+        .comment {
+            color: #6272a4;
+        }
+        .keyword {
+            color: #ff79c6;
+        }
+        .function {
+            color: #50fa7b;
+        }
+        .string {
+            color: #f1fa8c;
+        }
+        .highlight-box {
+            background-color: rgba(80, 250, 123, 0.1);
+            border-left: 4px solid #50fa7b;
+        }
+        .summary-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .future-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #8be9fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <h1 class="text-4xl font-bold mb-8 text-center">总结与展望</h1>
+        
+        <div class="flex flex-grow">
+            <!-- 左侧：Shell实现原理总结 -->
+            <div class="w-1/2 pr-6 flex flex-col">
+                <h2 class="text-3xl font-bold mb-4 text-blue-300">Shell实现原理总结</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="summary-card p-4 border-l-4 border-green-400">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-sync-alt text-2xl mr-3 text-green-400"></i>
+                            <div class="text-xl font-bold">REPL架构</div>
+                        </div>
+                        <div class="text-sm">
+                            循环执行：读取→解析→执行→输出
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card p-4 border-l-4 border-blue-400">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-terminal text-2xl mr-3 text-blue-400"></i>
+                            <div class="text-xl font-bold">命令解析</div>
+                        </div>
+                        <div class="text-sm">
+                            引用处理、token分割、扩展执行
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card p-4 border-l-4 border-yellow-400">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-code-branch text-2xl mr-3 text-yellow-400"></i>
+                            <div class="text-xl font-bold">进程管理</div>
+                        </div>
+                        <div class="text-sm">
+                            fork-exec模型、waitpid同步
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card p-4 border-l-4 border-red-400">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-exchange-alt text-2xl mr-3 text-red-400"></i>
+                            <div class="text-xl font-bold">I/O重定向</div>
+                        </div>
+                        <div class="text-sm">
+                            文件描述符、dup2系统调用
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box p-5 mb-6">
+                    <h3 class="text-2xl font-bold mb-3 text-blue-300">核心技术要点</h3>
+                    <ul class="space-y-2 text-lg">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>文件描述符表是I/O重定向的核心</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>管道是特殊的匿名文件，通过文件描述符共享</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>Shell通过fork-exec模型实现命令执行</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>复杂命令行解析涉及多阶段处理</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="terminal p-5 flex-grow">
+                    <div class="text-xl font-bold mb-3">Shell实现示例</div>
+                    <pre class="text-sm overflow-auto">
+<span class="comment">// 简易Shell实现</span>
+<span class="keyword">int</span> <span class="function">main</span>() {
+    <span class="keyword">while</span> (<span class="keyword">true</span>) {
+        <span class="comment">// 1. 显示提示符</span>
+        <span class="function">PrintCommandPrompt</span>();
+        
+        <span class="comment">// 2. 获取命令</span>
+        <span class="keyword">char</span> command[<span class="function">MAX_LEN</span>];
+        <span class="function">GetCommandLine</span>(command);
+        
+        <span class="comment">// 3. 解析命令</span>
+        <span class="function">ParseCommand</span>(command);
+        
+        <span class="comment">// 4. 执行命令</span>
+        <span class="function">ExecuteCommand</span>();
+    }
+    <span class="keyword">return</span> <span class="number">0</span>;
+}</pre>
+                </div>
+            </div>
+            
+            <!-- 右侧：Shell技术展望 -->
+            <div class="w-1/2 pl-6 flex flex-col">
+                <h2 class="text-3xl font-bold mb-4 text-blue-300">Shell技术展望</h2>
+                
+                <div class="future-item p-5 mb-6">
+                    <h3 class="text-2xl font-bold mb-3 text-blue-300">智能化发展</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-robot text-xl mr-2 text-blue-400"></i>
+                                <div class="font-bold">AI辅助</div>
+                            </div>
+                            <div class="text-sm">
+                                智能命令推荐<br>
+                                自动纠错与补全
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-brain text-xl mr-2 text-purple-400"></i>
+                                <div class="font-bold">自然语言</div>
+                            </div>
+                            <div class="text-sm">
+                                语音控制<br>
+                                自然语言命令
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="future-item p-5 mb-6">
+                    <h3 class="text-2xl font-bold mb-3 text-blue-300">现代化演进</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-cubes text-xl mr-2 text-green-400"></i>
+                                <div class="font-bold">模块化设计</div>
+                            </div>
+                            <div class="text-sm">
+                                插件式架构<br>
+                                可扩展功能
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-bolt text-xl mr-2 text-yellow-400"></i>
+                                <div class="font-bold">性能优化</div>
+                            </div>
+                            <div class="text-sm">
+                                JIT编译<br>
+                                并行处理
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 p-5 rounded-lg flex-grow">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-300">未来趋势</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-cloud text-3xl mr-4 text-blue-400"></i>
+                                <div>
+                                    <div class="text-xl font-bold">云原生集成</div>
+                                    <div class="text-sm">与容器编排系统深度整合</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-green-900/50 to-teal-900/50 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-shield-alt text-3xl mr-4 text-green-400"></i>
+                                <div>
+                                    <div class="text-xl font-bold">安全增强</div>
+                                    <div class="text-sm">自动安全审计与漏洞防护</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-yellow-900/50 to-orange-900/50 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-vr-cardboard text-3xl mr-4 text-yellow-400"></i>
+                                <div>
+                                    <div class="text-xl font-bold">多模态交互</div>
+                                    <div class="text-sm">图形化与命令行无缝结合</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

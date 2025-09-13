@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web服务器的基本概念</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #0052cc;
+            color: white;
+            padding: 30px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 70px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .concept-container {
+            display: flex;
+            margin-bottom: 30px;
+            flex-grow: 1;
+        }
+        .concept-icon {
+            flex: 0 0 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 5px;
+        }
+        .concept-icon .material-icons {
+            font-size: 48px;
+            color: #0052cc;
+        }
+        .concept-details {
+            flex: 1;
+        }
+        .concept-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #0052cc;
+            margin-bottom: 15px;
+        }
+        .concept-description {
+            font-size: 20px;
+            line-height: 1.5;
+        }
+        .key-points {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .key-point {
+            background-color: #e3f2fd;
+            border-left: 4px solid #0052cc;
+            padding: 10px 15px;
+            margin: 5px 10px 5px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .footer {
+            padding: 20px 70px;
+            background-color: #f5f5f5;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .highlight {
+            color: #0052cc;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">Web服务器的基本概念</h1>
+        </div>
+        <div class="content">
+            <div class="concept-container">
+                <div class="concept-icon">
+                    <i class="material-icons">dns</i>
+                </div>
+                <div class="concept-details">
+                    <h2 class="concept-title">定义</h2>
+                    <p class="concept-description">建立在Internet之上并且驻留在某种计算机上的程序，向Web客户端提供文档或其他服务</p>
+                    <div class="key-points">
+                        <div class="key-point">遵循HTTP协议</div>
+                        <div class="key-point">客户端-服务器模型</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="concept-container">
+                <div class="concept-icon">
+                    <i class="material-icons">settings</i>
+                </div>
+                <div class="concept-details">
+                    <h2 class="concept-title">功能</h2>
+                    <p class="concept-description">处理HTTP请求、提供静态文件、执行动态内容生成、管理并发连接</p>
+                    <div class="key-points">
+                        <div class="key-point">接收HTTP请求</div>
+                        <div class="key-point">解析请求内容</div>
+                        <div class="key-point">处理业务逻辑</div>
+                        <div class="key-point">生成HTTP响应</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="concept-container">
+                <div class="concept-icon">
+                    <i class="material-icons">swap_horiz</i>
+                </div>
+                <div class="concept-details">
+                    <h2 class="concept-title">作用</h2>
+                    <p class="concept-description">作为客户端和服务器端之间的桥梁，处理网络通信和数据传输</p>
+                    <div class="key-points">
+                        <div class="key-point">资源访问控制</div>
+                        <div class="key-point">安全防护</div>
+                        <div class="key-point">负载均衡</div>
+                        <div class="key-point">内容缓存</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Web服务器实现原理</div>
+            <div>第 <span class="highlight">3</span> 页</div>
+        </div>
+    </div>
+</body>
+</html>

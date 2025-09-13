@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>总结</title>
+    <link href="../../libs/Noto+Sans+SC.css" rel="stylesheet">
+    <link href="../../libs/Material+Icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, rgba(25, 118, 210, 0.9), rgba(21, 101, 192, 0.8));
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .slide::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 70px;
+            flex-grow: 1;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: inline-block;
+        }
+        .title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .summary-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex-grow: 1;
+        }
+        .summary-item {
+            display: flex;
+            align-items: flex-start;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        .summary-item:hover {
+            transform: translateX(10px);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .item-number {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin-right: 20px;
+            font-weight: 700;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .item-content {
+            font-size: 22px;
+            line-height: 1.5;
+        }
+        .highlight {
+            color: rgba(255, 255, 255, 1);
+            font-weight: 500;
+        }
+        .decoration {
+            position: absolute;
+            bottom: 40px;
+            right: 70px;
+            display: flex;
+            align-items: center;
+        }
+        .decoration .material-icons {
+            font-size: 36px;
+            margin-right: 15px;
+            opacity: 0.8;
+        }
+        .decoration-text {
+            font-size: 18px;
+            opacity: 0.8;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 20px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="content">
+            <h1 class="title">总结</h1>
+            
+            <div class="summary-container">
+                <div class="summary-item">
+                    <div class="item-number">1</div>
+                    <div class="item-content">
+                        编译器和解释器是将<span class="highlight">高级语言转换为计算机可执行代码</span>的两种主要方式
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="item-number">2</div>
+                    <div class="item-content">
+                        编译器通过<span class="highlight">词法分析、解析、代码生成和链接</span>等步骤将源代码转换为目标代码
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="item-number">3</div>
+                    <div class="item-content">
+                        解释器通过<span class="highlight">扫描、解析和求值</span>等步骤直接执行源代码
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="item-number">4</div>
+                    <div class="item-content">
+                        两者各有优缺点，适用于<span class="highlight">不同的应用场景</span>
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="item-number">5</div>
+                    <div class="item-content">
+                        现代编程语言常采用编译器和解释器结合的方式，如<span class="highlight">JIT（即时编译）技术</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                理解编译器和解释器的原理，有助于更好地选择和使用编程语言
+            </div>
+        </div>
+        
+        <div class="decoration">
+            <i class="material-icons">summarize</i>
+            <span class="decoration-text">计算机科学基础</span>
+        </div>
+    </div>
+</body>
+</html>

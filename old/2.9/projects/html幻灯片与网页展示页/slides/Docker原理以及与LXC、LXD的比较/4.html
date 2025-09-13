@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LXD的实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #e6edf3;
+            font-family: 'SF Mono', 'Consolas', 'Liberation Mono', Menlo, monospace;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            overflow: hidden;
+            position: relative;
+        }
+        .title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #6e40c9, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        .highlight {
+            color: #38bdf8;
+        }
+        .secondary-highlight {
+            color: #c084fc;
+        }
+        .code-block {
+            background-color: #161b22;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-left: 4px solid #38bdf8;
+        }
+        .feature-card {
+            background-color: rgba(22, 27, 34, 0.7);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid #30363d;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: #38bdf8;
+        }
+        .architecture-diagram {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid #30363d;
+        }
+        .arch-component {
+            background-color: rgba(30, 41, 59, 0.8);
+            border-radius: 6px;
+            padding: 0.75rem;
+            border: 1px solid #1e3a8a;
+            font-size: 0.9rem;
+        }
+        .arrow {
+            color: #8b949e;
+            font-size: 1.5rem;
+        }
+        .api-box {
+            background-color: rgba(124, 58, 237, 0.2);
+            border: 1px dashed #8b5cf6;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="title">LXD的实现原理</h1>
+            <p class="text-xl text-gray-400">LXD Implementation Principles</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow grid grid-cols-5 gap-6">
+            <!-- Left Column - What is LXD -->
+            <div class="col-span-2">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold mb-3"><i class="fas fa-cube text-purple-500 mr-2"></i>什么是LXD</h2>
+                    <div class="code-block">
+                        <p class="text-lg mb-2">LXC的<span class="highlight">高级管理器</span></p>
+                        <p class="text-lg mb-2">提供<span class="highlight">REST API</span>驱动LXC容器</p>
+                        <p class="text-lg mb-2">类虚拟机体验，使用<span class="highlight">Linux容器</span></p>
+                        <p class="text-lg"><span class="highlight">安全默认</span>和<span class="highlight">用户友好</span>的容器管理</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-2xl font-bold mb-3"><i class="fas fa-puzzle-piece text-blue-500 mr-2"></i>LXD架构</h2>
+                    <div class="architecture-diagram">
+                        <div class="flex flex-col items-center">
+                            <div class="w-full mb-4 text-center">
+                                <div class="arch-component inline-block">
+                                    <div class="font-bold text-blue-400">LXD客户端</div>
+                                    <p class="text-xs mt-1">命令行工具</p>
+                                </div>
+                            </div>
+                            <div class="arrow"><i class="fas fa-arrow-down"></i></div>
+                            <div class="w-full my-4 text-center">
+                                <div class="arch-component inline-block">
+                                    <div class="font-bold text-blue-400">LXD守护进程</div>
+                                    <p class="text-xs mt-1">REST API服务</p>
+                                </div>
+                            </div>
+                            <div class="arrow"><i class="fas fa-arrow-down"></i></div>
+                            <div class="w-full mt-4 text-center">
+                                <div class="arch-component inline-block">
+                                    <div class="font-bold text-blue-400">LXC库</div>
+                                    <p class="text-xs mt-1">底层容器技术</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Features & Architecture -->
+            <div class="col-span-3">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold mb-3"><i class="fas fa-star text-yellow-500 mr-2"></i>核心特性</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="feature-card">
+                            <h3 class="text-lg font-bold text-purple-400"><i class="fas fa-image text-sm"></i> 镜像管理</h3>
+                            <ul class="list-disc list-inside text-sm mt-2">
+                                <li>基于镜像的系统容器</li>
+                                <li>自动缓存远程镜像</li>
+                                <li>快照与状态保存</li>
+                                <li>通过别名简化引用</li>
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h3 class="text-lg font-bold text-purple-400"><i class="fas fa-network-wired text-sm"></i> 网络功能</h3>
+                            <ul class="list-disc list-inside text-sm mt-2">
+                                <li>多种网络模式</li>
+                                <li>网络隔离与安全</li>
+                                <li>内置DNS服务器</li>
+                                <li>网络配置模板</li>
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h3 class="text-lg font-bold text-purple-400"><i class="fas fa-shield-alt text-sm"></i> 安全特性</h3>
+                            <ul class="list-disc list-inside text-sm mt-2">
+                                <li>默认启用用户命名空间</li>
+                                <li>AppArmor/Seccomp配置</li>
+                                <li>TLS 1.2加密通信</li>
+                                <li>细粒度资源控制</li>
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h3 class="text-lg font-bold text-purple-400"><i class="fas fa-server text-sm"></i> 存储管理</h3>
+                            <ul class="list-disc list-inside text-sm mt-2">
+                                <li>多种存储类型支持</li>
+                                <li>块设备与文件系统</li>
+                                <li>存储卷管理</li>
+                                <li>存储热插拔</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-2xl font-bold mb-3"><i class="fas fa-code text-green-500 mr-2"></i>REST API架构</h2>
+                    <div class="code-block">
+                        <div class="mb-3">
+                            <div class="api-box">
+                                <p class="text-center font-bold text-purple-300 mb-2">LXD REST API</p>
+                                <div class="grid grid-cols-3 gap-2 text-sm">
+                                    <div class="text-center">
+                                        <i class="fas fa-database text-purple-400 mb-1"></i>
+                                        <p>容器管理</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fas fa-image text-purple-400 mb-1"></i>
+                                        <p>镜像操作</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fas fa-network-wired text-purple-400 mb-1"></i>
+                                        <p>网络配置</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fas fa-hdd text-purple-400 mb-1"></i>
+                                        <p>存储管理</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fas fa-users-cog text-purple-400 mb-1"></i>
+                                        <p>用户权限</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fas fa-chart-line text-purple-400 mb-1"></i>
+                                        <p>资源监控</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <p><span class="secondary-highlight">客户端-服务器架构</span>：通过REST API通信</p>
+                            <p><span class="secondary-highlight">远程管理</span>：支持多主机容器迁移</p>
+                            <p><span class="secondary-highlight">事件通知</span>：WebSocket实现实时监控</p>
+                            <p><span class="secondary-highlight">统一配置</span>：配置文件继承与覆盖机制</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-6 text-sm text-gray-500 flex justify-between items-center">
+            <div>Docker实现原理与LXC/LXD技术比较</div>
+            <div>4/6</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript引擎实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .engine-box {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .engine-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .v8-box {
+            border-left: 5px solid #4285f4;
+        }
+        .flow-box {
+            border-left: 5px solid #34a853;
+        }
+        .compare-box {
+            border-left: 5px solid #fbbc05;
+        }
+        .code-block {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 4px 0;
+            border-left: 3px solid #4285f4;
+        }
+        .highlight {
+            color: #4285f4;
+            font-weight: bold;
+        }
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .engine-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col p-10">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-4xl font-bold text-blue-800 mb-2">JavaScript引擎实现原理</h1>
+            <p class="text-xl text-blue-600">从源码到机器码的转换之旅</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-grow flex flex-col space-y-6">
+            <!-- Top Section: Engine Purpose and Importance -->
+            <div class="engine-box p-5 flex items-center">
+                <div class="w-1/4 flex justify-center">
+                    <div class="engine-icon bg-blue-600">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                </div>
+                <div class="w-3/4">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-3">JavaScript引擎的作用</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-code text-blue-500 mt-1 mr-2"></i>
+                            <p class="text-gray-700"><span class="font-semibold">解析执行</span>：将JavaScript代码转换为机器指令</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-bolt text-yellow-500 mt-1 mr-2"></i>
+                            <p class="text-gray-700"><span class="font-semibold">性能优化</span>：通过JIT等技术提升执行效率</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-shield-alt text-green-500 mt-1 mr-2"></i>
+                            <p class="text-gray-700"><span class="font-semibold">安全隔离</span>：提供沙箱环境确保安全性</p>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-laptop-code text-purple-500 mt-1 mr-2"></i>
+                            <p class="text-gray-700"><span class="font-semibold">跨平台</span>：使JavaScript能在不同环境运行</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Middle Section: Execution Flow -->
+            <div class="flex space-x-6">
+                <!-- Execution Flow -->
+                <div class="w-1/2 engine-box flow-box p-5">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4 flex items-center">
+                        <i class="fas fa-project-diagram text-green-600 mr-3"></i>
+                        JavaScript执行流程
+                    </h2>
+                    
+                    <div class="flex flex-col space-y-4">
+                        <!-- Compilation Phase -->
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <div class="step-circle bg-green-600 mr-3">1</div>
+                                <h3 class="text-xl font-bold text-green-700">编译阶段</h3>
+                            </div>
+                            <div class="ml-12">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-scissors text-green-500 mr-2"></i>
+                                    <p class="font-medium">词法分析</p>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-sitemap text-green-500 mr-2"></i>
+                                    <p class="font-medium">语法分析</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-cube text-green-500 mr-2"></i>
+                                    <p class="font-medium">生成AST抽象语法树</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Execution Phase -->
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <div class="step-circle bg-blue-600 mr-3">2</div>
+                                <h3 class="text-xl font-bold text-blue-700">执行阶段</h3>
+                            </div>
+                            <div class="ml-12">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-file-code text-blue-500 mr-2"></i>
+                                    <p class="font-medium">创建执行上下文</p>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-tasks text-blue-500 mr-2"></i>
+                                    <p class="font-medium">变量提升与作用域链</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-play-circle text-blue-500 mr-2"></i>
+                                    <p class="font-medium">执行代码</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Example -->
+                <div class="w-1/2 engine-box p-5">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-4 flex items-center">
+                        <i class="fas fa-code text-blue-600 mr-3"></i>
+                        代码示例
+                    </h2>
+                    
+                    <div class="code-block text-sm mb-4">
+                        <pre>function calculate(a, b) {
+  // 变量提升
+  console.log(result);
+  
+  var result = a + b;
+  return result;
+}
+
+calculate(5, 10);  // 输出: undefined</pre>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-2">执行过程解析</h4>
+                        <ol class="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                            <li>创建全局执行上下文</li>
+                            <li>解析函数声明，创建函数对象</li>
+                            <li>变量提升：result初始化为undefined</li>
+                            <li>调用calculate函数</li>
+                            <li>创建函数执行上下文</li>
+                            <li>变量提升：result初始化为undefined</li>
+                            <li>执行console.log(result) → undefined</li>
+                            <li>赋值result = 15</li>
+                            <li>返回15</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Section: Engine Comparison -->
+            <div class="engine-box compare-box p-5">
+                <h2 class="text-2xl font-bold text-yellow-700 mb-4 flex items-center">
+                    <i class="fas fa-balance-scale text-yellow-600 mr-3"></i>
+                    主流JavaScript引擎对比
+                </h2>
+                
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- V8 Engine -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="flex items-center mb-3">
+                            <div class="engine-icon bg-blue-600 mr-3">
+                                <i class="fab fa-chrome"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-blue-700">V8</h3>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">Google开发，用于Chrome和Node.js</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-700">
+                            <li>Parse → Ignition → TurboFan</li>
+                            <li>即时编译(JIT)优化</li>
+                            <li>隐藏类和内联缓存</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- SpiderMonkey -->
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                        <div class="flex items-center mb-3">
+                            <div class="engine-icon bg-red-600 mr-3">
+                                <i class="fab fa-firefox"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-red-700">SpiderMonkey</h3>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">Mozilla开发，Firefox浏览器使用</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-700">
+                            <li>基线编译器 + 优化编译器</li>
+                            <li>IonMonkey优化编译器</li>
+                            <li>并行编译和执行</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- JavaScriptCore -->
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div class="flex items-center mb-3">
+                            <div class="engine-icon bg-green-600 mr-3">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-green-700">JavaScriptCore</h3>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">Apple开发，Safari和iOS使用</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-700">
+                            <li>LLInt解释器 + DFTR优化编译器</li>
+                            <li>低延迟优化</li>
+                            <li>高效字节码生成</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

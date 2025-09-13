@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!--
+使用html，通过粒子创建星系，包含旋转动画，并创建星空背景。可在菜单选择椭圆星系、漩涡星系、棒旋星系和透镜状星系，使用OrbitControls.js控制场景旋转。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <title>3D 粒子星系</title>
+  <style>
+    body{margin:0;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;}
+    #gui{position:absolute;top:10px;left:10px;z-index:10;}
+  </style>
+</head>
+<body>
+  <canvas class="webgl"></canvas>
+  <div id="gui">
+    <label>星系类型：</label>
+    <select id="galaxySelect">
+      <option value="elliptical">椭圆星系</option>
+      <option value="spiral">漩涡星系</option>
+      <option value="barred">棒旋星系</option>
+      <option value="lenticular">透镜状星系</option>
+    </select>
+  </div>
+
+  <!-- Three.js & 控制器 -->
+    <script src="../../libs/three.min.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+
+  <script>
+    /* ----------------- 基础场景 ----------------- */
+    const canvas = document.querySelector('.webgl');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.set(0, 15, 30);
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    /* ----------------- 星空背景 ----------------- */
+    function createStarBackground(){
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 15000;
+      const pos = new Float32Array(starCount * 3);
+      for(let i=0;i<starCount*3;i++){
+        pos[i] = (Math.random()-0.5)*2000;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      const starMat = new THREE.PointsMaterial({color:0xffffff,size:0.7,sizeAttenuation:true});
+      const stars = new THREE.Points(starGeo,starMat);
+      scene.add(stars);
+    }
+    createStarBackground();
+
+    /* ----------------- 星系生成 ----------------- */
+    let points;                 // 当前星系 Points 对象
+    const params = {
+      count: 80000,
+      size:0.05,
+      radius:12,
+      spin:1,
+      branches:3,
+      randomness:0.2,
+      randomnessPower:3,
+      insideColor:'#ff7c00',
+      outsideColor:'#0077ff'
+    };
+
+    function generateElliptical(){
+      if(points){ scene.remove(points); points.geometry.dispose(); points.material.dispose(); }
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(params.count*3);
+      const col = new Float32Array(params.count*3);
+      const inside = new THREE.Color(params.insideColor);
+      const outside = new THREE.Color(params.outsideColor);
+      for(let i=0;i<params.count;i++){
+        const i3=i*3;
+        // 椭球形随机分布
+        const theta = Math.random()*Math.PI*2;
+        const phi   = Math.acos(2*Math.random()-1);
+        const r     = Math.pow(Math.random(), 0.7)*params.radius;
+        pos[i3]   = r*Math.sin(phi)*Math.cos(theta);
+        pos[i3+1] = r*0.5*Math.sin(phi)*Math.sin(theta);
+        pos[i3+2] = r*Math.cos(phi);
+
+        const mixed = inside.clone().lerp(outside, Math.random());
+        col[i3]=mixed.r; col[i3+1]=mixed.g; col[i3+2]=mixed.b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+      const mat = new THREE.PointsMaterial({size:params.size,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending});
+      points = new THREE.Points(geo,mat);
+      scene.add(points);
+    }
+
+    function generateSpiral(bar=false){
+      if(points){ scene.remove(points); points.geometry.dispose(); points.material.dispose(); }
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(params.count*3);
+      const col = new Float32Array(params.count*3);
+      const inside = new THREE.Color(params.insideColor);
+      const outside = new THREE.Color(params.outsideColor);
+      for(let i=0;i<params.count;i++){
+        const i3=i*3;
+        const radius = Math.random()*params.radius;
+        const spinAngle = radius*params.spin;
+        const branchAngle = bar?(i%2)/2*Math.PI*2 : (i%params.branches)/params.branches*Math.PI*2;
+
+        const randX = Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius;
+        const randY = Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius;
+        const randZ = Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius;
+
+        pos[i3]   = Math.cos(branchAngle+spinAngle)*radius+randX;
+        pos[i3+1] = randY;
+        pos[i3+2] = Math.sin(branchAngle+spinAngle)*radius+randZ;
+
+        const mixed = inside.clone().lerp(outside, radius/params.radius);
+        col[i3]=mixed.r; col[i3+1]=mixed.g; col[i3+2]=mixed.b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+      const mat = new THREE.PointsMaterial({size:params.size,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending});
+      points = new THREE.Points(geo,mat);
+      scene.add(points);
+    }
+
+    /* 透镜状 = 薄椭圆 + 漩涡的旋臂 */
+    function generateLenticular(){
+      if(points){ scene.remove(points); points.geometry.dispose(); points.material.dispose(); }
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(params.count*3);
+      const col = new Float32Array(params.count*3);
+      const inside = new THREE.Color(params.insideColor);
+      const outside = new THREE.Color(params.outsideColor);
+      for(let i=0;i<params.count;i++){
+        const i3=i*3;
+        const radius = Math.random()*params.radius;
+        const theta = Math.random()*Math.PI*2;
+        const phi   = Math.acos(Math.random()*0.2+0.8); // 薄盘
+        const r = radius;
+
+        pos[i3]   = r*Math.sin(phi)*Math.cos(theta);
+        pos[i3+1] = r*0.08*Math.sin(phi)*Math.sin(theta);
+        pos[i3+2] = r*Math.cos(phi);
+
+        const mixed = inside.clone().lerp(outside, radius/params.radius);
+        col[i3]=mixed.r; col[i3+1]=mixed.g; col[i3+2]=mixed.b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+      const mat = new THREE.PointsMaterial({size:params.size,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending});
+      points = new THREE.Points(geo,mat);
+      scene.add(points);
+    }
+
+    /* 初次加载 */
+    generateElliptical();
+
+    /* 菜单切换 */
+    const select = document.getElementById('galaxySelect');
+    select.addEventListener('change', e=>{
+      const val = e.target.value;
+      switch(val){
+        case 'elliptical': generateElliptical(); break;
+        case 'spiral': generateSpiral(false); break;
+        case 'barred': generateSpiral(true); break;
+        case 'lenticular': generateLenticular(); break;
+      }
+    });
+
+    /* ----------------- 动画循环 ----------------- */
+    const clock = new THREE.Clock();
+    function animate(){
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+      if(points) points.rotation.y = t*0.05;
+      controls.update();
+      renderer.render(scene,camera);
+    }
+    animate();
+
+    /* ----------------- 响应式 ----------------- */
+    addEventListener('resize',()=>{
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth,innerHeight);
+    });
+  </script>
+</body>
+</html>

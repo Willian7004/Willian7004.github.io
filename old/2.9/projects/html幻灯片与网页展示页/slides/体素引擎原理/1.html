@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体素引擎实现原理</title>
+    <script src="../../libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="../../libs/fontawesome/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            font-family: 'Arial', sans-serif;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            color: #38bdf8;
+        }
+        .voxel-cube {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide flex flex-col">
+        <div class="grid-pattern"></div>
+        
+        <div class="content flex flex-col justify-center items-center h-full px-16 py-12">
+            <!-- 标题区域 -->
+            <div class="text-center mb-12">
+                <h1 class="text-6xl font-bold mb-4">
+                    <span class="highlight">体素引擎</span>实现原理
+                </h1>
+                <p class="text-2xl text-blue-300 opacity-80">Voxel Engine Implementation</p>
+            </div>
+            
+            <!-- 主要内容区域 -->
+            <div class="flex w-full gap-10 items-center">
+                <!-- 左侧：体素概念 -->
+                <div class="w-1/2 flex flex-col">
+                    <h2 class="text-4xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-cube mr-4 text-blue-400"></i>
+                        体素基础
+                    </h2>
+                    <ul class="text-xl space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span><span class="highlight font-bold">体积像素</span>：3D空间中的最小表示单位</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>类似于2D图像中的<span class="highlight font-bold">像素</span>概念</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                            <span>每个体素存储<span class="highlight font-bold">位置</span>、<span class="highlight font-bold">颜色</span>和<span class="highlight font-bold">材质</span>信息</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 右侧：体素引擎特点 -->
+                <div class="w-1/2 flex flex-col">
+                    <h2 class="text-4xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-cogs mr-4 text-blue-400"></i>
+                        引擎特点
+                    </h2>
+                    <ul class="text-xl space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-star text-yellow-400 mt-1 mr-3"></i>
+                            <span>天然适合<span class="highlight font-bold">体积数据</span>渲染（云、烟雾等）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-star text-yellow-400 mt-1 mr-3"></i>
+                            <span>可实现<span class="highlight font-bold">真实光线散射</span>效果</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-star text-yellow-400 mt-1 mr-3"></i>
+                            <span>美术资产创建<span class="highlight font-bold">成本低</span>，适合开放世界游戏</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-star text-yellow-400 mt-1 mr-3"></i>
+                            <span>支持<span class="highlight font-bold">动态修改</span>世界结构</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 底部图示 -->
+            <div class="mt-10 flex justify-center">
+                <div class="voxel-cube relative">
+                    <img src="../../libs/951-400x250.jpg" alt="体素立方体结构" class="rounded-lg shadow-lg shadow-blue-500/20">
+                    <div class="absolute -bottom-4 -right-4 bg-blue-900/70 px-4 py-2 rounded-lg text-sm">
+                        体素世界示例
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
